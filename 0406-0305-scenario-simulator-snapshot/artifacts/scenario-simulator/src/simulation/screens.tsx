@@ -1,12 +1,36 @@
 import React, { useEffect, useRef, useState } from "react";
+import {
+  AlertTriangle,
+  Calendar,
+  Factory,
+  FileText,
+  Lock,
+  Truck,
+  Wallet,
+} from "lucide-react";
 import { useScenario } from "../lib/scenario";
-import { Card, PageShell, PrimaryButton } from "./components";
+import { Card, PageShell, PrimaryButton, TeamCallout, WaitStatus } from "./components";
 import { DocumentPanel } from "./documentBlocks";
+
+const STAKEHOLDER_ICON = {
+  rohini: Calendar,
+  fatima: Truck,
+  james: Factory,
+  rakesh: Wallet,
+} as const;
 
 export function ScreenBrief({ onNext }: { onNext: () => void }) {
   const { company, situation } = useScenario();
   return (
     <PageShell>
+      <div className="flex flex-wrap gap-2 mb-6">
+        <span className="rounded-full border border-[#E7E4DD] px-3 py-1 text-[14px] text-[#6C6975]">
+          Problem framing
+        </span>
+        <span className="rounded-full border border-[#301CA0] px-3 py-1 text-[14px] text-[#301CA0]">
+          Supply chain operations
+        </span>
+      </div>
       <h1 className="text-[32px] mb-2">Read the brief</h1>
       <p className="text-[16px] text-[#6C6975] mb-8">
         Start here. You can come back to this page at any time.
@@ -29,9 +53,22 @@ export function ScreenBrief({ onNext }: { onNext: () => void }) {
           </div>
         ))}
       </div>
-      <div className="bg-white border border-[#E7E4DD] rounded-xl p-8 mb-8">
-        <h2 className="text-[24px] mt-0 mb-3">The situation</h2>
-        <p className="text-[16px] leading-relaxed m-0">{situation}</p>
+      <div className="bg-white border border-[#E7E4DD] rounded-xl p-8 mb-8 shadow-[inset_0_1px_0_#fff,0_0_0_1px_rgba(48,28,160,0.05)]">
+        <div className="flex items-start gap-4">
+          <div className="shrink-0 rounded-lg bg-[#EAE8F6] text-[#301CA0] p-2">
+            <AlertTriangle className="h-5 w-5" strokeWidth={2} />
+          </div>
+          <div>
+            <h2 className="text-[24px] mt-0 mb-3">The situation</h2>
+            <p className="text-[16px] leading-relaxed m-0">{situation}</p>
+          </div>
+        </div>
+      </div>
+      <div className="mb-8">
+        <TeamCallout kicker="Discuss as a team">
+          Read this together. Do not jump to a solution yet — you still have to choose who to
+          interview and which document to open.
+        </TeamCallout>
       </div>
       <div className="flex justify-end">
         <PrimaryButton onClick={onNext}>Continue</PrimaryButton>
@@ -73,6 +110,14 @@ export function ScreenStakeholder({
             <div className="flex items-start gap-4">
               <img src={s.avatarUrl} alt="" className="w-14 h-14 rounded-full object-cover" />
               <div>
+                {(() => {
+                  const Icon = STAKEHOLDER_ICON[s.id as keyof typeof STAKEHOLDER_ICON];
+                  return Icon ? (
+                    <div className={`mb-2 ${locked && selectedId === s.id ? "text-white/80" : "text-[#301CA0]"}`}>
+                      <Icon className="h-4 w-4" strokeWidth={2} />
+                    </div>
+                  ) : null;
+                })()}
                 <div className="text-[18px] font-semibold">{s.name}</div>
                 <div className={locked && selectedId === s.id ? "text-white/80" : "text-[#301CA0]"}>
                   {s.role}
@@ -91,9 +136,10 @@ export function ScreenStakeholder({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
         {evidence.map((e) => (
           <Card key={e.id} locked>
+            <Lock className="h-4 w-4 mb-2" strokeWidth={2} />
             <div className="text-[16px] font-semibold text-[#1D1D24]">{e.title}</div>
             <div className="text-[14px] mt-1">{e.subtitle}</div>
-            <div className="text-[13px] uppercase tracking-wide mt-3">Locked</div>
+            <div className="text-[14px] uppercase tracking-wide mt-3">Locked</div>
           </Card>
         ))}
       </div>
@@ -123,7 +169,7 @@ export function ScreenInterview({
 }) {
   const scenario = useScenario();
   const stakeholder = scenario.stakeholders.find((s) => s.id === stakeholderId);
-  const [thinkingId, setThinkingId] = useState<string | null>(null);
+  const [wait, setWait] = useState<{ id: string; stage: "thinking" | "typing" } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => {
@@ -145,15 +191,18 @@ export function ScreenInterview({
   const remaining = stakeholder.questions.filter((q) => !askedIds.has(q.id));
   const askedCount = answers.length;
   const atLimit = askedCount >= stakeholder.askLimit;
-  const canAsk = !locked && !atLimit && !thinkingId;
+  const canAsk = !locked && !atLimit && !wait;
 
   const handleAsk = (id: string) => {
     if (!canAsk) return;
-    setThinkingId(id);
+    setWait({ id, stage: "thinking" });
     timer.current = setTimeout(() => {
-      onAsk(id);
-      setThinkingId(null);
-    }, 850);
+      setWait({ id, stage: "typing" });
+      timer.current = setTimeout(() => {
+        onAsk(id);
+        setWait(null);
+      }, 900);
+    }, 700);
   };
 
   return (
@@ -169,7 +218,7 @@ export function ScreenInterview({
               </div>
             </div>
             <div className="text-[16px] font-medium text-[#301CA0]">
-              Question {Math.min(askedCount + (thinkingId ? 1 : 0), stakeholder.askLimit)} of{" "}
+              Question {Math.min(askedCount + (wait ? 1 : 0), stakeholder.askLimit)} of{" "}
               {stakeholder.askLimit}
             </div>
           </div>
@@ -183,9 +232,16 @@ export function ScreenInterview({
                 <p className="text-[16px] leading-relaxed m-0">{q!.answer}</p>
               </div>
             ))}
-            {thinkingId && (
-              <div className="bg-white border border-[#E7E4DD] rounded-xl p-5 text-[#6C6975]">
-                {stakeholder.name} is thinking…
+            {wait && (
+              <div className="bg-white border border-[#E7E4DD] rounded-xl p-5">
+                <WaitStatus
+                  mode={wait.stage}
+                  label={
+                    wait.stage === "thinking"
+                      ? `${stakeholder.name} is thinking`
+                      : `${stakeholder.name} is typing`
+                  }
+                />
               </div>
             )}
           </div>
@@ -211,7 +267,7 @@ export function ScreenInterview({
 
           {!locked && askedCount > 0 && (
             <div className="flex justify-end">
-              <PrimaryButton onClick={onContinue} disabled={!!thinkingId}>
+              <PrimaryButton onClick={onContinue} disabled={!!wait}>
                 Continue to Evidence
               </PrimaryButton>
             </div>
@@ -253,7 +309,19 @@ export function ScreenEvidence({
   const scenario = useScenario();
   const stakeholder = scenario.stakeholders.find((s) => s.id === stakeholderId);
   const [pending, setPending] = useState<string | null>(selectedId);
+  const [opening, setOpening] = useState(false);
+  const resumeDoc = useRef(Boolean(selectedId));
   useEffect(() => setPending(selectedId), [selectedId]);
+  useEffect(() => {
+    if (!selectedId) return;
+    if (resumeDoc.current) {
+      resumeDoc.current = false;
+      return;
+    }
+    setOpening(true);
+    const id = setTimeout(() => setOpening(false), 1100);
+    return () => clearTimeout(id);
+  }, [selectedId]);
   const doc = scenario.evidence.find((e) => e.id === selectedId);
 
   return (
@@ -288,6 +356,7 @@ export function ScreenEvidence({
                 confirmed={locked && selectedId === e.id}
                 onClick={readOnly || locked ? undefined : () => setPending(e.id)}
               >
+                <FileText className="h-5 w-5 mb-3 text-[#301CA0]" strokeWidth={2} />
                 <div className="text-[18px] font-semibold">{e.title}</div>
                 <div className={locked && selectedId === e.id ? "text-white/80 text-[15px]" : "text-[#6C6975] text-[15px]"}>
                   {e.subtitle}
@@ -306,16 +375,42 @@ export function ScreenEvidence({
         </>
       )}
 
-      {doc && (
-        <DocumentPanel
-          title={doc.title}
-          subtitle={doc.subtitle}
-          sourceLabel={doc.sourceLabel}
-          blocks={doc.blocks}
-        />
+      {doc && opening && (
+        <div className="bg-white border border-[#E7E4DD] rounded-xl p-8 mb-6">
+          <div className="text-[14px] uppercase tracking-wide text-[#6C6975] mb-2">Opening file</div>
+          <div className="text-[20px] font-semibold mb-4">{doc.title}</div>
+          <WaitStatus mode="loading" label="Loading document" />
+          <div className="mt-5 h-1.5 rounded-full bg-[#E7E4DD] overflow-hidden">
+            <div className="tpl-load-bar h-full rounded-full bg-[#301CA0]" />
+          </div>
+        </div>
       )}
 
-      {doc && !readOnly && (
+      {doc && !opening && (
+        <>
+          <div className="flex items-center justify-between gap-4 rounded-xl border border-[#E7E4DD] bg-white px-5 py-4 mb-6">
+            <div>
+              <div className="text-[14px] text-[#6C6975]">Evidence source unlocked</div>
+              <div className="text-[18px] font-semibold">{doc.title}</div>
+            </div>
+            <div className="text-[14px] font-semibold text-[#2E7D5B]">Open</div>
+          </div>
+          <DocumentPanel
+            title={doc.title}
+            subtitle={doc.subtitle}
+            sourceLabel={doc.sourceLabel}
+            blocks={doc.blocks}
+          />
+          <div className="mt-6">
+            <TeamCallout kicker="Discuss as a team">
+              Does this document support or challenge what you heard in the interview? What does it
+              suggest about the real problem?
+            </TeamCallout>
+          </div>
+        </>
+      )}
+
+      {doc && !opening && !readOnly && (
         <div className="flex justify-end mt-8">
           <PrimaryButton onClick={onNext}>Continue to define the problem</PrimaryButton>
         </div>
