@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { FLOW_STEPS, SESSION_LABEL, type Screen, flowStepIndex } from "../lib/constants";
 import { formatCountdown, isExpired, remainingMs, type SessionConfig } from "../lib/timer";
 import { useScenario } from "../lib/scenario";
@@ -136,17 +136,16 @@ export function Header({
   const step = currentScreen ? flowStepIndex(currentScreen) : -1;
 
   return (
-    <header className="sticky top-0 z-50 text-white bg-gradient-to-b from-[#301CA0] to-[#1A0F58]">
+    <header className="sticky top-0 z-50 text-white tpl-nav-mesh">
       <div className="mx-auto max-w-[1280px] px-6 h-16 flex items-center justify-between gap-6">
         <div className="flex items-center gap-4 min-w-0">
           <img
             src="/content/media/logo-horizontal.svg"
             alt="the Practice Labs"
-            className="h-7 w-auto brightness-0 invert"
+            className="h-[21px] w-auto brightness-0 invert"
           />
           <div className="hidden lg:block h-8 w-px bg-white/25" />
           <div className="min-w-0 hidden md:block">
-            <div className="text-[14px] text-white/70 truncate">the Practice Labs by Ideate Innovation</div>
             <div className="text-[14px] font-medium truncate">{SESSION_LABEL}</div>
             <div className="text-[14px] text-white/75 truncate">{scenario.title}</div>
           </div>
@@ -154,7 +153,7 @@ export function Header({
         <div className="flex items-center gap-3 shrink-0">
           {config?.startedAt && !expired && <LivePill label="Live" />}
           <div
-            className={`rounded-full border border-white/20 bg-white/10 px-3 py-1 font-mono text-[18px] tabular-nums ${timerClass}`}
+            className={`rounded-full border border-white/20 bg-white/10 px-3 py-1 font-mono text-[18px] tabular-nums ${timerClass} ${underFive && !expired ? "tpl-timer-pulse" : ""}`}
           >
             {timerLabel}
           </div>
@@ -187,6 +186,9 @@ export function Header({
                           : "text-white/40 cursor-default"
                     }`}
                   >
+                    {done && !active ? (
+                      <Check className="inline h-3.5 w-3.5 mr-1 text-[#84C5B1]" strokeWidth={3} />
+                    ) : null}
                     {String(i + 1).padStart(2, "0")} {label}
                   </button>
                 </li>

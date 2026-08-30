@@ -195,7 +195,24 @@ export default function FacilitatePage() {
                     <td className="p-3">{sh?.name ?? "—"}</td>
                     <td className="p-3">{ev?.title ?? "—"}</td>
                     <td className="p-3">{s.submittedAt ? "Yes" : "No"}</td>
-                    <td className="p-3">{s.confidence ?? "—"}</td>
+                    <td className="p-3">
+                      {s.confidence ? (
+                        <span className="inline-flex items-center gap-2">
+                          <span
+                            className={`h-2.5 w-2.5 rounded-full ${
+                              s.confidence === "Low"
+                                ? "bg-[#B42318]"
+                                : s.confidence === "High"
+                                  ? "bg-[#2E7D5B]"
+                                  : "bg-[#B7791F]"
+                            }`}
+                          />
+                          {s.confidence}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
                     <td className="p-3">
                       <button
                         type="button"

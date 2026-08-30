@@ -5,7 +5,7 @@ import {
   useCreateOrResumeSession,
   useListSessions,
 } from "@workspace/api-client-react";
-import { SESSION_LABEL, TEAM_NAMES, WORKSHOP_CODE } from "../lib/constants";
+import { Lock } from "lucide-react";
 import { readStoredTeam, writeStoredTeam } from "../lib/teamStorage";
 import { Header, LivePill, MetaGrid, PrimaryButton, TeamCallout } from "../simulation/components";
 import { useScenario } from "../lib/scenario";
@@ -106,7 +106,11 @@ export default function JoinScreen() {
                 }`}
               >
                 {name}
-                {disabled && <div className="text-[14px] font-normal mt-1">Claimed</div>}
+                {disabled && (
+                  <div className="text-[14px] font-normal mt-1 inline-flex items-center gap-1">
+                    <Lock className="h-3.5 w-3.5" strokeWidth={2} /> Slot taken
+                  </div>
+                )}
                 {mine && <div className="text-[14px] font-normal mt-1">Your team</div>}
               </button>
             );

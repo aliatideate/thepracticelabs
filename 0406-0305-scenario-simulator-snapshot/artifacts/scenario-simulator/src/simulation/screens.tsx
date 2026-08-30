@@ -11,6 +11,7 @@ import {
 import { useScenario } from "../lib/scenario";
 import { Card, PageShell, PrimaryButton, TeamCallout, WaitStatus } from "./components";
 import { DocumentPanel } from "./documentBlocks";
+import { withMarketFlags, evidenceFilename } from "../lib/constants";
 
 const STAKEHOLDER_ICON = {
   rohini: Calendar,
@@ -37,7 +38,13 @@ export function ScreenBrief({ onNext }: { onNext: () => void }) {
       </p>
       <div className="bg-white border border-[#E7E4DD] rounded-xl p-8 mb-6">
         <div className="flex items-center gap-6 pb-6 border-b border-[#E7E4DD] mb-6">
-          <img src={company.logoUrl} alt={company.name} className="h-16 w-auto object-contain" />
+          <div className="rounded-lg bg-black px-3 py-2 shrink-0">
+            <img
+              src={company.logoUrl}
+              alt={company.name}
+              className="h-12 w-auto object-contain"
+            />
+          </div>
           <div>
             <h2 className="text-[28px] m-0">{company.name}</h2>
             <p className="text-[16px] text-[#6C6975] m-0">{company.descriptor}</p>
@@ -49,7 +56,7 @@ export function ScreenBrief({ onNext }: { onNext: () => void }) {
         {company.facts.map((f) => (
           <div key={f.label} className="bg-white border border-[#E7E4DD] rounded-xl p-4">
             <div className="text-[14px] text-[#6C6975] uppercase tracking-wide mb-1">{f.label}</div>
-            <div className="text-[16px]">{f.value}</div>
+            <div className="text-[16px]">{withMarketFlags(f.value)}</div>
           </div>
         ))}
       </div>
@@ -229,7 +236,7 @@ export function ScreenInterview({
                 <div className="text-[14px] text-[#6C6975] mb-2">You asked</div>
                 <p className="text-[16px] font-medium m-0 mb-3">{q!.text}</p>
                 <div className="text-[14px] text-[#301CA0] mb-1">{stakeholder.name} answered</div>
-                <p className="text-[16px] leading-relaxed m-0">{q!.answer}</p>
+                <p className="text-[16px] leading-relaxed m-0">{withMarketFlags(q!.answer)}</p>
               </div>
             ))}
             {wait && (
@@ -357,6 +364,7 @@ export function ScreenEvidence({
                 onClick={readOnly || locked ? undefined : () => setPending(e.id)}
               >
                 <FileText className="h-5 w-5 mb-3 text-[#301CA0]" strokeWidth={2} />
+                <div className="text-[14px] font-mono text-[#6C6975] mb-1">{evidenceFilename(e.id)}</div>
                 <div className="text-[18px] font-semibold">{e.title}</div>
                 <div className={locked && selectedId === e.id ? "text-white/80 text-[15px]" : "text-[#6C6975] text-[15px]"}>
                   {e.subtitle}
@@ -378,6 +386,7 @@ export function ScreenEvidence({
       {doc && opening && (
         <div className="bg-white border border-[#E7E4DD] rounded-xl p-8 mb-6">
           <div className="text-[14px] uppercase tracking-wide text-[#6C6975] mb-2">Opening file</div>
+          <div className="text-[14px] font-mono text-[#6C6975] mb-1">{evidenceFilename(doc.id)}</div>
           <div className="text-[20px] font-semibold mb-4">{doc.title}</div>
           <WaitStatus mode="loading" label="Loading document" />
           <div className="mt-5 h-1.5 rounded-full bg-[#E7E4DD] overflow-hidden">
@@ -391,6 +400,7 @@ export function ScreenEvidence({
           <div className="flex items-center justify-between gap-4 rounded-xl border border-[#E7E4DD] bg-white px-5 py-4 mb-6">
             <div>
               <div className="text-[14px] text-[#6C6975]">Evidence source unlocked</div>
+              <div className="text-[14px] font-mono text-[#6C6975]">{evidenceFilename(doc.id)}</div>
               <div className="text-[18px] font-semibold">{doc.title}</div>
             </div>
             <div className="text-[14px] font-semibold text-[#2E7D5B]">Open</div>
@@ -450,21 +460,32 @@ export function ScreenDefine({
       />
       <div className="text-[16px] font-medium mb-2">How confident is the team?</div>
       <div className="flex gap-3 mb-8">
-        {submission.confidenceOptions.map((opt) => (
-          <button
-            key={opt}
-            type="button"
-            disabled={readOnly}
-            onClick={() => setConfidence(opt)}
-            className={`px-4 py-2 rounded-lg border text-[16px] ${
-              confidence === opt
-                ? "bg-[#301CA0] text-white border-[#301CA0]"
-                : "bg-white border-[#E7E4DD]"
-            }`}
-          >
-            {opt}
-          </button>
-        ))}
+        {(["Low", "Medium", "High"] as const).map((opt) => {
+          const selected = confidence === opt;
+          const tone =
+            opt === "Low"
+              ? selected
+                ? "bg-[#B42318] text-white border-[#B42318]"
+                : "bg-white text-[#B42318] border-[#B42318]/50 hover:bg-[#B42318]/10"
+              : opt === "Medium"
+                ? selected
+                  ? "bg-[#B7791F] text-white border-[#B7791F]"
+                  : "bg-white text-[#B7791F] border-[#B7791F]/50 hover:bg-[#B7791F]/10"
+                : selected
+                  ? "bg-[#2E7D5B] text-white border-[#2E7D5B]"
+                  : "bg-white text-[#2E7D5B] border-[#2E7D5B]/50 hover:bg-[#2E7D5B]/10";
+          return (
+            <button
+              key={opt}
+              type="button"
+              disabled={readOnly}
+              onClick={() => setConfidence(opt)}
+              className={`px-4 py-2 rounded-full border text-[16px] font-semibold transition-colors duration-200 ${tone}`}
+            >
+              {opt}
+            </button>
+          );
+        })}
       </div>
       {!readOnly && (
         <PrimaryButton

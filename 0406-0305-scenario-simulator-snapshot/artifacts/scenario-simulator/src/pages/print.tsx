@@ -1,7 +1,7 @@
 import React from "react";
 import { useScenario } from "../lib/scenario";
 import { DocumentPanel } from "../simulation/documentBlocks";
-import { SESSION_LABEL } from "../lib/constants";
+import { SESSION_LABEL, withMarketFlags } from "../lib/constants";
 
 export default function PrintPack() {
   const scenario = useScenario();
@@ -21,7 +21,7 @@ export default function PrintPack() {
           {scenario.company.facts.map((f) => (
             <div key={f.label} className="mb-1">
               <dt className="inline font-semibold">{f.label}: </dt>
-              <dd className="inline m-0">{f.value}</dd>
+              <dd className="inline m-0">{withMarketFlags(f.value)}</dd>
             </div>
           ))}
         </dl>
@@ -44,7 +44,7 @@ export default function PrintPack() {
           {s.questions.map((q) => (
             <div key={q.id} className="mb-4">
               <p className="font-semibold m-0">{q.text}</p>
-              <p className="mt-1">{q.answer}</p>
+              <p className="mt-1">{withMarketFlags(q.answer)}</p>
             </div>
           ))}
         </section>

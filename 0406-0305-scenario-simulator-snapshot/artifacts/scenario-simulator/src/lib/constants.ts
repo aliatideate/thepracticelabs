@@ -36,3 +36,23 @@ export function flowStepIndex(screen: Screen): number {
   if (screen === "confirm") return 4;
   return Math.min(screenIndex(screen), 4);
 }
+
+/** Flag glyphs for market names so tables and facts scan as a tool, not a brochure. */
+export function withMarketFlags(text: string): string {
+  return text
+    .replaceAll("Saudi Arabia", "🇸🇦 Saudi Arabia")
+    .replaceAll("UAE", "🇦🇪 UAE")
+    .replaceAll("KSA", "🇸🇦 KSA")
+    .replaceAll("Qatar", "🇶🇦 Qatar");
+}
+
+export function evidenceFilename(id: string): string {
+  switch (id) {
+    case "sku_availability":
+      return "GBC-W35-availability.xlsx";
+    case "production_capacity":
+      return "GBC-W35-capacity-memo.pdf";
+    default:
+      return "GBC-W35-retailer-complaints.pdf";
+  }
+}

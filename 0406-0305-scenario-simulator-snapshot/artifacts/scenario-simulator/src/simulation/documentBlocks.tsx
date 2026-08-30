@@ -1,5 +1,6 @@
 import React from "react";
 import type { EvidenceBlock } from "../lib/scenario";
+import { withMarketFlags } from "../lib/constants";
 
 export function DocumentPanel({
   title,
@@ -36,7 +37,7 @@ function Block({ block }: { block: EvidenceBlock }) {
       return <h4 className="text-[20px] font-serif mt-2 mb-0 text-[#1A0F58]">{block.text}</h4>;
     }
     case "paragraph":
-      return <p className="text-[16px] leading-relaxed m-0">{block.text}</p>;
+      return <p className="text-[16px] leading-relaxed m-0">{withMarketFlags(block.text)}</p>;
     case "table":
       return (
         <figure className="m-0 overflow-x-auto">
@@ -58,7 +59,7 @@ function Block({ block }: { block: EvidenceBlock }) {
                 <tr key={ri} className="border-b border-[#E7E4DD]">
                   {row.map((cell, ci) => (
                     <td key={ci} className="py-2 pr-4 align-top">
-                      {cell}
+                      {withMarketFlags(cell)}
                     </td>
                   ))}
                 </tr>
@@ -76,7 +77,7 @@ function Block({ block }: { block: EvidenceBlock }) {
           {block.items.map((item) => (
             <div key={item.label}>
               <dt className="text-[14px] text-[#6C6975]">{item.label}</dt>
-              <dd className="m-0 text-[16px] font-medium">{item.value}</dd>
+              <dd className="m-0 text-[16px] font-medium">{withMarketFlags(item.value)}</dd>
             </div>
           ))}
         </dl>
@@ -87,7 +88,7 @@ function Block({ block }: { block: EvidenceBlock }) {
           {block.label && (
             <div className="text-[14px] font-semibold text-[#301CA0] mb-1">{block.label}</div>
           )}
-          <p className="m-0 text-[16px]">{block.text}</p>
+          <p className="m-0 text-[16px]">{withMarketFlags(block.text)}</p>
         </aside>
       );
     case "list": {
@@ -96,7 +97,7 @@ function Block({ block }: { block: EvidenceBlock }) {
         <List className={`text-[16px] leading-relaxed m-0 pl-5 ${block.ordered ? "list-decimal" : "list-disc"}`}>
           {block.items.map((item) => (
             <li key={item} className="mb-1">
-              {item}
+              {withMarketFlags(item)}
             </li>
           ))}
         </List>
@@ -105,8 +106,8 @@ function Block({ block }: { block: EvidenceBlock }) {
     case "quote":
       return (
         <blockquote className="m-0 border-l-4 border-[#84C5B1] pl-4">
-          <p className="text-[16px] italic m-0">“{block.text}”</p>
-          <footer className="text-[14px] text-[#6C6975] mt-1">— {block.attribution}</footer>
+          <p className="text-[16px] italic m-0">“{withMarketFlags(block.text)}”</p>
+          <footer className="text-[14px] text-[#6C6975] mt-1">— {withMarketFlags(block.attribution)}</footer>
         </blockquote>
       );
     default:
