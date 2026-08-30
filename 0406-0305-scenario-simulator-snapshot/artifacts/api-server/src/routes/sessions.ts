@@ -24,6 +24,9 @@ import {
   type StepTimings,
 } from "@workspace/db";
 import { submissionsBus } from "../lib/events";
+import { loadScenario } from "../lib/content";
+import { WORKSHOP_CODE, isAllowedTeamName } from "../lib/workshop";
+import { startTimerIfIdle } from "../lib/session-clock";
 
 const router: IRouter = Router();
 
@@ -31,26 +34,20 @@ interface SerializeContext {
   workshopCode: string;
 }
 
-const QUESTION_SCREENS = new Set(["q1", "q2", "q3", "q4"]);
+const INTERVIEW_LOCKED_SCREENS = new Set(["evidence", "define", "confirm"]);
 
 function screenToStep(screen: string, submitted: boolean): StepKey | null {
   if (submitted) return "submit";
-  if (QUESTION_SCREENS.has(screen)) return "interview";
   switch (screen) {
-    case "entry":
-      return null;
-    case "company":
-    case "scenario":
+    case "brief":
       return "brief";
-    case "investigate":
+    case "stakeholder":
       return "stakeholder";
-    case "intro":
+    case "interview":
       return "interview";
     case "evidence":
-    case "evidence_reveal":
       return "evidence";
-    case "insights":
-    case "problem":
+    case "define":
       return "define";
     case "confirm":
       return "submit";
@@ -199,6 +196,9 @@ router.post("/sessions", async (req, res) => {
   if (!teamName) return res.status(400).json({ error: "teamName required" });
   if (!workshopCode)
     return res.status(400).json({ error: "workshopCode required" });
+  if (workshopCode === WORKSHOP_CODE && !isAllowedTeamName(teamName)) {
+    return res.status(400).json({ error: "invalid team" });
+  }
 
   const workshopRows = await db
     .select()
@@ -220,7 +220,7 @@ router.post("/sessions", async (req, res) => {
     .limit(1);
 
   if (existing[0]) {
-    return res.json(serialize(existing[0], { workshopCode: workshop.code }));
+    return res.status(409).json({ error: "team claimed", sessionId: existing[0].id });
   }
 
   const now = new Date();
@@ -229,7 +229,8 @@ router.post("/sessions", async (req, res) => {
     .values({
       teamName,
       workshopId: workshop.id,
-      stepTimings: advanceTimings(null, screenToStep("company", false), now),
+      currentScreen: "brief",
+      stepTimings: advanceTimings(null, screenToStep("brief", false), now),
     })
     .returning();
 
@@ -239,6 +240,7 @@ router.post("/sessions", async (req, res) => {
     return res.status(500).json({ error: "insert failed" });
   }
   publish("submission.created", row.id, workshop.id, workshop.code);
+  await startTimerIfIdle(now);
   return res.json(serialize(row, { workshopCode: workshop.code }));
 });
 
@@ -269,21 +271,69 @@ router.patch("/sessions/:id", async (req, res) => {
   }
 
   const now = new Date();
+  const existingRows = await db
+    .select()
+    .from(sessionsTable)
+    .where(eq(sessionsTable.id, params.data.id))
+    .limit(1);
+  const existing = existingRows[0];
+  if (!existing) return res.status(404).json({ error: "not found" });
+
+  if (
+    body.data.selectedStakeholder !== undefined &&
+    existing.selectedStakeholder &&
+    body.data.selectedStakeholder !== existing.selectedStakeholder
+  ) {
+    return res.status(409).json({ error: "stakeholder locked" });
+  }
+  if (
+    body.data.selectedEvidenceSource !== undefined &&
+    existing.selectedEvidenceSource &&
+    body.data.selectedEvidenceSource !== existing.selectedEvidenceSource
+  ) {
+    return res.status(409).json({ error: "evidence locked" });
+  }
+
+  if (body.data.answers !== undefined) {
+    const prev = existing.answers ?? [];
+    const next = body.data.answers;
+    const prevIds = prev.map((a) => a.questionId);
+    if (next.length < prev.length) {
+      return res.status(409).json({ error: "answers cannot shrink" });
+    }
+    for (let i = 0; i < prev.length; i++) {
+      if (next[i]?.questionId !== prev[i]?.questionId) {
+        return res.status(409).json({ error: "answers are append-only" });
+      }
+    }
+    const screen = body.data.currentScreen ?? existing.currentScreen;
+    if (INTERVIEW_LOCKED_SCREENS.has(screen) && next.length > prev.length) {
+      return res.status(409).json({ error: "interview locked" });
+    }
+    const scenario = loadScenario();
+    const stakeholderId =
+      body.data.selectedStakeholder ?? existing.selectedStakeholder;
+    const stakeholder = scenario.stakeholders.find((s) => s.id === stakeholderId);
+    if (stakeholder && next.length > stakeholder.askLimit) {
+      return res.status(409).json({ error: "ask limit reached" });
+    }
+    for (const added of next.slice(prev.length)) {
+      const known = stakeholder?.questions.some((q) => q.id === added.questionId);
+      if (!known) return res.status(400).json({ error: "unknown question" });
+      if (prevIds.includes(added.questionId)) {
+        return res.status(409).json({ error: "question already asked" });
+      }
+    }
+  }
+
   const updates: Partial<typeof sessionsTable.$inferInsert> = {
     updatedAt: now,
   };
   if (body.data.currentScreen !== undefined) {
     updates.currentScreen = body.data.currentScreen;
-    const existingRows = await db
-      .select({ stepTimings: sessionsTable.stepTimings, submittedAt: sessionsTable.submittedAt })
-      .from(sessionsTable)
-      .where(eq(sessionsTable.id, params.data.id))
-      .limit(1);
-    const prev = existingRows[0]?.stepTimings ?? null;
-    const submitted = !!existingRows[0]?.submittedAt;
     updates.stepTimings = advanceTimings(
-      prev,
-      screenToStep(body.data.currentScreen, submitted),
+      existing.stepTimings,
+      screenToStep(body.data.currentScreen, !!existing.submittedAt),
       now,
     );
   }
@@ -336,7 +386,7 @@ router.post("/sessions/:id/reset", async (req, res) => {
   const updated = await db
     .update(sessionsTable)
     .set({
-      currentScreen: "company",
+      currentScreen: "brief",
       selectedStakeholder: null,
       selectedEvidenceSource: null,
       answers: [],
@@ -344,7 +394,7 @@ router.post("/sessions/:id/reset", async (req, res) => {
       confidence: null,
       assumption: "",
       submittedAt: null,
-      stepTimings: advanceTimings(null, screenToStep("company", false), now),
+      stepTimings: advanceTimings(null, screenToStep("brief", false), now),
       updatedAt: now,
     })
     .where(eq(sessionsTable.id, parsed.data.id))

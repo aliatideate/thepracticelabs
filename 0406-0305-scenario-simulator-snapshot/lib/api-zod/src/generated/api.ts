@@ -91,7 +91,7 @@ export const ListSessionsResponseItem = zod.object({
   answers: zod.array(
     zod.object({
       questionId: zod.string(),
-      selected: zod.enum(["A", "B", "C"]),
+      askedAt: zod.string(),
     }),
   ),
   problemStatement: zod.string(),
@@ -150,7 +150,7 @@ export const CreateOrResumeSessionResponse = zod.object({
   answers: zod.array(
     zod.object({
       questionId: zod.string(),
-      selected: zod.enum(["A", "B", "C"]),
+      askedAt: zod.string(),
     }),
   ),
   problemStatement: zod.string(),
@@ -205,7 +205,7 @@ export const GetSessionResponse = zod.object({
   answers: zod.array(
     zod.object({
       questionId: zod.string(),
-      selected: zod.enum(["A", "B", "C"]),
+      askedAt: zod.string(),
     }),
   ),
   problemStatement: zod.string(),
@@ -260,7 +260,7 @@ export const UpdateSessionBody = zod.object({
     .array(
       zod.object({
         questionId: zod.string(),
-        selected: zod.enum(["A", "B", "C"]),
+        askedAt: zod.string(),
       }),
     )
     .optional(),
@@ -284,7 +284,7 @@ export const UpdateSessionResponse = zod.object({
   answers: zod.array(
     zod.object({
       questionId: zod.string(),
-      selected: zod.enum(["A", "B", "C"]),
+      askedAt: zod.string(),
     }),
   ),
   problemStatement: zod.string(),
@@ -340,7 +340,7 @@ export const ResetSessionResponse = zod.object({
   answers: zod.array(
     zod.object({
       questionId: zod.string(),
-      selected: zod.enum(["A", "B", "C"]),
+      askedAt: zod.string(),
     }),
   ),
   problemStatement: zod.string(),
@@ -401,7 +401,7 @@ export const SubmitSessionResponse = zod.object({
   answers: zod.array(
     zod.object({
       questionId: zod.string(),
-      selected: zod.enum(["A", "B", "C"]),
+      askedAt: zod.string(),
     }),
   ),
   problemStatement: zod.string(),
@@ -460,7 +460,7 @@ export const ListSubmissionsResponseItem = zod.object({
   answers: zod.array(
     zod.object({
       questionId: zod.string(),
-      selected: zod.enum(["A", "B", "C"]),
+      askedAt: zod.string(),
     }),
   ),
   problemStatement: zod.string(),
@@ -521,7 +521,7 @@ export const SetSessionFlagResponse = zod.object({
   answers: zod.array(
     zod.object({
       questionId: zod.string(),
-      selected: zod.enum(["A", "B", "C"]),
+      askedAt: zod.string(),
     }),
   ),
   problemStatement: zod.string(),

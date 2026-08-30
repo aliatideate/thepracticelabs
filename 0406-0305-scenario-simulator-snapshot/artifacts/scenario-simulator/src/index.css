@@ -1,33 +1,69 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import "@fontsource/figtree/400.css";
+@import "@fontsource/figtree/500.css";
+@import "@fontsource/figtree/600.css";
+@import "@fontsource/figtree/700.css";
+@import "@fontsource/dm-serif-display/400.css";
 @import "tailwindcss";
 @import "tw-animate-css";
-@plugin "@tailwindcss/typography";
-
-@custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --color-border: hsl(var(--border));
-  --font-sans: var(--app-font-sans);
+  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "DM Serif Display", ui-serif, Georgia, serif;
+  --color-purple: #301CA0;
+  --color-purple-dark: #1A0F58;
+  --color-mint: #84C5B1;
+  --color-pale-mint: #E6F3EF;
+  --color-teal: #496C61;
+  --color-lavender: #EAE8F6;
+  --color-warm: #F8F6EF;
+  --color-charcoal: #1D1D24;
+  --color-muted: #6C6975;
+  --color-soft: #E7E4DD;
+  --color-success: #2E7D5B;
+  --color-warning: #B7791F;
+  --color-error: #B42318;
+  --color-info: #3159C9;
 }
 
 :root {
-  --background: 244 41% 10%;
-  --foreground: 0 0% 100%;
-  --border: 0 0% 100% / 0.1;
-  --app-font-sans: 'Inter', sans-serif;
-}
-
-.dark {
-  --background: 244 41% 10%;
-  --foreground: 0 0% 100%;
-  --border: 0 0% 100% / 0.1;
+  --warm-white: #F8F6EF;
+  --purple: #301CA0;
+  --purple-dark: #1A0F58;
+  --mint: #84C5B1;
+  --pale-mint: #E6F3EF;
+  --teal: #496C61;
+  --lavender: #EAE8F6;
+  --charcoal: #1D1D24;
+  --muted: #6C6975;
+  --soft: #E7E4DD;
+  --success: #2E7D5B;
+  --warning: #B7791F;
+  --error: #B42318;
+  --info: #3159C9;
 }
 
 @layer base {
-  body {
-    @apply font-sans antialiased text-white min-h-[100dvh];
-    background-color: #100f24;
+  html {
+    font-size: 16px;
   }
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--warm-white);
+    color: var(--charcoal);
+    font-family: "Figtree", ui-sans-serif, system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 {
+    font-family: "DM Serif Display", ui-serif, Georgia, serif;
+    font-weight: 400;
+    color: var(--purple-dark);
+  }
+}
+
+@media print {
+  header, .no-print { display: none !important; }
+  body { background: white; }
 }

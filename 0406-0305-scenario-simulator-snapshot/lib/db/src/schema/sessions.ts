@@ -3,7 +3,7 @@ import { workshopsTable } from "./workshops";
 
 export interface AnswerRecord {
   questionId: string;
-  selected: "A" | "B" | "C";
+  askedAt: string;
 }
 
 export type StepKey =
@@ -28,7 +28,7 @@ export const sessionsTable = pgTable(
       .notNull()
       .references(() => workshopsTable.id, { onDelete: "cascade" }),
     teamName: text("team_name").notNull(),
-    currentScreen: text("current_screen").notNull().default("company"),
+    currentScreen: text("current_screen").notNull().default("brief"),
     selectedStakeholder: text("selected_stakeholder"),
     selectedEvidenceSource: text("selected_evidence_source"),
     answers: jsonb("answers").$type<AnswerRecord[]>().notNull().default([]),

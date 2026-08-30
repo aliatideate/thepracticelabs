@@ -1,0 +1,291 @@
+{
+  "id": "gulf-beverages-demand-spike",
+  "title": "The Demand Spike",
+  "exerciseType": "problem-framing",
+  "timing": {
+    "defaultMinutes": 30
+  },
+  "company": {
+    "name": "Gulf Beverages Co.",
+    "descriptor": "Regional beverage manufacturer",
+    "logo": "gulf-logo.png",
+    "overview": "Gulf Beverages Co. is a fast-growing regional beverage manufacturer serving major retailers and distributors across the Gulf. The company has grown quickly, but its supply chain is under increasing pressure as demand becomes more volatile across markets and product lines.",
+    "facts": [
+      { "label": "Markets", "value": "UAE, Saudi Arabia, Qatar" },
+      { "label": "Product Lines", "value": "Bottled juices, flavoured water, ready-to-drink teas" },
+      { "label": "Channels", "value": "Modern trade, convenience, hospitality, e-commerce" },
+      { "label": "Current Priority", "value": "Maintain service levels while demand grows across key retail accounts" }
+    ]
+  },
+  "situation": "Demand is up roughly 40% year on year. Service levels are falling, and retailers are threatening to delist two product lines within six weeks. The business is treating this as a demand spike it failed to forecast. Your task is not to solve it yet. It is to figure out what problem is actually worth solving.",
+  "stakeholders": [
+    {
+      "id": "rohini",
+      "name": "Rohini Agarwal",
+      "role": "Demand Planner",
+      "blurb": "Regional demand planning and forecast coordination",
+      "avatar": "rohini.png",
+      "sideNote": "Rohini sees demand through forecasts and weekly planning updates. She does not sit in the plant, and she is not the person who places supplier orders.",
+      "askLimit": 3,
+      "questions": [
+        {
+          "id": "rohini-q1",
+          "text": "Can you walk us through what changed in the forecast over the last few weeks?",
+          "answer": "The headline number is a 40% increase, but that hides a lot. The spike is not evenly spread across the business. It's concentrated in two product lines, mainly in UAE and KSA, and mostly through modern trade retailers. Some SKUs are moving much faster than expected, while others are still close to forecast."
+        },
+        {
+          "id": "rohini-q2",
+          "text": "When did the demand signal start changing, and how was it communicated?",
+          "answer": "We started seeing unusual movement about three weeks ago, but it wasn't clean enough to trigger a major escalation at first. Some of it looked like normal promotional uplift. Then sales confirmed additional retailer activity quite late, and by the time the forecast was revised, procurement and manufacturing were already working off older assumptions."
+        },
+        {
+          "id": "rohini-q3",
+          "text": "Where did the planning process break down between sales, procurement, and manufacturing?",
+          "answer": "The biggest gap was that different teams were reacting to different versions of the truth. Sales was responding to retailer pressure. Procurement was working with supplier lead times based on the previous forecast. Manufacturing was focused on capacity constraints. Planning saw the mismatch, but we didn't have a strong enough forum to align everyone quickly around SKU-level priorities."
+        },
+        {
+          "id": "rohini-q4",
+          "text": "What should we understand before deciding whether the solution is more stock, faster production, or different allocation?",
+          "answer": "I'd want to know whether the most urgent issue is total volume, product mix, or allocation. If the wrong SKUs are in the wrong markets, producing more overall won't solve the retailer problem. We need to identify which products and accounts are at risk, agree on priorities, and then decide whether to shift inventory, adjust production, or renegotiate timelines with retailers."
+        }
+      ]
+    },
+    {
+      "id": "fatima",
+      "name": "Fatima Al-Harbi",
+      "role": "Procurement Lead",
+      "blurb": "Supplier relationships and sourcing timelines",
+      "avatar": "fatima.png",
+      "sideNote": "Fatima owns supplier lead times and purchase orders. She does not set the production schedule or the forecast.",
+      "askLimit": 3,
+      "questions": [
+        {
+          "id": "fatima-q1",
+          "text": "Have any suppliers missed agreed lead times in the last quarter?",
+          "answer": "Not in a way that explains this. Concentrate orange, sugar, PET resin, and tea extract have all landed inside the windows we contracted. We placed the last cycle of orders against the previous forecast, which is what procurement is supposed to do. I keep getting asked if we were late. We were not late. If manufacturing is waiting on something, it is not because a supplier failed to ship within the agreement."
+        },
+        {
+          "id": "fatima-q2",
+          "text": "When did you last receive a revised volume request from planning?",
+          "answer": "A proper revision came through quite late relative to the retailer noise I was hearing from sales. Until then we were covering the old plan plus a modest buffer. I can rush a spot buy, but concentrate and packing materials are not same-week items, and suppliers will not hold open capacity for a number they have not seen. I assumed the issue would be worked downstream once the orders were in."
+        },
+        {
+          "id": "fatima-q3",
+          "text": "Could you pull extra volume from existing contracts if manufacturing asked this week?",
+          "answer": "On paper, two suppliers have optional volume, but it is priced as spot and they want an eight-to-ten-week slot, not six. I have not been given a SKU-level breakdown of what would actually be bottled, so I cannot even tell them which drums to expedite. I have been treating this as a factory or allocation problem because my inbound calendar still looks healthy."
+        },
+        {
+          "id": "fatima-q4",
+          "text": "What can you not see from where you sit?",
+          "answer": "I do not see which production slots are confirmed, and I do not see which retailers are actually short. Purchase orders look fine on my dashboard. If the plant is refusing short runs or holding a line for a long changeover, that never appears in procurement. I only hear about it when someone asks why the materials are sitting while finished goods are missing."
+        }
+      ]
+    },
+    {
+      "id": "james",
+      "name": "James Okoro",
+      "role": "Factory Manager",
+      "blurb": "Production capacity and plant operations",
+      "avatar": "james.png",
+      "sideNote": "James runs the lines and the changeover calendar. He does not own the commercial forecast or retailer conversations.",
+      "askLimit": 3,
+      "questions": [
+        {
+          "id": "james-q1",
+          "text": "Are the lines actually full, or is something else eating the week?",
+          "answer": "Utilisation looks high because we batch. The two juice lines that make the fast movers have long flavour changeovers. If I break a run to chase every retailer request, I lose hours, not minutes. We have been protecting economic run length so the cost per case does not blow up. From the floor this looks like a capacity story. I do not get a clean picture of which SKUs are truly off-plan versus which ones just shout the loudest."
+        },
+        {
+          "id": "james-q2",
+          "text": "How do you decide the sequence of SKUs on those constrained lines?",
+          "answer": "We still sequence from the planning freeze we received, then we try to absorb extras at the end of the week. Planning has been sending an aggregate uplift. An aggregate number does not tell me whether to stay on Mango Nectar or switch to Sparkling Citrus. Switching is expensive. Staying on the wrong SKU is how you fill the warehouse with the wrong cases while the line that retailers care about waits."
+        },
+        {
+          "id": "james-q3",
+          "text": "What is the minimum run you will actually accept?",
+          "answer": "Below a certain case count the changeover labour and flush losses are worse than the margin on the order. We published that threshold last year and finance signed it. Emergency slots keep arriving under that threshold. I can run them if someone accepts the cost and the lost hours on the hero SKUs. Nobody has written that down. Until they do, I will keep batching."
+        },
+        {
+          "id": "james-q4",
+          "text": "If you had one extra week, what would you still not be able to do?",
+          "answer": "I still could not treat every SKU as if demand were uniform. The equipment does not care that the company grew forty percent. It cares that two flavours now want the same filler. Extra overtime helps a little. It does not delete a two-hour changeover. I wish planning would stop sending me a single percentage and start sending me a ranked list of SKUs and markets."
+        }
+      ]
+    },
+    {
+      "id": "rakesh",
+      "name": "Rakesh Memon",
+      "role": "Finance Manager",
+      "blurb": "Working capital, stock-holding, and cost of short runs",
+      "avatar": "rakesh.png",
+      "sideNote": "Rakesh sees cash, inventory value, and run-cost exceptions. He is not in the weekly demand meeting unless someone invites him.",
+      "askLimit": 3,
+      "questions": [
+        {
+          "id": "rakesh-q1",
+          "text": "Where is working capital actually tied up right now?",
+          "answer": "Finished goods value is not low. It is sitting in the wrong mix. We have plenty of slower SKUs at plan, and we are thin on the two lines that retailers are shouting about. Safety stock policy is still written as weeks-of-cover at category level, not SKU and channel. From finance this looks like we funded inventory, just not the inventory that is under threat."
+        },
+        {
+          "id": "rakesh-q2",
+          "text": "Were you consulted on emergency replenishment?",
+          "answer": "No. I saw a draft of overtime and spot-buy premiums after the conversation had already started with sales. Short runs destroy the cost standard we use to price these products. If we approve them silently, the P&L will show a manufacturing variance and nobody will remember it was a commercial choice. I would rather be in the room when someone decides that a six-week delisting risk is worth breaking the run-length rule."
+        },
+        {
+          "id": "rakesh-q3",
+          "text": "What does stock-holding policy allow you to do in the next six weeks?",
+          "answer": "Policy still caps cover on low-velocity SKUs, which is sensible, but it also makes it hard to pre-build the fast movers without an exception. Exceptions need a named owner. Right now operations is asking for cash, sales is asking for cases, and the policy sits in a PDF. I can fund a targeted build if someone shows me SKU-level risk. I will not fund a blanket 40 percent uplift that treats every bottle the same."
+        },
+        {
+          "id": "rakesh-q4",
+          "text": "What would a bad problem statement cost you?",
+          "answer": "If we call this a forecasting failure and pour money into overall volume, we will add stock where we already have it and still miss the accounts that matter. Write-offs and discounts will show up a quarter later. If we call it pure capacity, we will approve capex conversations we cannot execute in six weeks. I need a framing that names mix, cash, and which customers are actually at risk."
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "retailer_complaints",
+      "title": "Retailer Complaints Summary",
+      "subtitle": "Distributor and modern trade feedback — last 21 days",
+      "teaser": "Understand which retail partners are escalating, which markets are affected, and whether delisting risk is broad or concentrated.",
+      "sourceLabel": "Customer Operations · compiled 28 Aug 2026",
+      "blocks": [
+        { "type": "heading", "level": 1, "text": "Retailer complaints summary" },
+        {
+          "type": "paragraph",
+          "text": "Customer operations logged 47 availability complaints in the last 21 days. The volume of tickets is not evenly spread. A small set of modern trade banners in UAE and KSA account for most of the severity, including the two written delisting threats. Several hospitality and convenience accounts in Qatar reported no material gaps in the same window."
+        },
+        {
+          "type": "table",
+          "caption": "Complaints by market and channel (last 21 days)",
+          "columns": ["Market", "Channel", "Tickets", "Delisting language"],
+          "rows": [
+            ["UAE", "Modern trade", "18", "Two banners — written"],
+            ["KSA", "Modern trade", "14", "One banner — verbal"],
+            ["UAE", "Convenience", "5", "None"],
+            ["KSA", "Hospitality", "3", "None"],
+            ["Qatar", "Modern trade", "4", "None"],
+            ["Qatar", "E-commerce", "3", "None"]
+          ]
+        },
+        {
+          "type": "quote",
+          "text": "If Citrus Burst 500ml is not back on our planogram in six weeks we will delist the flavour and the 1L sibling.",
+          "attribution": "Category manager, major UAE hypermarket banner"
+        },
+        {
+          "type": "quote",
+          "text": "We can live with the slower juices. It is the two promo SKUs that keep arriving incomplete.",
+          "attribution": "KSA modern trade buyer"
+        },
+        {
+          "type": "quote",
+          "text": "Qatar store check this week was clean. Whatever is happening is not hitting us the same way.",
+          "attribution": "Gulf Beverages key-account note, Doha"
+        },
+        {
+          "type": "quote",
+          "text": "Do not send us more mixed pallets of the lines that are already full. Send the two that are empty.",
+          "attribution": "UAE distributor operations"
+        }
+      ]
+    },
+    {
+      "id": "sku_availability",
+      "title": "SKU Availability Snapshot",
+      "subtitle": "Market × channel stock versus plan",
+      "teaser": "Compare availability across markets, accounts, and product lines to see where gaps are most severe.",
+      "sourceLabel": "Supply Chain Control Tower · week 35 snapshot",
+      "blocks": [
+        { "type": "heading", "level": 1, "text": "SKU availability versus plan" },
+        {
+          "type": "paragraph",
+          "text": "The control tower extract below is a point-in-time view, not a forecast. Green cells in the source workbook (not reproduced) sit within 10% of plan. The two worst SKUs are Citrus Burst 500ml and Mango Nectar 1L in UAE and KSA modern trade. Several tea and flavoured-water SKUs remain close to plan in the same week."
+        },
+        {
+          "type": "table",
+          "caption": "On-shelf / DC availability vs weekly plan",
+          "columns": ["SKU", "Market", "Channel", "% of plan"],
+          "rows": [
+            ["Citrus Burst 500ml", "UAE", "Modern trade", "54%"],
+            ["Citrus Burst 500ml", "KSA", "Modern trade", "61%"],
+            ["Mango Nectar 1L", "UAE", "Modern trade", "58%"],
+            ["Mango Nectar 1L", "KSA", "Modern trade", "63%"],
+            ["Lemon Tea RTD 330ml", "UAE", "Convenience", "96%"],
+            ["Flavoured Water Lime", "Qatar", "Modern trade", "101%"],
+            ["Citrus Burst 500ml", "Qatar", "Modern trade", "89%"]
+          ]
+        },
+        {
+          "type": "callout",
+          "label": "Control tower note",
+          "text": "The two worst lines are also the two SKUs named in retailer delisting language. Availability in Qatar modern trade for the same SKUs is much closer to plan."
+        },
+        {
+          "type": "keyValue",
+          "items": [
+            { "label": "Snapshot week", "value": "2026 W35" },
+            { "label": "SKUs below 70% of plan", "value": "2 of 14 tracked" },
+            { "label": "SKUs within 10% of plan", "value": "9 of 14 tracked" },
+            { "label": "Highest overstock vs plan", "value": "Flavoured Water Lime, Qatar MT, 101%" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "production_capacity",
+      "title": "Production Capacity & Changeover Memo",
+      "subtitle": "Factory constraints, utilisation, and run-length rules",
+      "teaser": "Review plant-level constraints, changeover hours, and what manufacturing says can realistically move in six weeks.",
+      "sourceLabel": "Plant operations memo · Dubai factory · 27 Aug 2026",
+      "blocks": [
+        { "type": "heading", "level": 1, "text": "Capacity and changeover memo" },
+        {
+          "type": "paragraph",
+          "text": "The Dubai plant runs three beverage lines. Lines 1 and 2 handle the juice SKUs that are currently short. Changeovers between citrus and mango require a full flush. Line 3 (tea and water) is not the constraint this month. The memo restates the minimum economic run length agreed with finance last year."
+        },
+        {
+          "type": "table",
+          "caption": "Line utilisation and changeover hours — last four weeks",
+          "columns": ["Line", "Primary SKUs", "Utilisation", "Changeover hours"],
+          "rows": [
+            ["Line 1", "Citrus family", "94%", "11.5"],
+            ["Line 2", "Mango / mixed juice", "91%", "9.0"],
+            ["Line 3", "Tea & flavoured water", "71%", "3.5"]
+          ]
+        },
+        {
+          "type": "callout",
+          "label": "Minimum economic run length",
+          "text": "Juice SKUs below 18,000 cases per campaign are treated as uneconomic on Lines 1 and 2. Several emergency requests this month sat between 6,000 and 12,000 cases."
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Protect current campaigns on Lines 1 and 2 unless a named commercial exception is signed.",
+            "Do not break a citrus run for a sub-threshold mango request without costing the lost hours.",
+            "Line 3 overtime does not relieve juice shortages.",
+            "A ranked SKU list from planning is required before any extra Saturday crew is booked."
+          ]
+        },
+        {
+          "type": "keyValue",
+          "items": [
+            { "label": "Typical citrus changeover", "value": "110–130 minutes" },
+            { "label": "Typical mango changeover", "value": "90–110 minutes" },
+            { "label": "Saturday crew lead time", "value": "9 days to roster" },
+            { "label": "Capex for a fourth filler", "value": "Not executable inside six weeks" }
+          ]
+        }
+      ]
+    }
+  ],
+  "submission": {
+    "prompt": "In one paragraph, state the problem your team believes is worth solving. Be specific about what is happening, where, and why a generic 'we need more stock' framing may or may not be enough. This is a judgement, not a score.",
+    "placeholder": "The problem we would put on the table is…",
+    "confidenceOptions": ["Low", "Medium", "High"]
+  }
+}

@@ -1,41 +1,34 @@
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/not-found";
-
-import LandingScreen from "./pages/landing";
-import EntryScreen from "./pages/entry";
+import { ScenarioProvider } from "@/lib/scenario";
+import JoinScreen from "./pages/join";
 import SimulationApp from "./simulation/SimulationApp";
-import FacilitatorDashboard from "./pages/results";
-import ModeratorDashboard from "./pages/moderator";
+import FacilitatePage from "./pages/facilitate";
+import PrintPack from "./pages/print";
+import NotFound from "./pages/not-found";
 
 const queryClient = new QueryClient();
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={LandingScreen} />
-      <Route path="/w/:code" component={EntryScreen} />
+      <Route path="/" component={JoinScreen} />
       <Route path="/play/:sessionId/:screen" component={SimulationApp} />
-      <Route path="/results/:code" component={FacilitatorDashboard} />
-      <Route path="/moderator/:code" component={ModeratorDashboard} />
+      <Route path="/facilitate/:secret" component={FacilitatePage} />
+      <Route path="/print" component={PrintPack} />
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-function App() {
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+      <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+        <ScenarioProvider>
           <Router />
-        </WouterRouter>
-        <Toaster />
-      </TooltipProvider>
+        </ScenarioProvider>
+      </WouterRouter>
     </QueryClientProvider>
   );
 }
-
-export default App;

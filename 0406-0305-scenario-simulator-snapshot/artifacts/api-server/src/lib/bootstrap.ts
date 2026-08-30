@@ -1,9 +1,6 @@
 import { pool } from "@workspace/db";
 import { logger } from "./logger";
 
-// Idempotent SQL bootstrap that gets the DB into the shape required by the
-// drizzle schema, including backfilling existing sessions to a default
-// workshop. Runs at server startup before listen().
 export async function bootstrapDatabase(): Promise<void> {
   const client = await pool.connect();
   try {
@@ -20,15 +17,35 @@ export async function bootstrapDatabase(): Promise<void> {
 
     await client.query(`
       INSERT INTO workshops (code, label)
-      VALUES ('DEFAULT', 'Default Workshop')
+      VALUES ('DEFAULT', 'Unilever Session 1')
       ON CONFLICT (code) DO NOTHING
     `);
 
-    // Add workshop_id column to sessions if it does not yet exist. We add it
-    // nullable first so existing rows can be backfilled before the NOT NULL.
     await client.query(`
-      ALTER TABLE sessions
-      ADD COLUMN IF NOT EXISTS workshop_id UUID REFERENCES workshops(id) ON DELETE CASCADE
+      CREATE TABLE IF NOT EXISTS sessions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        workshop_id UUID NOT NULL REFERENCES workshops(id) ON DELETE CASCADE,
+        team_name TEXT NOT NULL,
+        current_screen TEXT NOT NULL DEFAULT 'brief',
+        selected_stakeholder TEXT,
+        selected_evidence_source TEXT,
+        answers JSONB NOT NULL DEFAULT '[]'::jsonb,
+        problem_statement TEXT NOT NULL DEFAULT '',
+        confidence TEXT,
+        assumption TEXT NOT NULL DEFAULT '',
+        flagged_for_debrief BOOLEAN NOT NULL DEFAULT FALSE,
+        step_timings JSONB NOT NULL DEFAULT '{"totals":{},"currentStep":null,"currentStepStartedAt":null}'::jsonb,
+        submitted_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await client.query(`
+      ALTER TABLE sessions ADD COLUMN IF NOT EXISTS workshop_id UUID REFERENCES workshops(id) ON DELETE CASCADE
+    `);
+    await client.query(`
+      ALTER TABLE sessions ADD COLUMN IF NOT EXISTS step_timings JSONB NOT NULL DEFAULT '{"totals":{},"currentStep":null,"currentStepStartedAt":null}'::jsonb
     `);
 
     await client.query(`
@@ -38,11 +55,9 @@ export async function bootstrapDatabase(): Promise<void> {
     `);
 
     await client.query(`
-      ALTER TABLE sessions
-      ALTER COLUMN workshop_id SET NOT NULL
+      ALTER TABLE sessions ALTER COLUMN workshop_id SET NOT NULL
     `);
 
-    // Drop the legacy global unique constraint on team_name if it still exists.
     await client.query(
       `ALTER TABLE sessions DROP CONSTRAINT IF EXISTS sessions_team_name_unique`,
     );
@@ -50,18 +65,59 @@ export async function bootstrapDatabase(): Promise<void> {
       `ALTER TABLE sessions DROP CONSTRAINT IF EXISTS sessions_team_name_key`,
     );
 
-    // Add the composite unique (workshop_id, team_name).
     await client.query(`
       DO $$
       BEGIN
         IF NOT EXISTS (
-          SELECT 1 FROM pg_constraint
-          WHERE conname = 'sessions_workshop_team_unique'
+          SELECT 1 FROM pg_constraint WHERE conname = 'sessions_workshop_team_unique'
         ) THEN
           ALTER TABLE sessions
           ADD CONSTRAINT sessions_workshop_team_unique UNIQUE (workshop_id, team_name);
         END IF;
       END $$
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS session_config (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        workshop_id UUID NOT NULL UNIQUE REFERENCES workshops(id) ON DELETE CASCADE,
+        started_at TIMESTAMPTZ,
+        duration_minutes INTEGER NOT NULL DEFAULT 30,
+        ended_at TIMESTAMPTZ,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await client.query(`
+      INSERT INTO session_config (workshop_id, duration_minutes)
+      SELECT id, 30 FROM workshops WHERE code = 'DEFAULT'
+      ON CONFLICT (workshop_id) DO NOTHING
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS moderator_notes (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+        message TEXT NOT NULL,
+        template_id TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        dismissed_at TIMESTAMPTZ
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS access_requests (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+        status TEXT NOT NULL DEFAULT 'pending',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        responded_at TIMESTAMPTZ
+      )
+    `);
+
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS access_requests_pending_per_session
+      ON access_requests (session_id) WHERE status = 'pending'
     `);
 
     await client.query("COMMIT");

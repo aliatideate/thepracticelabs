@@ -43,18 +43,9 @@ export interface StepTimings {
   currentStepStartedAt: string | null;
 }
 
-export type AnswerRecordSelected =
-  (typeof AnswerRecordSelected)[keyof typeof AnswerRecordSelected];
-
-export const AnswerRecordSelected = {
-  A: "A",
-  B: "B",
-  C: "C",
-} as const;
-
 export interface AnswerRecord {
   questionId: string;
-  selected: AnswerRecordSelected;
+  askedAt: string;
 }
 
 export interface Workshop {

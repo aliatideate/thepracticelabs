@@ -72,6 +72,8 @@
     "vaul": "^1.1.2",
     "vite": "catalog:",
     "wouter": "^3.3.5",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@fontsource/dm-serif-display": "^5.2.6",
+    "@fontsource/figtree": "^5.2.10"
   }
 }

@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs_22", "pnpm"]
+
+[phases.install]
+cmds = ["pnpm install --frozen-lockfile", "pnpm rebuild esbuild"]
+
+[phases.build]
+cmds = ["pnpm build"]
+
+[start]
+cmd = "node artifacts/api-server/dist/index.mjs"

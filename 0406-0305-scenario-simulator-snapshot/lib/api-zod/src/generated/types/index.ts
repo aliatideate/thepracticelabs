@@ -9,7 +9,6 @@
 export * from "./accessRequest";
 export * from "./accessRequestStatus";
 export * from "./answerRecord";
-export * from "./answerRecordSelected";
 export * from "./broadcastNoteInput";
 export * from "./confidence";
 export * from "./createNoteInput";

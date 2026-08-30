@@ -488,10 +488,10 @@ components:
       properties:
         questionId:
           type: string
-        selected:
+        askedAt:
           type: string
-          enum: [A, B, C]
-      required: [questionId, selected]
+          format: date-time
+      required: [questionId, askedAt]
 
     Workshop:
       type: object
