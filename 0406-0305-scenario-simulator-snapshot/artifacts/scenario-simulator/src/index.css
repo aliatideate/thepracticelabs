@@ -1,0 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --font-sans: var(--app-font-sans);
+}
+
+:root {
+  --background: 244 41% 10%;
+  --foreground: 0 0% 100%;
+  --border: 0 0% 100% / 0.1;
+  --app-font-sans: 'Inter', sans-serif;
+}
+
+.dark {
+  --background: 244 41% 10%;
+  --foreground: 0 0% 100%;
+  --border: 0 0% 100% / 0.1;
+}
+
+@layer base {
+  body {
+    @apply font-sans antialiased text-white min-h-[100dvh];
+    background-color: #100f24;
+  }
+}

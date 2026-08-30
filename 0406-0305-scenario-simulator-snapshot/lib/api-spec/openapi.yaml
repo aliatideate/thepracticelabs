@@ -1,0 +1,743 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification for Scenario Simulator
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: sessions
+    description: Team sessions
+  - name: submissions
+    description: Submitted team responses
+  - name: workshops
+    description: Workshops grouping team sessions
+paths:
+  /workshops:
+    get:
+      operationId: listWorkshops
+      tags: [workshops]
+      summary: List all workshops, newest first
+      responses:
+        "200":
+          description: List of workshops
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Workshop"
+    post:
+      operationId: createWorkshop
+      tags: [workshops]
+      summary: Create a workshop. Code is auto-generated when omitted.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWorkshopInput"
+      responses:
+        "200":
+          description: Created workshop
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workshop"
+        "409":
+          description: Workshop code already exists
+
+  /workshops/{code}:
+    get:
+      operationId: getWorkshop
+      tags: [workshops]
+      summary: Look up a workshop by its code
+      parameters:
+        - in: path
+          name: code
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Workshop
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workshop"
+        "404":
+          description: Not found
+
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /sessions:
+    get:
+      operationId: listSessions
+      tags: [sessions]
+      summary: List all team sessions, ordered by team name
+      parameters:
+        - in: query
+          name: workshopCode
+          required: false
+          schema:
+            type: string
+          description: Optional filter to limit sessions to a single workshop
+      responses:
+        "200":
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Session"
+    post:
+      operationId: createOrResumeSession
+      tags: [sessions]
+      summary: Create or resume a team session by team name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSessionInput"
+      responses:
+        "200":
+          description: Session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+
+  /sessions/{id}:
+    get:
+      operationId: getSession
+      tags: [sessions]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteSession
+      tags: [sessions]
+      summary: Delete a team session entirely
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+    patch:
+      operationId: updateSession
+      tags: [sessions]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSessionInput"
+      responses:
+        "200":
+          description: Updated session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "404":
+          description: Not found
+
+  /sessions/{id}/reset:
+    post:
+      operationId: resetSession
+      tags: [sessions]
+      summary: Reset a team's progress while keeping the team
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Reset session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "404":
+          description: Not found
+
+  /sessions/{id}/submit:
+    post:
+      operationId: submitSession
+      tags: [sessions]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitSessionInput"
+      responses:
+        "200":
+          description: Submitted session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "404":
+          description: Not found
+
+  /submissions:
+    get:
+      operationId: listSubmissions
+      tags: [submissions]
+      summary: List all submitted team responses, ordered by submission time ascending
+      parameters:
+        - in: query
+          name: workshopCode
+          required: false
+          schema:
+            type: string
+          description: Optional filter to limit submissions to a single workshop
+      responses:
+        "200":
+          description: List of submissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Session"
+
+  /sessions/{id}/flag:
+    post:
+      operationId: setSessionFlag
+      tags: [sessions]
+      summary: Mark or unmark a team for debrief
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetFlagInput"
+      responses:
+        "200":
+          description: Updated session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "404":
+          description: Not found
+
+  /sessions/{id}/notes:
+    get:
+      operationId: listSessionNotes
+      tags: [moderator]
+      summary: List moderator notes for a session
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: List of notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ModeratorNote"
+    post:
+      operationId: createSessionNote
+      tags: [moderator]
+      summary: Send a moderator note to one team
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateNoteInput"
+      responses:
+        "200":
+          description: Created note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModeratorNote"
+        "404":
+          description: Session not found
+
+  /notes/broadcast:
+    post:
+      operationId: broadcastNote
+      tags: [moderator]
+      summary: Send a moderator note to every team in a workshop
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BroadcastNoteInput"
+      responses:
+        "200":
+          description: Created notes (one per team)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ModeratorNote"
+
+  /notes/{id}/dismiss:
+    post:
+      operationId: dismissNote
+      tags: [moderator]
+      summary: Mark a note as dismissed by the participant
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Updated note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModeratorNote"
+        "404":
+          description: Not found
+
+  /sessions/{id}/access-requests:
+    get:
+      operationId: listSessionAccessRequests
+      tags: [moderator]
+      summary: List access requests for a session
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: List of access requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AccessRequest"
+    post:
+      operationId: createSessionAccessRequest
+      tags: [moderator]
+      summary: Moderator requests access to a team's screen
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Created access request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessRequest"
+        "404":
+          description: Session not found
+
+  /access-requests/{id}/respond:
+    post:
+      operationId: respondAccessRequest
+      tags: [moderator]
+      summary: Participant responds to a moderator access request
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RespondAccessInput"
+      responses:
+        "200":
+          description: Updated access request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessRequest"
+        "404":
+          description: Not found
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    Confidence:
+      type: string
+      enum: [Low, Medium, High]
+
+    StepKey:
+      type: string
+      enum: [brief, stakeholder, interview, evidence, define, submit]
+
+    StepTimings:
+      type: object
+      description: Cumulative time spent on each step plus the active step's start.
+      properties:
+        totals:
+          type: object
+          description: Map of step key to milliseconds accumulated on that step.
+          additionalProperties:
+            type: integer
+            minimum: 0
+        currentStep:
+          oneOf:
+            - $ref: "#/components/schemas/StepKey"
+            - type: "null"
+        currentStepStartedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required: [totals, currentStep, currentStepStartedAt]
+
+    AnswerRecord:
+      type: object
+      properties:
+        questionId:
+          type: string
+        selected:
+          type: string
+          enum: [A, B, C]
+      required: [questionId, selected]
+
+    Workshop:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        label:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, code, label, createdAt]
+
+    CreateWorkshopInput:
+      type: object
+      properties:
+        label:
+          type: string
+          minLength: 1
+        code:
+          type: string
+          minLength: 4
+          maxLength: 6
+          pattern: "^[A-Za-z2-9]+$"
+          nullable: true
+          description: Optional client-supplied code (4-6 chars, alphabet A-Z2-9, case-insensitive). Auto-generated when omitted.
+      required: [label]
+
+    Session:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        workshopId:
+          type: string
+          format: uuid
+        workshopCode:
+          type: string
+        teamName:
+          type: string
+        currentScreen:
+          type: string
+        selectedStakeholder:
+          type: string
+          nullable: true
+        selectedEvidenceSource:
+          type: string
+          nullable: true
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnswerRecord"
+        problemStatement:
+          type: string
+        confidence:
+          oneOf:
+            - $ref: "#/components/schemas/Confidence"
+            - type: "null"
+        assumption:
+          type: string
+        flaggedForDebrief:
+          type: boolean
+        stepTimings:
+          $ref: "#/components/schemas/StepTimings"
+        submittedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - workshopId
+        - workshopCode
+        - teamName
+        - currentScreen
+        - selectedStakeholder
+        - selectedEvidenceSource
+        - answers
+        - problemStatement
+        - confidence
+        - assumption
+        - flaggedForDebrief
+        - stepTimings
+        - submittedAt
+        - createdAt
+        - updatedAt
+
+    ModeratorNote:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sessionId:
+          type: string
+          format: uuid
+        message:
+          type: string
+        templateId:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        dismissedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - sessionId
+        - message
+        - templateId
+        - createdAt
+        - dismissedAt
+
+    AccessRequestStatus:
+      type: string
+      enum: [pending, granted, declined]
+
+    AccessRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sessionId:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/AccessRequestStatus"
+        createdAt:
+          type: string
+          format: date-time
+        respondedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - sessionId
+        - status
+        - createdAt
+        - respondedAt
+
+    SetFlagInput:
+      type: object
+      properties:
+        flagged:
+          type: boolean
+      required: [flagged]
+
+    CreateNoteInput:
+      type: object
+      properties:
+        message:
+          type: string
+          minLength: 1
+        templateId:
+          type: string
+          nullable: true
+      required: [message]
+
+    BroadcastNoteInput:
+      type: object
+      properties:
+        message:
+          type: string
+          minLength: 1
+        templateId:
+          type: string
+          nullable: true
+        workshopCode:
+          type: string
+          description: Restrict the broadcast to teams in this workshop. Required for multi-workshop deployments.
+      required: [message, workshopCode]
+
+    RespondAccessInput:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [granted, declined]
+      required: [status]
+
+    CreateSessionInput:
+      type: object
+      properties:
+        workshopCode:
+          type: string
+          minLength: 1
+        teamName:
+          type: string
+          minLength: 1
+      required: [workshopCode, teamName]
+
+    UpdateSessionInput:
+      type: object
+      properties:
+        currentScreen:
+          type: string
+        selectedStakeholder:
+          type: string
+          nullable: true
+        selectedEvidenceSource:
+          type: string
+          nullable: true
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnswerRecord"
+        problemStatement:
+          type: string
+        confidence:
+          oneOf:
+            - $ref: "#/components/schemas/Confidence"
+            - type: "null"
+        assumption:
+          type: string
+
+    SubmitSessionInput:
+      type: object
+      properties:
+        problemStatement:
+          type: string
+          minLength: 1
+        confidence:
+          $ref: "#/components/schemas/Confidence"
+        assumption:
+          type: string
+        selectedStakeholder:
+          type: string
+        selectedEvidenceSource:
+          type: string
+      required:
+        - problemStatement
+        - confidence
+        - assumption
+        - selectedStakeholder
+        - selectedEvidenceSource

@@ -1,0 +1,406 @@
+I have already built the first version of the Simulation Studio prototype. I now want to refine the current build based on the notes below.
+
+This is still a controlled happy-path prototype for a live workshop simulation. Please do not expand it into a full product, backend, auth system, or LMS. Keep it front-end only unless the current project already has a backend structure.
+
+Use the existing codebase and modify it carefully rather than rebuilding from scratch.
+
+---
+
+## Key changes to make
+
+### 1. Update the visual style to match Ideate’s Competitor Positioning Tool
+
+I am attaching a screenshot called “Ideate Comp Tool.png”. Please use this as the primary visual reference.
+
+The Simulation Studio interface should feel like it belongs to the same family of internal Ideate tools.
+
+Visual direction:
+- Dark navy / deep purple background
+- Cleaner, more minimal layout
+- Less heavy purple glow than the current version
+- More spacious, centered content
+- Subtle card borders
+- Dark translucent cards
+- Yellow/orange as the main accent color
+- Purple only as a secondary accent
+- Rounded pills and buttons similar to the Competitor Positioning Tool
+- Clean internal-tool header treatment
+- Use the Ideate triangle/mark style where relevant
+- Overall should feel premium, focused, and less “game UI”
+
+Please especially update:
+- Header
+- Status pills
+- Buttons
+- Cards
+- Step indicators
+- Form fields
+- Selected states
+- Final submission screen
+
+Keep the workshop simulation feel, but make the UI more aligned with Ideate’s existing internal tools.
+
+---
+
+### 2. Replace the current Simulation Studio logo
+
+Replace the current generic purple icon/logo with the attached Ideate Scenario Tool / Simulation Studio logo.
+
+Header should show:
+- Ideate Scenario Tool logo/mark
+- Product name: “Simulation Studio”
+- Subtitle: “Interactive Training Platform”
+
+Use the attached logo asset if available. If both a mark and full lockup are attached, use the full lockup in the header and the mark where a compact version is needed.
+
+---
+
+### 3. Add Gulf Beverages Co. logo to the company intro
+
+On the Gulf Beverages Co. introduction screen:
+- Add the attached Gulf Beverages Co. logo prominently.
+- It should appear as the company brand identity, not as part of the Simulation Studio header.
+- Keep the company intro card clean and realistic.
+- If needed, place the logo at the top of the company intro panel, above the company description and company detail cards.
+
+---
+
+### 4. Add profile images for interviewees
+
+On the “Choose how your team will investigate the problem” screen:
+- Add profile pictures/avatars for all stakeholder interview options.
+- Use the attached profile images.
+- Cards should show:
+  - Profile image
+  - Name
+  - Role
+  - Short subtitle / responsibility
+- Rohini Agarwal should remain the only fully functional happy-path interview.
+- Other stakeholders can remain visible but inactive or “not available in prototype.”
+
+Stakeholders:
+1. Rohini Agarwal — Demand Planner
+2. Fatima Al-Harbi — Procurement Lead
+3. James Okoro — Factory Manager
+4. Rakesh Memon — Finance Manager
+
+Also add Rohini’s profile image to:
+- Interviewee introduction screen
+- Interview question screens
+- Interview summary screen where useful
+
+---
+
+### 5. Rename and adjust interview content
+
+Use the name “Rohini Agarwal” throughout.
+
+Change the happy path answer sequence to:
+
+Question 1: A  
+Question 2: C  
+Question 3: A  
+Question 4: B
+
+This means that the prototype’s intended selected path should be A, C, A, B.
+
+Please update the flow so those options feel like the correct/strongest happy path choices.
+
+Important:
+- The current Q&A content may have been written for A, A, A, A.
+- Please update the wording of answer options and Rohini’s responses so the A, C, A, B journey still creates a coherent learning arc.
+- The learning arc should still move the team from “just ship more stock” toward a better-framed problem around SKU-level demand, retailer risk, allocation, forecasting signals, and cross-functional alignment.
+
+Keep the interaction MCQ/RPG style.
+
+---
+
+### 6. Add “thinking” delay and typed response effect
+
+When the user selects an interview question:
+- Show a short “Rohini is thinking…” state for around 700–1200ms.
+- Then reveal Rohini’s answer with a typing effect, as if the response is being typed out at speaking speed.
+- The user should not be able to click “Next Question” until the answer has finished typing.
+- Keep this effect smooth and not too slow.
+- Make sure the typing effect does not break layout or cause excessive jumping.
+
+The response should feel like a live conversation, not an instant quiz reveal.
+
+---
+
+### 7. Add back navigation within the journey
+
+Allow users to go back within the journey.
+
+Requirements:
+- Add a “Back” button or back arrow on relevant screens.
+- Users should be able to go back one step in the prototype flow.
+- Do not allow going back to create broken state.
+- Preserve selections and typed responses where reasonable.
+- The back behavior should work from:
+  - Scenario overview back to company intro
+  - Investigation choice back to scenario overview
+  - Interview intro back to investigation choice
+  - Interview questions back to previous question or interview intro
+  - Interview/data summary back to last interview screen
+  - Problem statement back to insights summary
+  - Submission confirmation back to problem statement
+
+If preserving all state becomes complicated, implement a simple safe back stack that works for this prototype.
+
+---
+
+### 8. After interview, go to a combined insights summary page
+
+After the interview is complete, and the assigned retailer complaints data is “unlocked,” the user should go to a page summarizing both:
+
+1. Interview insights from Rohini Agarwal
+2. Unlocked retailer complaint insights
+
+This should replace any separate flow where the user only sees interview insights first and then later sees retailer complaints.
+
+Screen title:
+“Review what your team has learned”
+
+Structure:
+- Top section: Completed investigation path
+  - Interviewed: Rohini Agarwal, Regional Demand Planner
+  - Reviewed: Retailer complaints
+- Section 1: “Interview insights”
+  Include 3–4 cards based on Rohini’s interview.
+- Section 2: “Retailer complaint insights”
+  Include 3–4 cards based on the unlocked evidence.
+- Section 3: “What this suggests”
+  A synthesis card that says something like:
+  “The issue may not be a simple shortage. The stronger problem appears to sit at the intersection of uneven SKU-level demand, late retailer signals, allocation decisions, and cross-functional alignment.”
+- CTA:
+  “Define the Problem”
+
+This page should make it clear that the retailer complaint review has been unlocked after the interview, even though the prototype skips the detailed evidence review process.
+
+---
+
+### 9. Allow insights to be revealed again on the problem statement screen
+
+On the “Define the problem your team believes is worth solving” screen:
+- Add a collapsible or drawer-style section called:
+  “Review your investigation insights”
+- It should be collapsed by default or visually secondary.
+- When clicked, it reveals the same summarized interview + retailer complaint insights from the previous screen.
+- This lets the team refer back to evidence while writing their problem statement.
+
+Do not make users navigate away from the problem statement screen just to review insights.
+
+---
+
+### 10. Remove support prompts from the problem statement screen
+
+Remove the current “Support Prompts (Optional)” chips:
+- “Who is affected?”
+- “What is the real constraint?”
+- “What assumption needs to be tested?”
+- “What would be risky to solve too quickly?”
+
+Instead, keep the screen focused on:
+- Instruction
+- Scaffold
+- Problem statement textarea
+- Confidence selection
+- Assumption field
+- Submit button
+- Collapsible insights review
+
+---
+
+### 11. Color-code confidence levels
+
+On the problem statement screen, update the confidence selector:
+
+- Low = Red
+- Medium = Yellow
+- High = Green
+
+Requirements:
+- Unselected states should remain subtle/dark.
+- Selected state should use the relevant color border/background/text.
+- Medium can remain yellow/orange, consistent with the brand accent.
+- Low should clearly feel red but not alarming/ugly.
+- High should clearly feel green.
+- On the submission confirmation screen, show the selected confidence with the same color coding.
+
+---
+
+### 12. Keep final submission screen useful
+
+After submission:
+- Show “Problem statement submitted”
+- Confirm it has been sent to the facilitator dashboard.
+- Display:
+  - Team name
+  - Submitted problem statement
+  - Confidence level with color coding
+  - Assumption to test
+- CTA:
+  “Return to Main Workshop Room”
+- Secondary action:
+  “Review Your Learnings”
+
+The return CTA can be a dummy link for now.
+
+---
+
+## Updated interview happy path content
+
+Please update the interview content so that the happy path is A, C, A, B.
+
+Use or adapt the following structure.
+
+### Question 1 — Happy path A
+
+Prompt:
+“You start by asking Rohini what has changed in the demand picture.”
+
+Options:
+A. “Can you walk us through what changed in the forecast over the last few weeks?”
+B. “Why didn’t planning warn the business earlier?”
+C. “Is sales exaggerating the demand increase?”
+
+Happy path response:
+“The headline number is a 40% increase, but that hides a lot. The spike is not evenly spread across the business. It’s concentrated in two product lines, mainly in UAE and KSA, and mostly through modern trade retailers. Some SKUs are moving much faster than expected, while others are still close to forecast.”
+
+Learning captured:
+“The problem may not be a total supply shortage. It may be a more specific issue around certain SKUs, markets, and retail channels.”
+
+---
+
+### Question 2 — Happy path C
+
+Prompt:
+“Rohini has explained that the demand spike is uneven. You now ask how visible this was before it became urgent.”
+
+Options:
+A. “Who first noticed the demand increase?”
+B. “Why didn’t the forecast automatically adjust earlier?”
+C. “When did the demand signal start changing, and how was it communicated?”
+
+Happy path response:
+“We started seeing unusual movement about three weeks ago, but it wasn’t clean enough to trigger a major escalation at first. Some of it looked like normal promotional uplift. Then sales confirmed additional retailer activity quite late, and by the time the forecast was revised, procurement and manufacturing were already working off older assumptions.”
+
+Learning captured:
+“The issue may involve delayed or fragmented demand signals, not just poor execution by one function.”
+
+---
+
+### Question 3 — Happy path A
+
+Prompt:
+“You ask Rohini where the planning process struggled most.”
+
+Options:
+A. “Where did the planning process break down between sales, procurement, and manufacturing?”
+B. “Should procurement have anticipated this earlier?”
+C. “What would you do if you had unlimited budget?”
+
+Happy path response:
+“The biggest gap was that different teams were reacting to different versions of the truth. Sales was responding to retailer pressure. Procurement was working with supplier lead times based on the previous forecast. Manufacturing was focused on capacity constraints. Planning saw the mismatch, but we didn’t have a strong enough forum to align everyone quickly around SKU-level priorities.”
+
+Learning captured:
+“The problem may be a cross-functional alignment issue around shared priorities, not just demand forecasting accuracy.”
+
+---
+
+### Question 4 — Happy path B
+
+Prompt:
+“You ask Rohini what the team should investigate before deciding on a solution.”
+
+Options:
+A. “Should Gulf Beverages immediately increase production across all affected lines?”
+B. “What should we understand before deciding whether the solution is more stock, faster production, or different allocation?”
+C. “Who should be held accountable for the retailer delisting risk?”
+
+Happy path response:
+“I’d want to know whether the most urgent issue is total volume, product mix, or allocation. If the wrong SKUs are in the wrong markets, producing more overall won’t solve the retailer problem. We need to identify which products and accounts are at risk, agree on priorities, and then decide whether to shift inventory, adjust production, or renegotiate timelines with retailers.”
+
+Learning captured:
+“The real problem may be about prioritizing the right SKUs and accounts under constraint, rather than simply increasing overall supply.”
+
+---
+
+## Combined insights summary content
+
+Use these as the combined insights after the interview and retailer complaint review.
+
+### Interview insights
+
+1. The demand spike is uneven  
+“The 40% increase is concentrated in specific product lines, SKUs, markets, and modern trade retailers.”
+
+2. Signals changed late and unevenly  
+“Early movement looked like normal promotional uplift, but late sales inputs and retailer activity changed the picture quickly.”
+
+3. Teams were working from different assumptions  
+“Sales, procurement, manufacturing, and planning were each responding to different versions of the situation.”
+
+4. The key question may be about prioritization  
+“Before producing more stock, the team needs to understand whether the issue is total volume, SKU mix, allocation, or retailer-specific risk.”
+
+### Retailer complaint insights
+
+1. Complaints are concentrated  
+“The strongest complaints are coming from major modern trade retailers in UAE and KSA, not evenly across all markets.”
+
+2. Two product lines are at risk  
+“Delisting threats are focused on two fast-moving product lines, especially specific SKUs used in current promotions.”
+
+3. The issue is not just total stock  
+“Retailers are less concerned about Gulf Beverages’ overall stock levels and more concerned about inconsistent replenishment of the right SKUs.”
+
+4. Allocation may be part of the problem  
+“Some lower-risk accounts appear to be receiving stock while higher-risk accounts are escalating complaints.”
+
+### Synthesis
+
+“The issue may not be a simple shortage. The stronger problem appears to sit at the intersection of uneven SKU-level demand, late retailer signals, allocation decisions, and cross-functional alignment.”
+
+---
+
+## Code organization request
+
+If not already done, please move scenario content into an easy-to-edit data file/object.
+
+For example:
+- scenarioData.ts
+- interviewData.ts
+- assets.ts
+
+I want to be able to easily edit:
+- company content
+- stakeholder names
+- stakeholder profile images
+- interview question options
+- responses
+- captured learnings
+- insight summary cards
+- problem statement scaffold
+
+Avoid hardcoding content across many components if possible.
+
+---
+
+## QA checklist
+
+Before finishing, check that:
+
+1. Rohini Agarwal appears consistently everywhere.
+2. The happy path is A, C, A, B.
+3. Rohini answers have a thinking delay and typing effect.
+4. The user can go back within the journey.
+5. The Gulf Beverages Co. logo appears on the company intro screen.
+6. Stakeholder cards show profile images.
+7. The Simulation Studio / Ideate Scenario Tool logo replaces the current generic icon.
+8. The post-interview page summarizes both interview insights and retailer complaint insights.
+9. The problem statement page allows users to reveal insights again.
+10. Support prompt chips are removed.
+11. Confidence is color-coded red/yellow/green.
+12. The visual style is closer to the attached Ideate Competitor Positioning Tool screenshot.

@@ -1,0 +1,150 @@
+Please add contextual, dismissible facilitator notes/tooltips to selected screens in the prototype.
+
+The goal is to make the Simulation Studio experience feel connected to the live workshop, rather than feeling like a separate self-contained app. These notes should feel like short messages from the workshop moderator/facilitator, guiding the team at key points in the journey.
+
+Do not rebuild the prototype. Add this as a lightweight UI layer on top of the current screens.
+
+---
+
+## General behavior
+
+Add a reusable component called something like:
+- FacilitatorNote
+- ModeratorNote
+- WorkshopNudge
+
+The note should:
+- Appear on specific screens only
+- Be dismissible with an “X” or “Got it” control
+- Stay visually secondary, not block the main flow
+- Be readable but compact
+- Feel like a live facilitator message
+- Match the current dark Ideate internal tools visual style
+
+Suggested styling:
+- Small floating card or inline callout
+- Dark translucent background
+- Thin yellow/orange or purple border
+- Small facilitator/moderator icon or label
+- Label: “Facilitator note”
+- Body text below
+- Optional small timestamp-style label like “Workshop guidance”
+- Dismiss icon in top-right
+
+Placement:
+- Prefer top-right of the main content area where there is space
+- On narrower screens, place below the title/subtitle
+- Do not cover primary CTAs, question options, typed interview responses, or the insights cards
+- The note should not cause major layout shifts if dismissed
+
+State:
+- Use local state to track dismissed notes.
+- Dismissing a note should hide it for that screen.
+- It is okay if dismissal resets on page refresh.
+- If the user navigates away and comes back, either behavior is acceptable:
+  - note remains dismissed during the session, or
+  - note appears again
+Preferred: keep it dismissed during the session.
+
+---
+
+## Screens and note copy
+
+### 1. Brief / Company Overview screen
+
+Show this note on the Gulf Beverages Co. company overview / brief screen.
+
+Title:
+“Facilitator note”
+
+Message:
+“Before moving ahead, take a minute to discuss what a company like Gulf Beverages might be dealing with in this situation. What pressures could show up across sales, planning, manufacturing, procurement, and finance?”
+
+Purpose:
+Remind the team to discuss the business context, not just read it.
+
+---
+
+### 2. Interviewee profile screen
+
+Show this note on the Rohini Agarwal interviewee intro/profile screen.
+
+Important: Use Rohini, not Sohini.
+
+Title:
+“Facilitator note”
+
+Message:
+“Before you begin the interview, make sure your team understands Rohini’s perspective. What does her role make her more likely to notice, defend, or miss? Use that lens when choosing your questions.”
+
+Purpose:
+Encourage participants to think about stakeholder perspective and bias before asking questions.
+
+---
+
+### 3. Interview Question 2 screen
+
+Show this note specifically during Interview Question 2.
+
+Title:
+“Facilitator note”
+
+Message:
+“Remember to take your own notes as you go. Use your shared team space — such as your Miro board — so you can refer back to your observations when defining the problem later.”
+
+Purpose:
+Connect the tool back to the live workshop workspace and encourage note-taking.
+
+Implementation:
+- Show this only when the current interview question index is 2.
+- It should appear before or while the team is choosing the question.
+- It should not interfere with the typed response animation.
+
+---
+
+### 4. Full review / investigation summary screen
+
+Show this note on the “Review what your team has learned” screen.
+
+Title:
+“Facilitator note”
+
+Message:
+“Discuss these insights in depth before moving on. Make sure everyone contributes, and if your team disagrees on what the evidence means, capture that disagreement rather than rushing past it.”
+
+Purpose:
+Encourage deeper team discussion and make disagreement part of the learning process.
+
+---
+
+## Optional interaction polish
+
+If easy, add a small animation:
+- Note fades/slides in when the screen loads.
+- Dismissal fades it out.
+
+Keep the animation subtle and fast.
+
+---
+
+## Copy consistency
+
+Please check all references:
+- Use “Rohini Agarwal” throughout.
+- Do not use “Sohini.”
+- Use “facilitator” or “moderator” consistently. Preferred label: “Facilitator note.”
+
+---
+
+## QA checklist
+
+Before finishing, check that:
+
+1. Facilitator notes appear only on the specified screens.
+2. Each note has the correct screen-specific copy.
+3. Each note can be dismissed.
+4. Dismissing a note does not break layout or navigation.
+5. The Interview Question 2 note appears only on Question 2.
+6. The notes do not cover important CTAs or answer options.
+7. The notes visually match the current Ideate internal tools style.
+8. The prototype still works through the happy path as before.
