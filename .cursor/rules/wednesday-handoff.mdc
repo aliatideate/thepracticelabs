@@ -1,0 +1,26 @@
+---
+description: Remaining work for the Unilever Session 1 workshop (Wed 2 Sep 2026)
+alwaysApply: true
+---
+
+# Pick up here
+
+Live: https://app-production-2948.up.railway.app/  
+Facilitator: `/facilitate/unilever-s1`  
+Code: `0406-0305-scenario-simulator-snapshot/`  
+Content: `content/scenario.json` (loaded at API boot; replace + redeploy). Do not restore removed demo screens.
+
+## Next (user is guiding)
+
+Visual design pass so the join-to-submit flow feels nicer. Wait for examples and instructions; do not invent a redesign.
+
+## After visual work
+
+1. Push GitHub if `main` is ahead of origin (`aliatideate/thepracticelabs`). Railway deploys are still `railway up` unless GitHub is connected.
+2. Six-window dress rehearsal on production (30 min, mid-flow refresh).
+3. Save `/print` as PDF fallback for breakouts.
+4. Optional: GitHub → Railway auto-deploy.
+
+## Content already decided (do not reopen)
+
+Rohini Q3 is events-only (no “SKU-level priorities”). SKU snapshot has W34 movement, no synthesis callout. Leave Rakesh Q4, Fatima/James, retailer + capacity memos, `askLimit` 3.

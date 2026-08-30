@@ -24,6 +24,7 @@ export default function FacilitatePage() {
   const [config, setConfig] = useState<SessionConfig | null>(null);
   const [duration, setDuration] = useState(String(scenario.timing.defaultMinutes));
   const [msg, setMsg] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
 
   React.useEffect(() => {
     const load = async () => {
@@ -82,6 +83,32 @@ export default function FacilitatePage() {
     await call(`/api/sessions/${id}`, { method: "DELETE" });
     refetch();
   };
+  const resetAll = async () => {
+    const ok = window.confirm(
+      "Delete every team session and reset the shared timer? Testers should return to the join page and claim a slot again.",
+    );
+    if (!ok) return;
+    setResetting(true);
+    try {
+      const res = await call("/api/sessions/reset-all", { method: "POST", body: "{}" });
+      if (!res) return;
+      const data = (await res.json()) as { deleted: number };
+      const cfgRes = await fetch("/api/session-config");
+      if (cfgRes.ok) {
+        const next = (await cfgRes.json()) as SessionConfig;
+        setConfig(next);
+        setDuration(String(next.durationMinutes));
+      }
+      await refetch();
+      setMsg(
+        data.deleted === 0
+          ? "No sessions to clear. Timer reset."
+          : `Cleared ${data.deleted} session${data.deleted === 1 ? "" : "s"}. Timer reset.`,
+      );
+    } finally {
+      setResetting(false);
+    }
+  };
   const download = async (format: "csv" | "json") => {
     const res = await call(`/api/export?format=${format}`);
     if (!res) return;
@@ -119,6 +146,9 @@ export default function FacilitatePage() {
           </label>
           <SecondaryButton onClick={adjust}>Adjust timer</SecondaryButton>
           <SecondaryButton onClick={end}>End exercise</SecondaryButton>
+          <SecondaryButton onClick={resetAll} disabled={resetting}>
+            {resetting ? "Resetting…" : "Reset all sessions"}
+          </SecondaryButton>
           <SecondaryButton onClick={() => download("csv")}>Download CSV</SecondaryButton>
           <SecondaryButton onClick={() => download("json")}>Download JSON</SecondaryButton>
           <a href="/print" target="_blank" rel="noreferrer" className="text-[#301CA0] text-[16px] underline">

@@ -51,3 +51,19 @@ export async function startTimerIfIdle(now = new Date()) {
       ),
     );
 }
+
+/** Clears the shared clock so the next team join starts a fresh countdown. */
+export async function clearClock(now = new Date()) {
+  await getOrCreateConfig();
+  const workshopId = await defaultWorkshopId();
+  const scenario = loadScenario();
+  await db
+    .update(sessionConfigTable)
+    .set({
+      startedAt: null,
+      endedAt: null,
+      durationMinutes: scenario.timing.defaultMinutes,
+      updatedAt: now,
+    })
+    .where(eq(sessionConfigTable.workshopId, workshopId));
+}

@@ -25,8 +25,8 @@ import {
 } from "@workspace/db";
 import { submissionsBus } from "../lib/events";
 import { loadScenario } from "../lib/content";
-import { WORKSHOP_CODE, isAllowedTeamName } from "../lib/workshop";
-import { startTimerIfIdle } from "../lib/session-clock";
+import { WORKSHOP_CODE, checkFacilitatorSecret, isAllowedTeamName } from "../lib/workshop";
+import { clearClock, defaultWorkshopId, startTimerIfIdle } from "../lib/session-clock";
 
 const router: IRouter = Router();
 
@@ -184,6 +184,19 @@ router.get("/sessions", async (req, res) => {
   return res.json(
     rows.map((r) => serialize(r, { workshopCode: codeMap.get(r.workshopId) ?? "" })),
   );
+});
+
+router.post("/sessions/reset-all", async (req, res) => {
+  if (!checkFacilitatorSecret(String(req.headers["x-facilitator-secret"] ?? ""))) {
+    return res.status(401).json({ error: "unauthorized" });
+  }
+  const workshopId = await defaultWorkshopId();
+  const deleted = await db
+    .delete(sessionsTable)
+    .where(eq(sessionsTable.workshopId, workshopId))
+    .returning({ id: sessionsTable.id });
+  await clearClock();
+  return res.json({ deleted: deleted.length });
 });
 
 router.post("/sessions", async (req, res) => {
@@ -362,6 +375,9 @@ router.patch("/sessions/:id", async (req, res) => {
 });
 
 router.delete("/sessions/:id", async (req, res) => {
+  if (!checkFacilitatorSecret(String(req.headers["x-facilitator-secret"] ?? ""))) {
+    return res.status(401).json({ error: "unauthorized" });
+  }
   const parsed = DeleteSessionParams.safeParse(req.params);
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.flatten() });

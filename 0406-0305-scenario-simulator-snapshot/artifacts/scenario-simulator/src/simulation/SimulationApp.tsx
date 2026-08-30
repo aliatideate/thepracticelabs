@@ -12,6 +12,7 @@ import {
   type Screen,
   screenIndex,
 } from "../lib/constants";
+import { clearStoredTeam } from "../lib/teamStorage";
 import { Header, TimeBanner, useSessionConfig } from "./components";
 import {
   ScreenBrief,
@@ -30,9 +31,19 @@ export default function SimulationApp() {
     ? screen
     : "brief") as Screen;
 
-  const { data: session, isLoading } = useGetSession(sessionId, {
-    query: { enabled: !!sessionId, queryKey: getGetSessionQueryKey(sessionId) },
+  const { data: session, isLoading, isError } = useGetSession(sessionId, {
+    query: {
+      enabled: !!sessionId,
+      retry: false,
+      queryKey: getGetSessionQueryKey(sessionId),
+    },
   });
+
+  useEffect(() => {
+    if (!isError) return;
+    clearStoredTeam();
+    setLocation("/");
+  }, [isError, setLocation]);
   const updateSession = useUpdateSession();
   const submitSession = useSubmitSession();
   const config = useSessionConfig();

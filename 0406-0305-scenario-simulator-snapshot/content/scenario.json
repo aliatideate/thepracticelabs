@@ -41,7 +41,7 @@
         {
           "id": "rohini-q3",
           "text": "Where did the planning process break down between sales, procurement, and manufacturing?",
-          "answer": "The biggest gap was that different teams were reacting to different versions of the truth. Sales was responding to retailer pressure. Procurement was working with supplier lead times based on the previous forecast. Manufacturing was focused on capacity constraints. Planning saw the mismatch, but we didn't have a strong enough forum to align everyone quickly around SKU-level priorities."
+          "answer": "I sent the revised number as soon as I had it. Procurement came back and said the orders for that cycle had already gone in against the previous plan. The plant asked me what to put on the line, and I sent them the same uplift percentage, because that is the number I had. Nobody pushed back on me and nothing changed. We talked about it in the Tuesday call, everyone agreed it was tight, and then everyone went back to their own week. I have sent that percentage three times now."
         },
         {
           "id": "rohini-q4",
@@ -202,26 +202,26 @@
         { "type": "heading", "level": 1, "text": "SKU availability versus plan" },
         {
           "type": "paragraph",
-          "text": "The control tower extract below is a point-in-time view, not a forecast. Green cells in the source workbook (not reproduced) sit within 10% of plan. The two worst SKUs are Citrus Burst 500ml and Mango Nectar 1L in UAE and KSA modern trade. Several tea and flavoured-water SKUs remain close to plan in the same week."
+          "text": "The control tower extract below is a point-in-time view, not a forecast. Availability is measured against the weekly plan issued at the start of week 35. Fourteen SKUs are tracked across the three markets; the extract shows the seven with the widest variance in either direction, plus the week-on-week movement for each."
         },
         {
           "type": "table",
           "caption": "On-shelf / DC availability vs weekly plan",
-          "columns": ["SKU", "Market", "Channel", "% of plan"],
+          "columns": ["SKU", "Market", "Channel", "% of plan", "Change vs W34"],
           "rows": [
-            ["Citrus Burst 500ml", "UAE", "Modern trade", "54%"],
-            ["Citrus Burst 500ml", "KSA", "Modern trade", "61%"],
-            ["Mango Nectar 1L", "UAE", "Modern trade", "58%"],
-            ["Mango Nectar 1L", "KSA", "Modern trade", "63%"],
-            ["Lemon Tea RTD 330ml", "UAE", "Convenience", "96%"],
-            ["Flavoured Water Lime", "Qatar", "Modern trade", "101%"],
-            ["Citrus Burst 500ml", "Qatar", "Modern trade", "89%"]
+            ["Citrus Burst 500ml", "UAE", "Modern trade", "54%", "-9 pts"],
+            ["Citrus Burst 500ml", "KSA", "Modern trade", "61%", "-6 pts"],
+            ["Mango Nectar 1L", "UAE", "Modern trade", "58%", "-11 pts"],
+            ["Mango Nectar 1L", "KSA", "Modern trade", "63%", "-4 pts"],
+            ["Lemon Tea RTD 330ml", "UAE", "Convenience", "96%", "-1 pt"],
+            ["Flavoured Water Lime", "Qatar", "Modern trade", "101%", "+3 pts"],
+            ["Citrus Burst 500ml", "Qatar", "Modern trade", "89%", "-2 pts"]
           ]
         },
         {
           "type": "callout",
           "label": "Control tower note",
-          "text": "The two worst lines are also the two SKUs named in retailer delisting language. Availability in Qatar modern trade for the same SKUs is much closer to plan."
+          "text": "Plan figures are the week 35 issue. Where a SKU was re-planned mid-week, the original issue is used, so variance for those lines may read worse than operational teams report."
         },
         {
           "type": "keyValue",
