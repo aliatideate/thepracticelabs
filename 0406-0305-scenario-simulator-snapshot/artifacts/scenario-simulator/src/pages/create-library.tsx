@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { PrimaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
 import {
   CreateShell,
@@ -38,6 +39,7 @@ type LibraryBrief = {
 type LibraryItem = LibraryExercise | LibraryBrief;
 
 function Library() {
+  const [, setLocation] = useLocation();
   const [openId, setOpenId] = useState<string | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ["create-exercises"],
@@ -97,7 +99,18 @@ function Library() {
   }, [data]);
 
   return (
-    <CreateShell activeTab="library">
+    <CreateShell
+      activeTab="library"
+      actions={
+        <PrimaryButton
+          type="button"
+          icon="plus"
+          onClick={() => setLocation("/create/briefs/new")}
+        >
+          New activity
+        </PrimaryButton>
+      }
+    >
       {isLoading && <p className="text-[#6C6975]">Loading…</p>}
       {[...grouped.entries()].map(([cat, list]) => (
         <section key={cat} className="mb-10">

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useParams } from "wouter";
+import { Link, useLocation, useParams } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Header, PrimaryButton, SecondaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
@@ -18,14 +18,20 @@ const MODES = [
   { value: "hybrid", label: "Hybrid" },
 ] as const;
 
-function BriefDetail() {
+const FIELD =
+  "w-full rounded-xl border border-[#E7E4DD] px-4 py-3 text-[16px] bg-white";
+
+function BriefEditor() {
   const { id } = useParams<{ id: string }>();
+  const isNew = id === "new";
+  const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["create-brief", id],
+    enabled: !isNew,
     queryFn: async () => {
       const res = await fetch(`/api/create/briefs/${id}`, { credentials: "same-origin" });
       if (!res.ok) throw new Error("failed");
@@ -81,27 +87,47 @@ function BriefDetail() {
     setClientId(data.clientId ?? "");
   }, [data]);
 
+  const body = () => ({
+    title,
+    category,
+    audience,
+    skill,
+    debriefFocus,
+    setting,
+    durationMinutes,
+    teamCount,
+    mode,
+    clientId: clientId || null,
+  });
+
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     setMsg(null);
     try {
+      if (isNew) {
+        const res = await fetch("/api/create/briefs", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(body()),
+        });
+        if (!res.ok) {
+          setMsg("Could not create activity.");
+          setBusy(false);
+          return;
+        }
+        const row = (await res.json()) as { id: string };
+        await queryClient.invalidateQueries({ queryKey: ["create-exercises"] });
+        setLocation(`/create/briefs/${row.id}`);
+        return;
+      }
+
       const res = await fetch(`/api/create/briefs/${id}`, {
         method: "PATCH",
         credentials: "same-origin",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          title,
-          category,
-          audience,
-          skill,
-          debriefFocus,
-          setting,
-          durationMinutes,
-          teamCount,
-          mode,
-          clientId: clientId || null,
-        }),
+        body: JSON.stringify(body()),
       });
       if (!res.ok) {
         setMsg("Could not save brief.");
@@ -117,23 +143,20 @@ function BriefDetail() {
     setBusy(false);
   };
 
-  if (isLoading) {
+  if (!isNew && isLoading) {
     return (
       <div className="min-h-screen bg-[#F8F6EF] flex items-center justify-center text-[#6C6975]">
         Loading…
       </div>
     );
   }
-  if (isError || !data) {
+  if (!isNew && (isError || !data)) {
     return (
       <div className="min-h-screen bg-[#F8F6EF] flex items-center justify-center text-[#B42318]">
         Brief not found.
       </div>
     );
   }
-
-  const field =
-    "w-full rounded-xl border border-[#E7E4DD] px-4 py-3 text-[16px] bg-white";
 
   return (
     <div className="min-h-screen bg-[#F8F6EF]">
@@ -147,8 +170,10 @@ function BriefDetail() {
           {formatFromCategory(category)}
         </p>
         <div className="flex items-start justify-between gap-3 mb-6">
-          <h1 className="text-[32px] mt-0 mb-0 text-[#6C6975]">{data.title}</h1>
-          <StatusTag status={data.status} />
+          <h1 className="text-[32px] mt-0 mb-0 text-[#6C6975]">
+            {isNew ? "New activity" : data!.title}
+          </h1>
+          {!isNew && <StatusTag status={data!.status} />}
         </div>
 
         <form onSubmit={save} className="bg-white border border-[#E7E4DD] rounded-xl p-6 space-y-4">
@@ -158,7 +183,7 @@ function BriefDetail() {
             </label>
             <input
               id="brief-title"
-              className={field}
+              className={FIELD}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
@@ -171,7 +196,7 @@ function BriefDetail() {
               </label>
               <select
                 id="brief-category"
-                className={field}
+                className={FIELD}
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
               >
@@ -188,7 +213,7 @@ function BriefDetail() {
               </label>
               <select
                 id="brief-client"
-                className={field}
+                className={FIELD}
                 value={clientId}
                 onChange={(e) => setClientId(e.target.value)}
               >
@@ -207,7 +232,7 @@ function BriefDetail() {
             </label>
             <textarea
               id="brief-audience"
-              className={field}
+              className={FIELD}
               rows={2}
               value={audience}
               onChange={(e) => setAudience(e.target.value)}
@@ -220,7 +245,7 @@ function BriefDetail() {
             </label>
             <textarea
               id="brief-skill"
-              className={field}
+              className={FIELD}
               rows={2}
               value={skill}
               onChange={(e) => setSkill(e.target.value)}
@@ -233,7 +258,7 @@ function BriefDetail() {
             </label>
             <textarea
               id="brief-debrief"
-              className={field}
+              className={FIELD}
               rows={2}
               value={debriefFocus}
               onChange={(e) => setDebriefFocus(e.target.value)}
@@ -246,7 +271,7 @@ function BriefDetail() {
             </label>
             <textarea
               id="brief-setting"
-              className={field}
+              className={FIELD}
               rows={2}
               value={setting}
               onChange={(e) => setSetting(e.target.value)}
@@ -263,7 +288,7 @@ function BriefDetail() {
                 type="number"
                 min={5}
                 max={480}
-                className={field}
+                className={FIELD}
                 value={durationMinutes}
                 onChange={(e) => setDurationMinutes(Number(e.target.value))}
                 required
@@ -278,7 +303,7 @@ function BriefDetail() {
                 type="number"
                 min={1}
                 max={40}
-                className={field}
+                className={FIELD}
                 value={teamCount}
                 onChange={(e) => setTeamCount(Number(e.target.value))}
                 required
@@ -290,7 +315,7 @@ function BriefDetail() {
               </label>
               <select
                 id="brief-mode"
-                className={field}
+                className={FIELD}
                 value={mode}
                 onChange={(e) => setMode(e.target.value)}
               >
@@ -305,7 +330,7 @@ function BriefDetail() {
           {msg && <p className="text-[14px] text-[#6C6975] m-0">{msg}</p>}
           <div className="flex gap-3 pt-2">
             <PrimaryButton type="submit" disabled={busy}>
-              {busy ? "Saving…" : "Save"}
+              {busy ? (isNew ? "Creating…" : "Saving…") : isNew ? "Create" : "Save"}
             </PrimaryButton>
             <Link href="/create/library">
               <SecondaryButton>Back to Library</SecondaryButton>
@@ -320,7 +345,7 @@ function BriefDetail() {
 export default function CreateBriefPage() {
   return (
     <AuthGate>
-      <BriefDetail />
+      <BriefEditor />
     </AuthGate>
   );
 }
