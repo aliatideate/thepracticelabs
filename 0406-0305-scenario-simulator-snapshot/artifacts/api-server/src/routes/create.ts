@@ -877,20 +877,18 @@ router.get("/create/sessions/:id", async (req, res) => {
   });
 });
 
-/** Prefill customise from existing client copy */
+/** Prefill customise from existing client copy + latest published variable schema */
 router.get("/create/clients/:clientId/copies/:exerciseId", async (req, res) => {
   const user = orgUser(req);
   if (!user) return res.status(401).json({ error: "unauthorized" });
+  const published = await latestPublishedVersion(String(req.params.exerciseId), user.orgId);
+  if (!published) return res.status(404).json({ error: "not_found" });
+
   const rows = await db
     .select({
       copy: clientCopiesTable,
-      variables: exerciseVersionsTable.variables,
     })
     .from(clientCopiesTable)
-    .innerJoin(
-      exerciseVersionsTable,
-      eq(exerciseVersionsTable.id, clientCopiesTable.exerciseVersionId),
-    )
     .where(
       and(
         eq(clientCopiesTable.clientId, String(req.params.clientId)),
@@ -900,8 +898,6 @@ router.get("/create/clients/:clientId/copies/:exerciseId", async (req, res) => {
     )
     .limit(1);
   if (!rows[0]) {
-    const published = await latestPublishedVersion(String(req.params.exerciseId), user.orgId);
-    if (!published) return res.status(404).json({ error: "not_found" });
     return res.json({
       variableValues: {},
       variables: published.version.variables,
@@ -911,8 +907,10 @@ router.get("/create/clients/:clientId/copies/:exerciseId", async (req, res) => {
   }
   return res.json({
     variableValues: rows[0].copy.variableValues,
-    variables: rows[0].variables,
-    exerciseVersionId: rows[0].copy.exerciseVersionId,
+    // Always expose the latest published schema so v2 fields appear after Phase 4 seed
+    // even when an older client_copy still points at v1.
+    variables: published.version.variables,
+    exerciseVersionId: published.version.id,
     logoAssetId: rows[0].copy.logoAssetId,
   });
 });
