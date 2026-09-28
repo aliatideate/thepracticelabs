@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowRight, Check, Phone } from "lucide-react";
+import { ArrowRight, Check, Phone, Plus } from "lucide-react";
 import { FLOW_STEPS, SESSION_LABEL, type Screen, flowStepIndex } from "../lib/constants";
 import {
   formatCountdown,
@@ -328,11 +328,14 @@ export function PrimaryButton({
   onClick,
   disabled,
   type = "button",
+  icon = "arrow",
 }: {
   children: React.ReactNode;
   onClick?: () => void;
   disabled?: boolean;
   type?: "button" | "submit";
+  /** Trailing icon. Default arrow matches player/facilitator CTAs. */
+  icon?: "arrow" | "plus" | "none";
 }) {
   return (
     <button
@@ -342,7 +345,13 @@ export function PrimaryButton({
       className="group inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#301CA0] to-[#1A0F58] text-white text-[16px] font-semibold px-6 py-2.5 shadow-[0_8px_24px_rgba(48,28,160,0.28)] transition-all duration-200 ease-out hover:scale-[1.05] hover:shadow-[0_14px_36px_rgba(48,28,160,0.42)] hover:from-[#3d28b8] hover:to-[#301CA0] active:scale-[0.96] active:shadow-[0_4px_14px_rgba(48,28,160,0.3)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-[0_8px_24px_rgba(48,28,160,0.28)]"
     >
       {children}
-      <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1 group-active:translate-x-0" strokeWidth={2.25} />
+      {icon === "arrow" && (
+        <ArrowRight
+          className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1 group-active:translate-x-0"
+          strokeWidth={2.25}
+        />
+      )}
+      {icon === "plus" && <Plus className="h-4 w-4" strokeWidth={2.25} />}
     </button>
   );
 }

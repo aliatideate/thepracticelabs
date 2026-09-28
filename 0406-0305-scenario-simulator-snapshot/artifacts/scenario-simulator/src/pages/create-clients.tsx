@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Header, PrimaryButton, SecondaryButton } from "../simulation/components";
+import { PrimaryButton, SecondaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
+import { CreateShell } from "./create-shell";
 
 type ClientRow = {
   id: string;
@@ -11,45 +12,6 @@ type ClientRow = {
   createdAt: string;
   sessions: { id: string; title: string; status: string; workshopCode: string; createdAt: string }[];
 };
-
-function CreateShell({
-  children,
-  title,
-  actions,
-}: {
-  children: React.ReactNode;
-  title: string;
-  actions?: React.ReactNode;
-}) {
-  return (
-    <div className="min-h-screen bg-[#F8F6EF]">
-      <Header hideFlowNav clock={{ startedAt: null, durationMinutes: 30, endedAt: null }} />
-      <div className="mx-auto max-w-[960px] px-6 py-10">
-        <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
-          <div>
-            <p className="text-[14px] uppercase tracking-wide text-[#6C6975] m-0 mb-1">
-              the Practice Labs
-            </p>
-            <h1 className="text-[32px] mt-0 mb-0">{title}</h1>
-          </div>
-          <div className="flex flex-wrap gap-3 items-center">
-            <Link href="/create" className="text-[16px] text-[#301CA0] underline">
-              Clients
-            </Link>
-            <Link href="/create/library" className="text-[16px] text-[#301CA0] underline">
-              Library
-            </Link>
-            <Link href="/facilitate" className="text-[16px] text-[#6C6975] underline">
-              Facilitator boards
-            </Link>
-            {actions}
-          </div>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
 
 function ClientsHome() {
   const queryClient = useQueryClient();
@@ -96,9 +58,9 @@ function ClientsHome() {
 
   return (
     <CreateShell
-      title="Clients"
+      activeTab="clients"
       actions={
-        <PrimaryButton type="button" onClick={() => setShowNew(true)}>
+        <PrimaryButton type="button" icon="plus" onClick={() => setShowNew(true)}>
           New client
         </PrimaryButton>
       }
@@ -135,9 +97,7 @@ function ClientsHome() {
             <PrimaryButton type="submit" disabled={busy || !name.trim()}>
               {busy ? "Saving…" : "Create"}
             </PrimaryButton>
-            <SecondaryButton onClick={() => setShowNew(false)}>
-              Cancel
-            </SecondaryButton>
+            <SecondaryButton onClick={() => setShowNew(false)}>Cancel</SecondaryButton>
           </div>
         </form>
       )}
