@@ -37,7 +37,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#F8F6EF]">
-      <Header hideFlowNav clock={{ startedAt: null, durationMinutes: 30, endedAt: null }} />
+      <Header brandOnly hideFlowNav />
       <div className="mx-auto max-w-[480px] px-6 py-14">
         <h1 className="text-[32px] mt-0 mb-2">Sign in</h1>
         <p className="text-[16px] text-[#6C6975] mb-6">
