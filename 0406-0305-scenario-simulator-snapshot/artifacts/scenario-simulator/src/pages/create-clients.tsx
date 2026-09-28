@@ -143,14 +143,14 @@ function ClientsHome() {
               ) : (
                 <ul className="m-0 p-0 list-none space-y-2">
                   {c.sessions.map((s) => (
-                    <li key={s.id}>
+                    <li key={s.id} className="flex items-baseline justify-between gap-3">
                       <Link
                         href={`/create/sessions/${s.id}`}
-                        className="text-[15px] text-[#301CA0] no-underline hover:underline"
+                        className="text-[15px] text-[#301CA0] no-underline hover:underline min-w-0 truncate"
                       >
                         {s.title}
                       </Link>
-                      <span className="text-[14px] text-[#6C6975]"> · {s.status}</span>
+                      <span className="text-[14px] text-[#6C6975] shrink-0">{s.status}</span>
                     </li>
                   ))}
                 </ul>
