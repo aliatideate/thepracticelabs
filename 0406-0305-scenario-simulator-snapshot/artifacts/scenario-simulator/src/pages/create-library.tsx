@@ -169,19 +169,24 @@ function Library() {
                         Clients with copies:{" "}
                         {detailQ.data.clientCopies.map((c) => c.clientName).join(", ") || "none"}
                       </p>
-                      {detailQ.data.versions.map((v) => (
-                        <div key={v.id} className="mb-3">
-                          <div className="font-semibold">Version {v.version}</div>
-                          <div className="text-[#6C6975]">
-                            Variables: {JSON.stringify(v.variables)}
+                      {detailQ.data.versions.map((v) => {
+                        const vars = Array.isArray(v.variables) ? v.variables : [];
+                        return (
+                          <div key={v.id} className="mb-3">
+                            <div className="font-semibold">Version {v.version}</div>
+                            {vars.length > 0 && (
+                              <div className="text-[#6C6975]">
+                                Variables: {JSON.stringify(vars)}
+                              </div>
+                            )}
+                            {v.facilitatorNotes && (
+                              <pre className="whitespace-pre-wrap text-[13px] mt-2 bg-[#F8F6EF] p-3 rounded-lg">
+                                {v.facilitatorNotes}
+                              </pre>
+                            )}
                           </div>
-                          {v.facilitatorNotes && (
-                            <pre className="whitespace-pre-wrap text-[13px] mt-2 bg-[#F8F6EF] p-3 rounded-lg">
-                              {v.facilitatorNotes}
-                            </pre>
-                          )}
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </button>
