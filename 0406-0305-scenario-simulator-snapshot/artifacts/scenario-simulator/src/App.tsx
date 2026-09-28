@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation, useParams, useSearch } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ScenarioProvider } from "@/lib/scenario";
 import { DecisionGameProvider } from "@/lib/decisionGame";
+import { SessionRoomFromRoute, useSessionRoomRequired } from "@/lib/sessionRoom";
 import JoinScreen from "./pages/join";
 import SimulationApp from "./simulation/SimulationApp";
 import FacilitatePage from "./pages/facilitate";
@@ -16,6 +17,13 @@ import AuthGate from "./pages/auth-gate";
 import LoginPage from "./pages/login";
 import DesktopGate from "./pages/DesktopGate";
 import NotFound from "./pages/not-found";
+import CreateClientsPage from "./pages/create-clients";
+import CreateClientPage from "./pages/create-client";
+import CreateNewSessionPage from "./pages/create-new-session";
+import CreateSessionPage from "./pages/create-session";
+import CreateLibraryPage from "./pages/create-library";
+import CreateBoardsPage from "./pages/create-boards";
+import CreateBriefPage from "./pages/create-brief";
 
 const queryClient = new QueryClient();
 
@@ -37,7 +45,6 @@ function LegacyTryPlayRedirect() {
   return <Redirect to={`/mart/try/play/${sessionId}`} />;
 }
 
-/** Old /facilitate/:secret bookmarks → hub (auth via cookie, not URL secret). */
 function LegacyFacilitatorRedirect() {
   return <Redirect to="/facilitate" />;
 }
@@ -89,7 +96,7 @@ function TryPlayGate() {
 }
 
 function HomeRedirect() {
-  return <Redirect to="/demand" />;
+  return <Redirect to="/create" />;
 }
 
 function TryHomeRedirect() {
@@ -104,79 +111,113 @@ function DemandTryPlay() {
   return <SimulationApp mode="try" />;
 }
 
-/**
- * Phase 3: /s/:code aliases onto the Unilever seeded sessions (DEFAULT / MART / *-TRY).
- * New random codes land in Phase 5 create-flow; until then unknown codes 404.
- */
-function sessionLegacyPath(code: string, suffix: string): string | null {
-  const normalized = code.toUpperCase();
-  const map: Record<string, string> = {
-    DEFAULT: `/demand${suffix}`,
-    "DEMAND-TRY": `/demand/try${suffix}`,
-    MART: `/mart${suffix}`,
-    "MART-TRY": `/mart/try${suffix}`,
+function SessionJoinInner() {
+  const room = useSessionRoomRequired();
+  if (room.format === "branching") {
+    return (
+      <DecisionGameProvider code={room.workshopCode}>
+        <MartJoin />
+      </DecisionGameProvider>
+    );
+  }
+  return (
+    <ScenarioProvider code={room.workshopCode}>
+      <JoinScreen />
+    </ScenarioProvider>
+  );
+}
+
+function SessionPlayInner() {
+  const room = useSessionRoomRequired();
+  if (room.format === "branching") {
+    return (
+      <DecisionGameProvider code={room.workshopCode}>
+        <MartApp />
+      </DecisionGameProvider>
+    );
+  }
+  return (
+    <ScenarioProvider code={room.workshopCode}>
+      <SimulationApp />
+    </ScenarioProvider>
+  );
+}
+
+function SessionFacilitateInner() {
+  const room = useSessionRoomRequired();
+  if (room.format === "branching") {
+    return (
+      <AuthGate>
+        <DecisionGameProvider code={room.workshopCode}>
+          <MartFacilitate />
+        </DecisionGameProvider>
+      </AuthGate>
+    );
+  }
+  return (
+    <AuthGate>
+      <ScenarioProvider code={room.workshopCode}>
+        <FacilitatePage />
+      </ScenarioProvider>
+    </AuthGate>
+  );
+}
+
+function SessionPrintInner() {
+  const room = useSessionRoomRequired();
+  if (room.format !== "investigation") return <NotFound />;
+  return (
+    <ScenarioProvider code={room.workshopCode}>
+      <PrintPack />
+    </ScenarioProvider>
+  );
+}
+
+function SessionTryInner() {
+  const room = useSessionRoomRequired();
+  // Preview sessions are themselves try-outs; live sessions link to a separate preview create.
+  if (room.format === "branching") {
+    return (
+      <DecisionGameProvider code={room.workshopCode}>
+        <MartJoin />
+      </DecisionGameProvider>
+    );
+  }
+  return (
+    <ScenarioProvider code={room.workshopCode}>
+      <JoinScreen />
+    </ScenarioProvider>
+  );
+}
+
+function withSessionRoom(Inner: React.ComponentType) {
+  return function Wrapped() {
+    return (
+      <SessionRoomFromRoute>
+        <Inner />
+      </SessionRoomFromRoute>
+    );
   };
-  return map[normalized] ?? null;
 }
 
-function SessionCodeRedirect() {
-  const { code } = useParams<{ code: string }>();
-  const to = sessionLegacyPath(code ?? "", "");
-  if (!to) return <NotFound />;
-  return <Redirect to={to} />;
-}
-
-function SessionTryRedirect() {
-  const { code } = useParams<{ code: string }>();
-  const to = sessionLegacyPath(code ?? "", "/try");
-  if (!to) return <NotFound />;
-  return <Redirect to={to} />;
-}
-
-function SessionFacilitateRedirect() {
-  const { code } = useParams<{ code: string }>();
-  const normalized = (code ?? "").toUpperCase();
-  if (normalized === "MART" || normalized === "MART-TRY") {
-    return <Redirect to="/facilitate?tab=mart" />;
-  }
-  if (normalized === "DEFAULT" || normalized === "DEMAND-TRY") {
-    return <Redirect to="/facilitate" />;
-  }
-  return <NotFound />;
-}
-
-function SessionPrintRedirect() {
-  const { code } = useParams<{ code: string }>();
-  const normalized = (code ?? "").toUpperCase();
-  if (normalized === "DEFAULT" || normalized === "DEMAND-TRY") {
-    return <Redirect to="/print" />;
-  }
-  return <NotFound />;
-}
-
-function SessionPlayRedirect() {
-  const params = useParams<{ code: string; sessionId: string; screen?: string }>();
-  const normalized = (params.code ?? "").toUpperCase();
-  if (normalized === "DEFAULT") {
-    return <Redirect to={`/demand/play/${params.sessionId}/${params.screen ?? "brief"}`} />;
-  }
-  if (normalized === "DEMAND-TRY") {
-    return <Redirect to={`/demand/try/play/${params.sessionId}/${params.screen ?? "brief"}`} />;
-  }
-  if (normalized === "MART") {
-    return <Redirect to={`/mart/play/${params.sessionId}`} />;
-  }
-  if (normalized === "MART-TRY") {
-    return <Redirect to={`/mart/try/play/${params.sessionId}`} />;
-  }
-  return <NotFound />;
-}
+const SessionJoinGate = withSessionRoom(SessionJoinInner);
+const SessionPlayGate = withSessionRoom(SessionPlayInner);
+const SessionFacilitateGate = withSessionRoom(SessionFacilitateInner);
+const SessionPrintGate = withSessionRoom(SessionPrintInner);
+const SessionTryGate = withSessionRoom(SessionTryInner);
 
 function Router() {
   return (
     <DesktopGate>
       <Switch>
         <Route path="/" component={HomeRedirect} />
+        <Route path="/create/library" component={CreateLibraryPage} />
+        <Route path="/create/boards" component={CreateBoardsPage} />
+        <Route path="/create/briefs/:id" component={CreateBriefPage} />
+        <Route path="/create/sessions/:id" component={CreateSessionPage} />
+        <Route path="/create/clients/:id/new" component={CreateNewSessionPage} />
+        <Route path="/create/clients/:id" component={CreateClientPage} />
+        <Route path="/create" component={CreateClientsPage} />
         <Route path="/play/:sessionId/:screen" component={LegacyPlayRedirect} />
         <Route path="/demand/try/play/:sessionId/:screen" component={DemandTryPlay} />
         <Route path="/demand/try" component={DemandTryJoin} />
@@ -192,14 +233,14 @@ function Router() {
         <Route path="/facilitate/:secret" component={LegacyFacilitatorRedirect} />
         <Route path="/facilitate" component={FacilitateHub} />
         <Route path="/print" component={PrintPack} />
-        <Route path="/s/:code/facilitate" component={SessionFacilitateRedirect} />
-        <Route path="/s/:code/print" component={SessionPrintRedirect} />
-        <Route path="/s/:code/play/:sessionId/:screen" component={SessionPlayRedirect} />
-        <Route path="/s/:code/play/:sessionId" component={SessionPlayRedirect} />
-        <Route path="/s/:code/try/play/:sessionId/:screen" component={SessionPlayRedirect} />
-        <Route path="/s/:code/try/play/:sessionId" component={SessionPlayRedirect} />
-        <Route path="/s/:code/try" component={SessionTryRedirect} />
-        <Route path="/s/:code" component={SessionCodeRedirect} />
+        <Route path="/s/:code/facilitate" component={SessionFacilitateGate} />
+        <Route path="/s/:code/print" component={SessionPrintGate} />
+        <Route path="/s/:code/play/:sessionId/:screen" component={SessionPlayGate} />
+        <Route path="/s/:code/play/:sessionId" component={SessionPlayGate} />
+        <Route path="/s/:code/try/play/:sessionId/:screen" component={SessionPlayGate} />
+        <Route path="/s/:code/try/play/:sessionId" component={SessionPlayGate} />
+        <Route path="/s/:code/try" component={SessionTryGate} />
+        <Route path="/s/:code" component={SessionJoinGate} />
         <Route component={NotFound} />
       </Switch>
     </DesktopGate>

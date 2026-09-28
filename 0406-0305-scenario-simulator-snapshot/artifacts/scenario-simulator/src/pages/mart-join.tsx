@@ -12,6 +12,7 @@ import {
 import { readMartTeam, writeMartTeam } from "../lib/teamStorage";
 import { Header, LivePill, MetaGrid, PrimaryButton, TeamCallout } from "../simulation/components";
 import { useDecisionGame } from "../lib/decisionGame";
+import { useSessionRoom } from "../lib/sessionRoom";
 
 type MartSession = {
   id: string;
@@ -24,6 +25,9 @@ type MartSession = {
 export default function MartJoin() {
   const [, setLocation] = useLocation();
   const game = useDecisionGame();
+  const room = useSessionRoom();
+  const workshopCode = room?.runtimeWorkshopCode || room?.workshopCode || "MART";
+  const teamSlots = TEAM_NAMES.slice(0, room?.teamCount ?? TEAM_NAMES.length);
   const stored = typeof window !== "undefined" ? readMartTeam() : null;
   const [sessions, setSessions] = useState<MartSession[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -34,17 +38,18 @@ export default function MartJoin() {
   const [pending, setPending] = useState(false);
 
   React.useEffect(() => {
+    const qs = `workshopCode=${encodeURIComponent(workshopCode)}`;
     const load = async () => {
-      const res = await fetch("/api/mart/sessions");
+      const res = await fetch(`/api/mart/sessions?${qs}`);
       if (res.ok) setSessions((await res.json()) as MartSession[]);
     };
     load();
     const id = setInterval(load, 3000);
     return () => clearInterval(id);
-  }, []);
+  }, [workshopCode]);
 
   const claimed = new Map(sessions.map((s) => [s.teamName, s]));
-  const openSlots = TEAM_NAMES.filter((name) => !claimed.has(name)).length;
+  const openSlots = teamSlots.filter((name) => !claimed.has(name)).length;
   const mySession =
     stored && claimed.get(stored.teamName)?.id === stored.sessionId
       ? claimed.get(stored.teamName)
@@ -54,7 +59,8 @@ export default function MartJoin() {
     displayName.trim().replace(/\s+/g, " ").length >= 2 &&
     displayName.trim().replace(/\s+/g, " ").length <= 24;
 
-  const goToPlay = (sessionId: string) => setLocation(`/mart/play/${sessionId}`);
+  const goToPlay = (sessionId: string) =>
+    setLocation(room ? `/s/${room.workshopCode}/play/${sessionId}` : `/mart/play/${sessionId}`);
 
   const join = (teamName: string) => {
     setError(null);
@@ -93,6 +99,7 @@ export default function MartJoin() {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
+          workshopCode,
           teamName: claimingSlot,
           displayName: displayName.trim().replace(/\s+/g, " "),
           emoji,
@@ -223,7 +230,7 @@ export default function MartJoin() {
               </p>
             )}
             <div className="grid grid-cols-2 gap-3">
-              {TEAM_NAMES.map((name, index) => {
+              {teamSlots.map((name, index) => {
                 const existing = claimed.get(name);
                 const taken = !!existing;
                 const mine = !!mySession && mySession.teamName === name;

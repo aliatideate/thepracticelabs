@@ -5,7 +5,7 @@ import { Header, PrimaryButton } from "../simulation/components";
 export default function LoginPage() {
   const [, setLocation] = useLocation();
   const search = useSearch();
-  const next = new URLSearchParams(search).get("next") || "/facilitate";
+  const next = new URLSearchParams(search).get("next") || "/create";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,7 +28,7 @@ export default function LoginPage() {
         setBusy(false);
         return;
       }
-      setLocation(next.startsWith("/") ? next : "/facilitate", { replace: true });
+      setLocation(next.startsWith("/") ? next : "/create", { replace: true });
     } catch {
       setError("Could not reach the server.");
       setBusy(false);
@@ -37,11 +37,11 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#F8F6EF]">
-      <Header hideFlowNav clock={{ startedAt: null, durationMinutes: 30, endedAt: null }} />
+      <Header brandOnly hideFlowNav />
       <div className="mx-auto max-w-[480px] px-6 py-14">
         <h1 className="text-[32px] mt-0 mb-2">Sign in</h1>
         <p className="text-[16px] text-[#6C6975] mb-6">
-          Use your Practice Labs account to open the facilitator board.
+          Use your Practice Labs account to open Clients and Boards.
         </p>
         <form onSubmit={submit} className="bg-white border border-[#E7E4DD] rounded-xl p-6">
           <label className="block text-[14px] font-semibold mb-2" htmlFor="login-email">

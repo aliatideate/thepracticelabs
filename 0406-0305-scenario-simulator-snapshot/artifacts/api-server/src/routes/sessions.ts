@@ -34,7 +34,7 @@ import {
   isAllowedTeamName,
   normalizeDisplayName,
 } from "../lib/workshop";
-import { clearClock, defaultWorkshopId, startTimerIfIdle } from "../lib/session-clock";
+import { clearClock, defaultWorkshopId, startTimerIfIdle, workshopIdFor } from "../lib/session-clock";
 
 const router: IRouter = Router();
 
@@ -205,12 +205,17 @@ router.get("/sessions", async (req, res) => {
 
 router.post("/sessions/reset-all", async (req, res) => {
   if (!(await assertFacilitator(req, res))) return;
-  const workshopId = await defaultWorkshopId();
+  const body = req.body as { workshopCode?: string };
+  const code =
+    typeof body?.workshopCode === "string" && body.workshopCode.trim()
+      ? body.workshopCode.trim().toUpperCase()
+      : WORKSHOP_CODE;
+  const workshopId = await workshopIdFor(code);
   const deleted = await db
     .delete(sessionsTable)
     .where(eq(sessionsTable.workshopId, workshopId))
     .returning({ id: sessionsTable.id });
-  await clearClock();
+  await clearClock(new Date(), code);
   return res.json({ deleted: deleted.length });
 });
 
@@ -233,7 +238,7 @@ router.post("/sessions", async (req, res) => {
   if (!isAllowedTeamEmoji(emoji)) {
     return res.status(400).json({ error: "invalid emoji" });
   }
-  if (workshopCode === WORKSHOP_CODE && !isAllowedTeamName(teamName)) {
+  if (workshopCode !== DEMAND_TRY_WORKSHOP_CODE && !isAllowedTeamName(teamName)) {
     return res.status(400).json({ error: "invalid team" });
   }
 
@@ -279,8 +284,8 @@ router.post("/sessions", async (req, res) => {
     return res.status(500).json({ error: "insert failed" });
   }
   publish("submission.created", row.id, workshop.id, workshop.code);
-  if (workshop.code === WORKSHOP_CODE) {
-    await startTimerIfIdle(now);
+  if (workshop.code !== DEMAND_TRY_WORKSHOP_CODE) {
+    await startTimerIfIdle(now, workshop.code);
   }
   return res.json(serialize(row, { workshopCode: workshop.code }));
 });

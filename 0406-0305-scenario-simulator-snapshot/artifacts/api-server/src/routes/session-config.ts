@@ -1,10 +1,9 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { db, sessionConfigTable } from "@workspace/db";
-import { loadScenario } from "../lib/content";
 import { assertFacilitator } from "../lib/auth";
 import { WORKSHOP_CODE } from "../lib/workshop";
-import { defaultWorkshopId, getOrCreateConfig } from "../lib/session-clock";
+import { getOrCreateConfig, workshopIdFor } from "../lib/session-clock";
 import { setWorkshopSessionStatusByRuntimeCode } from "../lib/workshop-session";
 
 const router: IRouter = Router();
@@ -18,37 +17,51 @@ function serialize(row: typeof sessionConfigTable.$inferSelect) {
   };
 }
 
-router.get("/session-config", async (_req, res) => {
-  const row = await getOrCreateConfig();
+function codeFrom(req: { query: Record<string, unknown>; body?: unknown }) {
+  const q = req.query.workshopCode;
+  if (typeof q === "string" && q.trim()) return q.trim().toUpperCase();
+  const body = req.body as { workshopCode?: string } | undefined;
+  if (typeof body?.workshopCode === "string" && body.workshopCode.trim()) {
+    return body.workshopCode.trim().toUpperCase();
+  }
+  return WORKSHOP_CODE;
+}
+
+router.get("/session-config", async (req, res) => {
+  const code = codeFrom(req);
+  const row = await getOrCreateConfig(code);
   return res.json(serialize(row));
 });
 
 router.post("/session-config/start", async (req, res) => {
   if (!(await assertFacilitator(req, res))) return;
-  const scenario = loadScenario();
-  const workshopId = await defaultWorkshopId();
+  const code = codeFrom(req);
+  const workshopId = await workshopIdFor(code);
+  const existing = await getOrCreateConfig(code);
   const now = new Date();
   const updated = await db
     .update(sessionConfigTable)
     .set({
       startedAt: now,
       endedAt: null,
-      durationMinutes: scenario.timing.defaultMinutes,
+      durationMinutes: existing.durationMinutes,
       updatedAt: now,
     })
     .where(eq(sessionConfigTable.workshopId, workshopId))
     .returning();
-  const row = updated[0] ?? (await getOrCreateConfig());
+  const row = updated[0] ?? (await getOrCreateConfig(code));
+  await setWorkshopSessionStatusByRuntimeCode(code, "live");
   return res.json(serialize(row));
 });
 
 router.patch("/session-config", async (req, res) => {
   if (!(await assertFacilitator(req, res))) return;
+  const code = codeFrom(req);
   const body = req.body as {
     durationMinutes?: number;
     end?: boolean;
   };
-  const workshopId = await defaultWorkshopId();
+  const workshopId = await workshopIdFor(code);
   const now = new Date();
   const updates: Partial<typeof sessionConfigTable.$inferInsert> = {
     updatedAt: now,
@@ -68,7 +81,7 @@ router.patch("/session-config", async (req, res) => {
   const row = updated[0];
   if (!row) return res.status(404).json({ error: "not found" });
   if (body.end === true) {
-    await setWorkshopSessionStatusByRuntimeCode(WORKSHOP_CODE, "ended");
+    await setWorkshopSessionStatusByRuntimeCode(code, "ended");
   }
   return res.json(serialize(row));
 });

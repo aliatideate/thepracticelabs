@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowRight, Check, Phone } from "lucide-react";
+import { ArrowRight, Check, Phone, Plus, User } from "lucide-react";
 import { FLOW_STEPS, SESSION_LABEL, type Screen, flowStepIndex } from "../lib/constants";
 import {
   formatCountdown,
@@ -122,6 +122,7 @@ export function Header({
   hideFlowNav,
   clock,
   liveLabel = "Live",
+  brandOnly = false,
 }: {
   teamName?: string;
   teamEmoji?: string;
@@ -136,11 +137,14 @@ export function Header({
   hideFlowNav?: boolean;
   clock?: SessionConfig | null;
   liveLabel?: string;
+  /** Creator area: logo + "Creator Studio", no session title / timer. */
+  brandOnly?: boolean;
 }) {
   const scenario = useScenario();
   const fetched = useSessionConfig(clock !== undefined ? undefined : (configPath ?? "/api/session-config"));
   const config = clock !== undefined ? clock : fetched;
   const [, setTick] = useState(0);
+  const [profileName, setProfileName] = useState<string | null>(null);
   useEffect(() => {
     const id = setInterval(() => setTick((n) => n + 1), 1000);
     return () => clearInterval(id);
@@ -154,6 +158,25 @@ export function Header({
       document.title = previous;
     };
   }, [sessionLabel]);
+
+  useEffect(() => {
+    if (!brandOnly) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/me", { credentials: "same-origin" });
+        if (!res.ok || cancelled) return;
+        const body = (await res.json()) as { displayName?: string | null };
+        const name = body.displayName?.trim();
+        if (!cancelled && name) setProfileName(name);
+      } catch {
+        /* login / unauthenticated — no chip */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [brandOnly]);
 
   const remaining = config ? remainingMs(config) : null;
   const fraction = config ? remainingFraction(config) : 1;
@@ -184,19 +207,41 @@ export function Header({
             alt="the Practice Labs"
             className="h-[33px] w-auto"
           />
-          <div className="hidden lg:block h-8 w-px bg-white/25" />
-          <div className="min-w-0 hidden md:block">
-            <div className="text-[14px] font-medium truncate">{sessionLabel}</div>
-            <div className="text-[14px] text-white/75 truncate">{titleOverride ?? scenario.title}</div>
-          </div>
+          {brandOnly ? (
+            <>
+              <div className="hidden lg:block h-8 w-px bg-white/25" />
+              <div className="min-w-0 hidden md:block leading-tight">
+                <div className="text-[17px] font-medium">Creator</div>
+                <div className="text-[17px] font-medium">Studio</div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="hidden lg:block h-8 w-px bg-white/25" />
+              <div className="min-w-0 hidden md:block">
+                <div className="text-[14px] font-medium truncate">{sessionLabel}</div>
+                <div className="text-[14px] text-white/75 truncate">
+                  {titleOverride ?? scenario.title}
+                </div>
+              </div>
+            </>
+          )}
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          {config?.startedAt && !expired && <LivePill label={liveLabel} />}
-          <div
-            className={`rounded-full border border-white/20 bg-white/10 px-3 py-1 font-mono text-[18px] tabular-nums ${timerClass} ${underFive && !expired ? "tpl-timer-pulse" : ""}`}
-          >
-            {timerLabel}
-          </div>
+          {!brandOnly && config?.startedAt && !expired && <LivePill label={liveLabel} />}
+          {!brandOnly && (
+            <div
+              className={`rounded-full border border-white/20 bg-white/10 px-3 py-1 font-mono text-[18px] tabular-nums ${timerClass} ${underFive && !expired ? "tpl-timer-pulse" : ""}`}
+            >
+              {timerLabel}
+            </div>
+          )}
+          {brandOnly && profileName && (
+            <div className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[14px] font-medium inline-flex items-center gap-2 max-w-[14rem]">
+              <User className="h-4 w-4 shrink-0 opacity-90" strokeWidth={2.25} aria-hidden />
+              <span className="truncate">{profileName}</span>
+            </div>
+          )}
           {teamName && (
             <div className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[14px] font-medium inline-flex items-center gap-1.5 max-w-[14rem]">
               {teamEmoji ? <span className="text-[16px] leading-none">{teamEmoji}</span> : null}
@@ -328,11 +373,14 @@ export function PrimaryButton({
   onClick,
   disabled,
   type = "button",
+  icon = "arrow",
 }: {
   children: React.ReactNode;
   onClick?: () => void;
   disabled?: boolean;
   type?: "button" | "submit";
+  /** Trailing icon. Default arrow matches player/facilitator CTAs. */
+  icon?: "arrow" | "plus" | "none";
 }) {
   return (
     <button
@@ -342,7 +390,13 @@ export function PrimaryButton({
       className="group inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#301CA0] to-[#1A0F58] text-white text-[16px] font-semibold px-6 py-2.5 shadow-[0_8px_24px_rgba(48,28,160,0.28)] transition-all duration-200 ease-out hover:scale-[1.05] hover:shadow-[0_14px_36px_rgba(48,28,160,0.42)] hover:from-[#3d28b8] hover:to-[#301CA0] active:scale-[0.96] active:shadow-[0_4px_14px_rgba(48,28,160,0.3)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-[0_8px_24px_rgba(48,28,160,0.28)]"
     >
       {children}
-      <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1 group-active:translate-x-0" strokeWidth={2.25} />
+      {icon === "arrow" && (
+        <ArrowRight
+          className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1 group-active:translate-x-0"
+          strokeWidth={2.25}
+        />
+      )}
+      {icon === "plus" && <Plus className="h-4 w-4" strokeWidth={2.25} />}
     </button>
   );
 }

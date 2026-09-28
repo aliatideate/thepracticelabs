@@ -16,12 +16,16 @@ import {
 import { readStoredTeam, writeStoredTeam } from "../lib/teamStorage";
 import { Header, LivePill, MetaGrid, PrimaryButton, TeamCallout } from "../simulation/components";
 import { useScenario } from "../lib/scenario";
+import { useSessionRoom } from "../lib/sessionRoom";
 
 export default function JoinScreen() {
   const [, setLocation] = useLocation();
   const scenario = useScenario();
+  const room = useSessionRoom();
+  const workshopCode = room?.runtimeWorkshopCode || room?.workshopCode || WORKSHOP_CODE;
+  const teamSlots = TEAM_NAMES.slice(0, room?.teamCount ?? TEAM_NAMES.length);
   const stored = typeof window !== "undefined" ? readStoredTeam() : null;
-  const listParams = { workshopCode: WORKSHOP_CODE };
+  const listParams = { workshopCode };
   const { data: sessions = [] } = useListSessions(listParams, {
     query: { refetchInterval: 3000, queryKey: getListSessionsQueryKey(listParams) },
   });
@@ -33,7 +37,7 @@ export default function JoinScreen() {
   const [emoji, setEmoji] = useState<(typeof TEAM_EMOJIS)[number] | "">("");
 
   const claimed = new Map(sessions.map((s) => [s.teamName, s]));
-  const openSlots = TEAM_NAMES.filter((name) => !claimed.has(name)).length;
+  const openSlots = teamSlots.filter((name) => !claimed.has(name)).length;
   const mySession =
     stored && claimed.get(stored.teamName)?.id === stored.sessionId
       ? claimed.get(stored.teamName)
@@ -43,7 +47,10 @@ export default function JoinScreen() {
     && displayName.trim().replace(/\s+/g, " ").length <= 24;
 
   const goToPlay = (sessionId: string, screen?: string | null) => {
-    setLocation(`/demand/play/${sessionId}/${screen || "brief"}`);
+    const path = room
+      ? `/s/${room.workshopCode}/play/${sessionId}/${screen || "brief"}`
+      : `/demand/play/${sessionId}/${screen || "brief"}`;
+    setLocation(path);
   };
 
   const join = (teamName: string) => {
@@ -80,7 +87,7 @@ export default function JoinScreen() {
     create.mutate(
       {
         data: {
-          workshopCode: WORKSHOP_CODE,
+          workshopCode,
           teamName: claimingSlot,
           displayName: displayName.trim().replace(/\s+/g, " "),
           emoji,
@@ -113,10 +120,13 @@ export default function JoinScreen() {
         <div className="mb-6">
           <MetaGrid
             items={[
-              { label: "Session", value: SESSION_LABEL.split(":")[0] },
+              { label: "Session", value: room?.title || SESSION_LABEL.split(":")[0] },
               { label: "Scenario", value: scenario.title },
-              { label: "Duration", value: `${scenario.timing.defaultMinutes} minutes` },
-              { label: "Open slots", value: `${openSlots} of ${TEAM_NAMES.length}` },
+              {
+                label: "Duration",
+                value: `${room?.durationMinutes ?? scenario.timing.defaultMinutes} minutes`,
+              },
+              { label: "Open slots", value: `${openSlots} of ${teamSlots.length}` },
             ]}
           />
         </div>
@@ -214,7 +224,7 @@ export default function JoinScreen() {
               </p>
             )}
             <div className="grid grid-cols-2 gap-3">
-              {TEAM_NAMES.map((name, index) => {
+              {teamSlots.map((name, index) => {
                 const existing = claimed.get(name);
                 const taken = !!existing;
                 const mine = !!mySession && mySession.teamName === name;

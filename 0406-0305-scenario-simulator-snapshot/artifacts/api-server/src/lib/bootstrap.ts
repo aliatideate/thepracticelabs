@@ -445,6 +445,7 @@ export async function bootstrapDatabase(): Promise<void> {
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         org_id UUID NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
         client_id UUID REFERENCES clients(id),
+        title TEXT NOT NULL DEFAULT 'Untitled',
         category TEXT NOT NULL,
         audience TEXT NOT NULL,
         skill TEXT NOT NULL,
@@ -467,6 +468,18 @@ export async function bootstrapDatabase(): Promise<void> {
           status IN ('in_design')
         )
       )
+    `);
+    await client.query(`
+      ALTER TABLE briefs ADD COLUMN IF NOT EXISTS title TEXT
+    `);
+    await client.query(`
+      UPDATE briefs SET title = 'Untitled' WHERE title IS NULL OR title = ''
+    `);
+    await client.query(`
+      ALTER TABLE briefs ALTER COLUMN title SET DEFAULT 'Untitled'
+    `);
+    await client.query(`
+      ALTER TABLE briefs ALTER COLUMN title SET NOT NULL
     `);
 
     await client.query(`

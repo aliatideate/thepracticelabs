@@ -1,8 +1,22 @@
 import { and, eq, isNull } from "drizzle-orm";
-import { db, sessionConfigTable, workshopsTable } from "@workspace/db";
+import { db, sessionConfigTable, workshopSessionsTable, workshopsTable } from "@workspace/db";
 import { loadScenario } from "./content";
 import { WORKSHOP_CODE, MART_WORKSHOP_CODE, MART_TRY_WORKSHOP_CODE, MART_DURATION_MINUTES } from "./workshop";
 import { setWorkshopSessionStatusByRuntimeCode } from "./workshop-session";
+
+async function defaultDurationForCode(code: string): Promise<number> {
+  if (code === MART_WORKSHOP_CODE || code === MART_TRY_WORKSHOP_CODE) {
+    return MART_DURATION_MINUTES;
+  }
+  const linked = await db
+    .select({ durationMinutes: workshopSessionsTable.durationMinutes })
+    .from(workshopSessionsTable)
+    .innerJoin(workshopsTable, eq(workshopsTable.id, workshopSessionsTable.runtimeWorkshopId))
+    .where(eq(workshopsTable.code, code))
+    .limit(1);
+  if (linked[0]?.durationMinutes) return linked[0].durationMinutes;
+  return loadScenario().timing.defaultMinutes;
+}
 
 export async function workshopIdFor(code: string): Promise<string> {
   const rows = await db
@@ -27,10 +41,7 @@ export async function getOrCreateConfig(code = WORKSHOP_CODE) {
     .where(eq(sessionConfigTable.workshopId, workshopId))
     .limit(1);
   if (existing[0]) return existing[0];
-  const durationMinutes =
-    code === MART_WORKSHOP_CODE || code === MART_TRY_WORKSHOP_CODE
-      ? MART_DURATION_MINUTES
-      : loadScenario().timing.defaultMinutes;
+  const durationMinutes = await defaultDurationForCode(code);
   const inserted = await db
     .insert(sessionConfigTable)
     .values({
@@ -70,12 +81,9 @@ export async function startTimerIfIdle(now = new Date(), code = WORKSHOP_CODE) {
 
 /** Clears the shared clock so the next team join starts a fresh countdown. */
 export async function clearClock(now = new Date(), code = WORKSHOP_CODE) {
-  await getOrCreateConfig(code);
+  const current = await getOrCreateConfig(code);
   const workshopId = await workshopIdFor(code);
-  const durationMinutes =
-    code === MART_WORKSHOP_CODE || code === MART_TRY_WORKSHOP_CODE
-      ? MART_DURATION_MINUTES
-      : loadScenario().timing.defaultMinutes;
+  const durationMinutes = current.durationMinutes || (await defaultDurationForCode(code));
   await db
     .update(sessionConfigTable)
     .set({
