@@ -9,7 +9,8 @@
     "dev:api": "PORT=${PORT:-3000} pnpm --filter @workspace/api-server run dev",
     "dev:web": "pnpm --filter @workspace/scenario-simulator run dev",
     "typecheck:libs": "tsc --build",
-    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
+    "seed:creator": "pnpm --filter @workspace/scripts run seed:creator"
   },
   "private": true,
   "pnpm": {

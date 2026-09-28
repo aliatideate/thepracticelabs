@@ -207,6 +207,237 @@ export async function bootstrapDatabase(): Promise<void> {
       END $$
     `);
 
+    // --- Creator-side Phase 1 (additive only; no runtime table changes) ---
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS organisations (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name TEXT NOT NULL UNIQUE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        org_id UUID NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
+        email TEXT NOT NULL,
+        password_hash TEXT,
+        display_name TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'users_email_unique'
+        ) THEN
+          ALTER TABLE users ADD CONSTRAINT users_email_unique UNIQUE (email);
+        END IF;
+      END $$
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS clients (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        org_id UUID NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        notes TEXT,
+        created_by UUID NOT NULL REFERENCES users(id),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS clients_org_name_idx ON clients (org_id, name)
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS exercises (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        org_id UUID NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        category TEXT NOT NULL,
+        format TEXT NOT NULL,
+        status TEXT NOT NULL,
+        created_by UUID NOT NULL REFERENCES users(id),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        CONSTRAINT exercises_category_check CHECK (
+          category IN ('problem-framing', 'decision-making', 'ideation', 'prototyping')
+        ),
+        CONSTRAINT exercises_format_check CHECK (
+          format IN ('investigation', 'branching')
+        ),
+        CONSTRAINT exercises_status_check CHECK (
+          status IN ('published', 'in_design')
+        )
+      )
+    `);
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'exercises_org_title_unique'
+        ) THEN
+          ALTER TABLE exercises
+          ADD CONSTRAINT exercises_org_title_unique UNIQUE (org_id, title);
+        END IF;
+      END $$
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS exercise_versions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        org_id UUID NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
+        exercise_id UUID NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
+        version INTEGER NOT NULL,
+        content JSONB NOT NULL,
+        facilitator_notes TEXT,
+        variables JSONB NOT NULL DEFAULT '[]'::jsonb,
+        default_assets JSONB NOT NULL DEFAULT '{}'::jsonb,
+        created_by UUID NOT NULL REFERENCES users(id),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'exercise_versions_exercise_version_unique'
+        ) THEN
+          ALTER TABLE exercise_versions
+          ADD CONSTRAINT exercise_versions_exercise_version_unique UNIQUE (exercise_id, version);
+        END IF;
+      END $$
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS assets (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        org_id UUID NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
+        created_by UUID NOT NULL REFERENCES users(id),
+        filename TEXT NOT NULL,
+        mime_type TEXT NOT NULL,
+        byte_size INTEGER NOT NULL,
+        bytes BYTEA NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        CONSTRAINT assets_mime_type_check CHECK (
+          mime_type IN ('image/png', 'image/jpeg', 'image/webp')
+        )
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS client_copies (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        org_id UUID NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
+        client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+        exercise_id UUID NOT NULL REFERENCES exercises(id),
+        exercise_version_id UUID NOT NULL REFERENCES exercise_versions(id),
+        variable_values JSONB NOT NULL DEFAULT '{}'::jsonb,
+        logo_asset_id UUID REFERENCES assets(id),
+        created_by UUID NOT NULL REFERENCES users(id),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'client_copies_client_exercise_unique'
+        ) THEN
+          ALTER TABLE client_copies
+          ADD CONSTRAINT client_copies_client_exercise_unique UNIQUE (client_id, exercise_id);
+        END IF;
+      END $$
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS workshop_sessions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        org_id UUID NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
+        client_id UUID NOT NULL REFERENCES clients(id),
+        client_copy_id UUID NOT NULL REFERENCES client_copies(id),
+        exercise_version_id UUID NOT NULL REFERENCES exercise_versions(id),
+        variable_values JSONB NOT NULL DEFAULT '{}'::jsonb,
+        title TEXT NOT NULL,
+        duration_minutes INTEGER NOT NULL,
+        team_count INTEGER NOT NULL,
+        mode TEXT NOT NULL,
+        workshop_code TEXT NOT NULL,
+        resolved_content JSONB NOT NULL,
+        resolved_facilitator_notes TEXT,
+        facilitator_token_hash TEXT,
+        status TEXT NOT NULL,
+        is_preview BOOLEAN NOT NULL DEFAULT FALSE,
+        preview_expires_at TIMESTAMPTZ,
+        created_by UUID NOT NULL REFERENCES users(id),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        ended_at TIMESTAMPTZ,
+        CONSTRAINT workshop_sessions_status_check CHECK (
+          status IN ('ready', 'live', 'ended')
+        ),
+        CONSTRAINT workshop_sessions_team_count_check CHECK (
+          team_count BETWEEN 1 AND 10
+        ),
+        CONSTRAINT workshop_sessions_mode_check CHECK (
+          mode IN ('in_person', 'remote', 'hybrid')
+        )
+      )
+    `);
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS workshop_sessions_workshop_code_unique
+      ON workshop_sessions (workshop_code)
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS workshop_sessions_client_created_idx
+      ON workshop_sessions (client_id, created_at DESC)
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS workshop_sessions_org_status_idx
+      ON workshop_sessions (org_id, status)
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS workshop_sessions_preview_cleanup_idx
+      ON workshop_sessions (preview_expires_at)
+      WHERE is_preview = TRUE
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS briefs (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        org_id UUID NOT NULL REFERENCES organisations(id) ON DELETE CASCADE,
+        client_id UUID REFERENCES clients(id),
+        category TEXT NOT NULL,
+        audience TEXT NOT NULL,
+        skill TEXT NOT NULL,
+        debrief_focus TEXT NOT NULL,
+        setting TEXT NOT NULL,
+        duration_minutes INTEGER NOT NULL,
+        team_count INTEGER NOT NULL,
+        mode TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'in_design',
+        created_by UUID NOT NULL REFERENCES users(id),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        CONSTRAINT briefs_category_check CHECK (
+          category IN ('problem-framing', 'decision-making', 'ideation', 'prototyping')
+        ),
+        CONSTRAINT briefs_mode_check CHECK (
+          mode IN ('in_person', 'remote', 'hybrid')
+        ),
+        CONSTRAINT briefs_status_check CHECK (
+          status IN ('in_design')
+        )
+      )
+    `);
+
     await client.query("COMMIT");
     logger.info("database bootstrap complete");
   } catch (err) {
