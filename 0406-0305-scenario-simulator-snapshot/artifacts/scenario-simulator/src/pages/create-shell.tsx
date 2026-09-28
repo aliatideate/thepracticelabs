@@ -31,7 +31,7 @@ export function CreateShell({
 
   return (
     <div className="min-h-screen bg-[#F8F6EF]">
-      <Header hideFlowNav clock={{ startedAt: null, durationMinutes: 30, endedAt: null }} />
+      <Header brandOnly hideFlowNav />
       <div className="mx-auto max-w-[960px] px-6 py-10">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <nav

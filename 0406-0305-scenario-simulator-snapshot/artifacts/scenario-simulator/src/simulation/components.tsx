@@ -122,6 +122,7 @@ export function Header({
   hideFlowNav,
   clock,
   liveLabel = "Live",
+  brandOnly = false,
 }: {
   teamName?: string;
   teamEmoji?: string;
@@ -136,6 +137,8 @@ export function Header({
   hideFlowNav?: boolean;
   clock?: SessionConfig | null;
   liveLabel?: string;
+  /** Logo only — no session title / timer (creator area). */
+  brandOnly?: boolean;
 }) {
   const scenario = useScenario();
   const fetched = useSessionConfig(clock !== undefined ? undefined : (configPath ?? "/api/session-config"));
@@ -184,19 +187,27 @@ export function Header({
             alt="the Practice Labs"
             className="h-[33px] w-auto"
           />
-          <div className="hidden lg:block h-8 w-px bg-white/25" />
-          <div className="min-w-0 hidden md:block">
-            <div className="text-[14px] font-medium truncate">{sessionLabel}</div>
-            <div className="text-[14px] text-white/75 truncate">{titleOverride ?? scenario.title}</div>
-          </div>
+          {!brandOnly && (
+            <>
+              <div className="hidden lg:block h-8 w-px bg-white/25" />
+              <div className="min-w-0 hidden md:block">
+                <div className="text-[14px] font-medium truncate">{sessionLabel}</div>
+                <div className="text-[14px] text-white/75 truncate">
+                  {titleOverride ?? scenario.title}
+                </div>
+              </div>
+            </>
+          )}
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          {config?.startedAt && !expired && <LivePill label={liveLabel} />}
-          <div
-            className={`rounded-full border border-white/20 bg-white/10 px-3 py-1 font-mono text-[18px] tabular-nums ${timerClass} ${underFive && !expired ? "tpl-timer-pulse" : ""}`}
-          >
-            {timerLabel}
-          </div>
+          {!brandOnly && config?.startedAt && !expired && <LivePill label={liveLabel} />}
+          {!brandOnly && (
+            <div
+              className={`rounded-full border border-white/20 bg-white/10 px-3 py-1 font-mono text-[18px] tabular-nums ${timerClass} ${underFive && !expired ? "tpl-timer-pulse" : ""}`}
+            >
+              {timerLabel}
+            </div>
+          )}
           {teamName && (
             <div className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[14px] font-medium inline-flex items-center gap-1.5 max-w-[14rem]">
               {teamEmoji ? <span className="text-[16px] leading-none">{teamEmoji}</span> : null}

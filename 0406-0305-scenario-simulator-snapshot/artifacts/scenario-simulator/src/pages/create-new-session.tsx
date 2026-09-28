@@ -114,7 +114,7 @@ function NewSessionWizard() {
 
   return (
     <div className="min-h-screen bg-[#F8F6EF]">
-      <Header hideFlowNav clock={{ startedAt: null, durationMinutes: 30, endedAt: null }} />
+      <Header brandOnly hideFlowNav />
       <div className="mx-auto max-w-[720px] px-6 py-10">
         <p className="text-[14px] text-[#6C6975] mb-2">
           <Link href={`/create/clients/${clientId}`} className="text-[#301CA0] underline">
