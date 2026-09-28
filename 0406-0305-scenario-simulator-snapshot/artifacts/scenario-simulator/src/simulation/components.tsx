@@ -190,8 +190,9 @@ export function Header({
           {brandOnly ? (
             <>
               <div className="hidden lg:block h-8 w-px bg-white/25" />
-              <div className="min-w-0 hidden md:block">
-                <div className="text-[16px] font-medium truncate">Creator Studio</div>
+              <div className="min-w-0 hidden md:block leading-tight">
+                <div className="text-[17px] font-medium">Creator</div>
+                <div className="text-[17px] font-medium">Studio</div>
               </div>
             </>
           ) : (
