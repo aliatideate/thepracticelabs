@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowRight, Check, Phone, Plus } from "lucide-react";
+import { ArrowRight, Check, Phone, Plus, User } from "lucide-react";
 import { FLOW_STEPS, SESSION_LABEL, type Screen, flowStepIndex } from "../lib/constants";
 import {
   formatCountdown,
@@ -144,6 +144,7 @@ export function Header({
   const fetched = useSessionConfig(clock !== undefined ? undefined : (configPath ?? "/api/session-config"));
   const config = clock !== undefined ? clock : fetched;
   const [, setTick] = useState(0);
+  const [profileName, setProfileName] = useState<string | null>(null);
   useEffect(() => {
     const id = setInterval(() => setTick((n) => n + 1), 1000);
     return () => clearInterval(id);
@@ -157,6 +158,25 @@ export function Header({
       document.title = previous;
     };
   }, [sessionLabel]);
+
+  useEffect(() => {
+    if (!brandOnly) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/me", { credentials: "same-origin" });
+        if (!res.ok || cancelled) return;
+        const body = (await res.json()) as { displayName?: string | null };
+        const name = body.displayName?.trim();
+        if (!cancelled && name) setProfileName(name);
+      } catch {
+        /* login / unauthenticated — no chip */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [brandOnly]);
 
   const remaining = config ? remainingMs(config) : null;
   const fraction = config ? remainingFraction(config) : 1;
@@ -214,6 +234,12 @@ export function Header({
               className={`rounded-full border border-white/20 bg-white/10 px-3 py-1 font-mono text-[18px] tabular-nums ${timerClass} ${underFive && !expired ? "tpl-timer-pulse" : ""}`}
             >
               {timerLabel}
+            </div>
+          )}
+          {brandOnly && profileName && (
+            <div className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[14px] font-medium inline-flex items-center gap-2 max-w-[14rem]">
+              <User className="h-4 w-4 shrink-0 opacity-90" strokeWidth={2.25} aria-hidden />
+              <span className="truncate">{profileName}</span>
             </div>
           )}
           {teamName && (
