@@ -9,10 +9,14 @@ import sessionConfigRouter from "./session-config";
 import exportRouter from "./export";
 import archivesRouter from "./archives";
 import martRouter from "./mart";
+import authRouter from "./auth";
+import workshopSessionsRouter from "./workshop-sessions";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(authRouter);
+router.use(workshopSessionsRouter);
 router.use(workshopsRouter);
 router.use(sessionsRouter);
 router.use(eventsRouter);

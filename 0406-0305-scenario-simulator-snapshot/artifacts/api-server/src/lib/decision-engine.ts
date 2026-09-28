@@ -59,6 +59,7 @@ export function tagLine(game: DecisionGame, choices: DecisionChoice[], tag: "too
     orders.push(decision.order);
   }
   const spec = game.scoring.tags[tag];
+  if (!spec) return "";
   if (orders.length === 0) return spec.zero;
   return spec.withBranches.replace("{branches}", formatBranchList(orders));
 }
