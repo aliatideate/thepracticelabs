@@ -9,6 +9,12 @@ const TABS = [
 
 export type CreateTab = (typeof TABS)[number]["key"];
 
+/** Display helper for API statuses (`ready` → `Ready`). */
+export function formatStatus(status: string): string {
+  if (!status) return status;
+  return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
 function tabFromPath(path: string): CreateTab {
   if (path.startsWith("/create/library")) return "library";
   if (path.startsWith("/create/boards")) return "boards";

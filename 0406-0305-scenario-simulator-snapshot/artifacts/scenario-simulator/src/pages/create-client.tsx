@@ -3,6 +3,7 @@ import { Link, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Header, PrimaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
+import { formatStatus } from "./create-shell";
 
 function Shell({
   title,
@@ -98,7 +99,9 @@ function ClientDetail() {
           >
             <div className="flex items-baseline justify-between gap-3">
               <div className="font-semibold text-[18px] min-w-0 truncate">{s.title}</div>
-              <span className="text-[14px] text-[#6C6975] shrink-0">{s.status}</span>
+              <span className="text-[14px] text-[#6C6975] shrink-0">
+                {formatStatus(s.status)}
+              </span>
             </div>
             <div className="text-[14px] text-[#6C6975] mt-1">
               code {s.workshopCode} · {s.teamCount} teams · {s.durationMinutes} min
@@ -120,7 +123,9 @@ function ClientDetail() {
           >
             <div className="flex items-baseline justify-between gap-3">
               <div className="font-semibold text-[18px] min-w-0 truncate">{s.title}</div>
-              <span className="text-[14px] text-[#6C6975] shrink-0">{s.status}</span>
+              <span className="text-[14px] text-[#6C6975] shrink-0">
+                {formatStatus(s.status)}
+              </span>
             </div>
             <div className="text-[14px] text-[#6C6975] mt-1">code {s.workshopCode}</div>
           </Link>

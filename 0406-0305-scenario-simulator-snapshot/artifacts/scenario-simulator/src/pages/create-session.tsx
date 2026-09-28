@@ -3,6 +3,7 @@ import { Link, useParams } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Header, PrimaryButton, SecondaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
+import { formatStatus } from "./create-shell";
 
 function SessionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -96,7 +97,8 @@ function SessionDetail() {
         </p>
         <h1 className="text-[32px] mt-0 mb-2">{data.title}</h1>
         <p className="text-[16px] text-[#6C6975] mb-8">
-          {data.exerciseTitle} · {data.status} · {data.teamCount} teams · {data.durationMinutes} min ·{" "}
+          {data.exerciseTitle} · {formatStatus(data.status)} · {data.teamCount} teams ·{" "}
+          {data.durationMinutes} min ·{" "}
           {data.mode.replace("_", " ")}
         </p>
 

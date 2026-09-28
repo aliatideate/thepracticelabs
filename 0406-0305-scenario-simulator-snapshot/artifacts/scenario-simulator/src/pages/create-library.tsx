@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import AuthGate from "./auth-gate";
-import { CreateShell } from "./create-shell";
+import { CreateShell, formatStatus } from "./create-shell";
 
 const LABELS: Record<string, string> = {
   "problem-framing": "Problem framing",
@@ -79,7 +79,7 @@ function Library() {
               >
                 <div className="font-semibold text-[18px]">{ex.title}</div>
                 <div className="text-[14px] text-[#6C6975] mt-1">
-                  {ex.format} · {ex.status} · v{ex.latestVersion ?? "—"}
+                  {ex.format} · {formatStatus(ex.status)} · v{ex.latestVersion ?? "—"}
                 </div>
                 {openId === ex.id && detailQ.data && (
                   <div className="mt-4 pt-4 border-t border-[#E7E4DD] text-[14px] text-[#1D1D24]">

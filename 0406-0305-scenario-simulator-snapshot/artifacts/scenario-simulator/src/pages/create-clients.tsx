@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PrimaryButton, SecondaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
-import { CreateShell } from "./create-shell";
+import { CreateShell, formatStatus } from "./create-shell";
 
 type ClientRow = {
   id: string;
@@ -150,7 +150,9 @@ function ClientsHome() {
                       >
                         {s.title}
                       </Link>
-                      <span className="text-[14px] text-[#6C6975] shrink-0">{s.status}</span>
+                      <span className="text-[14px] text-[#6C6975] shrink-0">
+                        {formatStatus(s.status)}
+                      </span>
                     </li>
                   ))}
                 </ul>
