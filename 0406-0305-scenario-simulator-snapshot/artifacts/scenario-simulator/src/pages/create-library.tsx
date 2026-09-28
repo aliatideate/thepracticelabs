@@ -102,7 +102,7 @@ function Library() {
       {[...grouped.entries()].map(([cat, list]) => (
         <section key={cat} className="mb-10">
           <h2 className="text-[20px] mt-0 mb-3">{LABELS[cat] ?? cat}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
             {list.map((item) => {
               const isBrief = item.kind === "brief";
               const isInDesign = item.status === "in_design";
@@ -122,7 +122,7 @@ function Library() {
                   >
                     <div className="w-full text-left bg-white border border-[#E7E4DD] rounded-xl p-5 hover:border-[#301CA0] opacity-90">
                       <div className="flex items-start justify-between gap-3">
-                        <div className="font-semibold text-[18px] min-w-0 text-[#6C6975]">
+                        <div className="font-semibold text-[18px] leading-snug min-w-0 text-[#6C6975]">
                           {item.title}
                         </div>
                         <StatusTag status={item.status} />
@@ -141,17 +141,17 @@ function Library() {
                   key={item.id}
                   type="button"
                   onClick={() => setOpenId(openId === item.id ? null : item.id)}
-                  className="w-full text-left bg-white border border-[#E7E4DD] rounded-xl p-5 hover:border-[#301CA0]"
+                  className="flex w-full flex-col justify-start text-left bg-white border border-[#E7E4DD] rounded-xl p-5 hover:border-[#301CA0]"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="font-semibold text-[18px] min-w-0 text-[#1D1D24]">
+                  <div className="flex items-start justify-between gap-3 w-full">
+                    <div className="font-semibold text-[18px] leading-snug min-w-0 text-[#1D1D24]">
                       {item.title}
                     </div>
                     <StatusTag status={item.status} />
                   </div>
                   <div className="text-[14px] text-[#6C6975] mt-1">{meta}</div>
                   {openId === item.id && detailQ.data && (
-                    <div className="mt-4 pt-4 border-t border-[#E7E4DD] text-[14px] text-[#1D1D24]">
+                    <div className="mt-4 pt-4 border-t border-[#E7E4DD] text-[14px] text-[#1D1D24] w-full">
                       <p className="m-0 mb-2">
                         Clients with copies:{" "}
                         {detailQ.data.clientCopies.map((c) => c.clientName).join(", ") || "none"}
