@@ -68,15 +68,11 @@ export type Screen = (typeof ALL_SCREENS)[number];
 export const TEAM_STORAGE_KEY = "tpl-session";
 export const DEMAND_TRY_STORAGE_KEY = "tpl-demand-try-session";
 export const DEMAND_TRY_WORKSHOP_CODE = "DEMAND-TRY";
-export const DEMAND_FACILITATOR_SECRET = "unilever-s1";
 export const MART_STORAGE_KEY = "tpl-mart-session";
 export const MART_SESSION_LABEL = "Session 2: Ideation & Decision-Making";
 export const MART_CONFIG_PATH = "/api/mart/session-config";
 export const MART_DURATION_MINUTES = 15;
-export const MART_FACILITATOR_SECRET = "unilever-s2";
 export const MART_TRY_STORAGE_KEY = "tpl-mart-try-session";
-export const FACILITATOR_PASSWORD = "3108";
-export const FACILITATOR_UNLOCK_KEY = "tpl-facilitate-unlock";
 
 export function screenIndex(screen: string): number {
   const i = (ALL_SCREENS as readonly string[]).indexOf(screen);

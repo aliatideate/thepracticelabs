@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Bookmark, PencilLine, Phone, RotateCcw, X } from "lucide-react";
+import { Bookmark, Download, PencilLine, Phone, RotateCcw, X } from "lucide-react";
 import { MART_DURATION_MINUTES, MART_SESSION_LABEL, formatTeamLabel } from "../lib/constants";
 import { Header, SecondaryButton } from "../simulation/components";
 import { formatCountdown, isExpired, remainingMs, type SessionConfig } from "../lib/timer";
@@ -227,7 +227,7 @@ function MartResultsTable({
   );
 }
 
-export default function MartFacilitate({ secret }: { secret: string }) {
+export default function MartFacilitate() {
   const [game, setGame] = useState<DecisionGame | null>(null);
   const [sessions, setSessions] = useState<FacSession[]>([]);
   const [config, setConfig] = useState<SessionConfig | null>(null);
@@ -240,7 +240,7 @@ export default function MartFacilitate({ secret }: { secret: string }) {
   const [viewing, setViewing] = useState<ArchiveDetail | null>(null);
   const [viewingTry, setViewingTry] = useState<FacSession | null>(null);
   const [tryRuns, setTryRuns] = useState<FacSession[]>([]);
-  const headers = { "content-type": "application/json", "x-facilitator-secret": secret };
+  const headers = { "content-type": "application/json" };
 
   const loadArchives = async () => {
     const res = await fetch("/api/mart/archives", { headers });
@@ -269,12 +269,12 @@ export default function MartFacilitate({ secret }: { secret: string }) {
     load();
     const id = setInterval(load, 5000);
     return () => clearInterval(id);
-  }, [secret]);
+  }, []);
 
   const call = async (url: string, init?: RequestInit) => {
     const res = await fetch(url, { ...init, headers: { ...headers, ...init?.headers } });
     if (!res.ok) {
-      setMsg("Request failed. Check the facilitator URL.");
+      setMsg("Request failed. Try signing in again.");
       return null;
     }
     return res;
