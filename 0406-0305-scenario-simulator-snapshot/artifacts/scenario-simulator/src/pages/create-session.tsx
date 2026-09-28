@@ -31,6 +31,7 @@ function SessionDetail() {
         mode: string;
         endedAt: string | null;
         variableValues: Record<string, unknown>;
+        resolvedFacilitatorNotes?: string | null;
         archives: { id: string; savedAt: string; teamCount: number; submittedCount: number }[];
         paths: {
           join: string;
@@ -162,15 +163,22 @@ function SessionDetail() {
         <h2 className="text-[20px] mt-0 mb-3">Variable values</h2>
         <div className="bg-white border border-[#E7E4DD] rounded-xl p-5 mb-8">
           {Object.keys(data.variableValues || {}).length === 0 ? (
-            <p className="text-[#6C6975] m-0">
-              None yet — content uses the published exercise as-is until tokenisation.
-            </p>
+            <p className="text-[#6C6975] m-0">Defaults from the published exercise version.</p>
           ) : (
             <pre className="text-[14px] m-0 whitespace-pre-wrap">
               {JSON.stringify(data.variableValues, null, 2)}
             </pre>
           )}
         </div>
+
+        {data.resolvedFacilitatorNotes && (
+          <>
+            <h2 className="text-[20px] mt-0 mb-3">Facilitator notes (resolved)</h2>
+            <pre className="bg-white border border-[#E7E4DD] rounded-xl p-5 mb-8 text-[14px] whitespace-pre-wrap m-0">
+              {data.resolvedFacilitatorNotes}
+            </pre>
+          </>
+        )}
 
         <h2 className="text-[20px] mt-0 mb-3">Archives</h2>
         <div className="space-y-2">

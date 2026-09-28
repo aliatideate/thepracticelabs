@@ -1,0 +1,676 @@
+{
+  "scenario": {
+    "id": "week-in-the-field-v1",
+    "title": "A Week in the Field",
+    "exerciseType": "decision"
+  },
+  "assets": {
+    "sceneImage": "/content/media/mart-scene.png?v=1416",
+    "doorImage": "/content/media/mart-door.svg",
+    "phoneImage": "/content/media/mart-phone.svg",
+    "sceneImages": [
+      "/content/media/mart-scene.png?v=1416",
+      "/content/media/mart-scene-2.png?v=1",
+      "/content/media/mart-scene-3.png?v=1",
+      "/content/media/mart-scene-4.png?v=1",
+      "/content/media/mart-scene-5.png?v=1",
+      "/content/media/mart-scene-6.png?v=1"
+    ],
+    "travelImages": [
+      "/content/media/mart-travel-1.png",
+      "/content/media/mart-travel-2.png",
+      "/content/media/mart-travel-3.png",
+      "/content/media/mart-travel-4.png",
+      "/content/media/mart-travel-5.png"
+    ]
+  },
+  "intro": {
+    "role": "You're a field rep for {{company.name}}.",
+    "setting": "Six branches to cover, a long weekend coming, and a busy area manager",
+    "goal": ""
+  },
+  "playbook": {
+    "title": "The {{company.name}} Playbook",
+    "rules": [
+      "If you can undo a decision before your next visit, take a decision.",
+      "Never commit the company to anything beyond this month without approval.",
+      "Your area manager is busy. Every call takes a day.",
+      "Retailers are partners. Tell them the truth about what we can deliver."
+    ]
+  },
+  "decisions": [
+    {
+      "id": "d1-price-labels",
+      "order": 1,
+      "location": {
+        "name": "{{chain.name}}, {{branches.alNahda}}"
+      },
+      "situation": "The shelf labels still show last month's higher price, not this week's promotion. You have promo labels in the car.",
+      "hotspot": {
+        "x": 33,
+        "y": 38,
+        "w": 17,
+        "h": 32
+      },
+      "facilitator": {
+        "difficulty": "easy",
+        "note": "Plain two-way door. Nobody should escalate this. Deferring costs a day because you have to come back."
+      },
+      "options": [
+        {
+          "id": "A",
+          "label": "Swap the labels now with the store staff",
+          "immediate": "Ten minutes with a staff member and the shelf is right. Shoppers can see the deal.",
+          "deferred": {
+            "headline": "{{branches.alNahda}} shoppers snap up juice promotion",
+            "standfirst": "Correct shelf pricing drove a strong weekend for the promotion.",
+            "weight": 2,
+            "outcome": "good"
+          },
+          "facilitator": {
+            "doorType": "two-way"
+          },
+          "grade": {
+            "grade": "best",
+            "tag": null,
+            "rules": [
+              1
+            ],
+            "rationale": "Yours to fix, and fixed on the spot."
+          },
+          "icon": "/content/media/options/Q101.png"
+        },
+        {
+          "id": "B",
+          "label": "Mention it to the store manager and move on",
+          "immediate": "The manager says he'll sort it. On your next visit, the old labels are still up.",
+          "deferred": {
+            "headline": "Juice promotion goes unnoticed at {{branches.alNahda}}",
+            "standfirst": "Shoppers saw the old price for most of the promotion.",
+            "weight": 3,
+            "outcome": "bad"
+          },
+          "facilitator": {
+            "doorType": "two-way"
+          },
+          "grade": {
+            "grade": "worst",
+            "tag": "tooSlow",
+            "rules": [
+              1
+            ],
+            "rationale": "A ten-minute fix left undone all week."
+          },
+          "icon": "/content/media/options/Q102.png"
+        },
+        {
+          "id": "call",
+          "label": "Call your area manager",
+          "immediate": "Your area manager sounds confused. \"Why are you calling me about labels? Just fix them.\" You fix them, a day later than you could have.",
+          "deferred": {
+            "headline": "Area manager: \"Please stop calling me about labels\"",
+            "standfirst": "The promotion was fixed in the end, a day late.",
+            "weight": 1,
+            "outcome": "bad"
+          },
+          "facilitator": {
+            "doorType": "n/a"
+          },
+          "grade": {
+            "grade": "poor",
+            "tag": "tooSlow",
+            "rules": [
+              1,
+              3
+            ],
+            "rationale": "Yours to fix. The call only added a day."
+          },
+          "icon": "/content/media/options/Q103.png"
+        }
+      ]
+    },
+    {
+      "id": "d2-endcap-discount",
+      "order": 2,
+      "location": {
+        "name": "{{chain.name}}, {{branches.muwaileh}}"
+      },
+      "situation": "The store manager offers you the end-of-aisle display this weekend, if {{company.name}} gives an extra 5% off.",
+      "hotspot": {
+        "x": 50,
+        "y": 53,
+        "w": 10,
+        "h": 25
+      },
+      "facilitator": {
+        "difficulty": "murky",
+        "note": "Looks two-way (one weekend only), but a discount sets a precedent that's hard to take back. Both doors cost the same. This is a debate door."
+      },
+      "options": [
+        {
+          "id": "A",
+          "label": "Accept, for this weekend only",
+          "immediate": "You shake on it. The display goes up on Thursday night.",
+          "deferred": {
+            "headline": "{{branches.muwaileh}} manager asks for 5% again, and two other branches want the same",
+            "standfirst": "A great weekend on the end-cap, but the one-off discount is now the expected price.",
+            "weight": 4,
+            "outcome": "mixed"
+          },
+          "facilitator": {
+            "doorType": "murky"
+          },
+          "grade": {
+            "grade": "judgment",
+            "tag": null,
+            "rules": [],
+            "rationale": "A judgment call. We'll discuss this one."
+          },
+          "icon": "/content/media/options/Q201.png"
+        },
+        {
+          "id": "B",
+          "label": "Decline, and offer the standard promotion instead",
+          "immediate": "The manager shrugs. \"Your loss.\" The display goes to someone else.",
+          "deferred": {
+            "headline": "Rival brand takes {{branches.muwaileh}} end-cap for the long weekend",
+            "standfirst": "A quieter weekend for {{company.name}}, but pricing stays where it was.",
+            "weight": 3,
+            "outcome": "mixed"
+          },
+          "facilitator": {
+            "doorType": "murky"
+          },
+          "grade": {
+            "grade": "judgment",
+            "tag": null,
+            "rules": [],
+            "rationale": "A judgment call. We'll discuss this one."
+          },
+          "icon": "/content/media/options/Q202.png"
+        },
+        {
+          "id": "call",
+          "label": "Call your area manager",
+          "immediate": "\"Your call, but be careful what you set up.\" By the time you call back, the display has gone to a competitor.",
+          "deferred": {
+            "headline": "Rival brand takes {{branches.muwaileh}} end-cap while {{company.name}} deliberates",
+            "standfirst": "The decision came back to the rep anyway, a day too late.",
+            "weight": 3,
+            "outcome": "bad"
+          },
+          "facilitator": {
+            "doorType": "n/a"
+          },
+          "grade": {
+            "grade": "poor",
+            "tag": "tooSlow",
+            "rules": [
+              3
+            ],
+            "rationale": "Your manager had already said it was your call."
+          },
+          "icon": "/content/media/options/Q203.png"
+        }
+      ]
+    },
+    {
+      "id": "d3-planogram",
+      "order": 3,
+      "location": {
+        "name": "{{chain.name}}, {{branches.alMajaz}}"
+      },
+      "situation": "Your juice has been moved to the bottom shelf, not where the agreed shelf plan puts it.",
+      "hotspot": {
+        "x": 53,
+        "y": 20,
+        "w": 13,
+        "h": 30
+      },
+      "facilitator": {
+        "difficulty": "easy",
+        "note": "Restoring the agreed plan is the rep's job. Clear two-way door."
+      },
+      "options": [
+        {
+          "id": "A",
+          "label": "Put it back where the plan says, with the staff's OK",
+          "immediate": "Back at eye level in twenty minutes. The staff didn't mind.",
+          "deferred": {
+            "headline": "Juice back at eye level, {{branches.alMajaz}} sales recover",
+            "standfirst": "Sales returned to normal within the week.",
+            "weight": 2,
+            "outcome": "good"
+          },
+          "facilitator": {
+            "doorType": "two-way"
+          },
+          "grade": {
+            "grade": "best",
+            "tag": null,
+            "rules": [
+              1
+            ],
+            "rationale": "Restoring the agreed shelf plan is your job."
+          },
+          "icon": "/content/media/options/Q301.png"
+        },
+        {
+          "id": "B",
+          "label": "Note it for your next visit",
+          "immediate": "You log it and move on. On your next visit, it's still on the bottom shelf.",
+          "deferred": {
+            "headline": "A week on the bottom shelf costs {{branches.alMajaz}} juice sales",
+            "standfirst": "Shoppers didn't find what they couldn't see.",
+            "weight": 3,
+            "outcome": "bad"
+          },
+          "facilitator": {
+            "doorType": "two-way"
+          },
+          "grade": {
+            "grade": "worst",
+            "tag": "tooSlow",
+            "rules": [
+              1
+            ],
+            "rationale": "A twenty-minute fix left undone all week."
+          },
+          "icon": "/content/media/options/Q302.png"
+        },
+        {
+          "id": "call",
+          "label": "Call your area manager",
+          "immediate": "\"That's literally your job.\" You move it back, a day later than you could have.",
+          "deferred": {
+            "headline": "Area manager's week interrupted by shelf question",
+            "standfirst": "The shelf was fixed in the end, a day late.",
+            "weight": 1,
+            "outcome": "bad"
+          },
+          "facilitator": {
+            "doorType": "n/a"
+          },
+          "grade": {
+            "grade": "poor",
+            "tag": "tooSlow",
+            "rules": [
+              1,
+              3
+            ],
+            "rationale": "Yours to fix. The call only added a day."
+          },
+          "icon": "/content/media/options/Q303.png"
+        }
+      ]
+    },
+    {
+      "id": "d4-exclusivity",
+      "order": 4,
+      "location": {
+        "name": "{{chain.name}}, {{branches.ajmanCorniche}}"
+      },
+      "situation": "The chain's buyer for three branches offers to drop a competitor's juice completely, if {{company.name}} commits to exclusive supply at a fixed price for 12 months.",
+      "hotspot": {
+        "x": 69,
+        "y": 52,
+        "w": 17,
+        "h": 23
+      },
+      "facilitator": {
+        "difficulty": "hard",
+        "note": "Clear one-way door. Calling is the right move, and the only place in the game where it clearly is. Teaches that escalation belongs at one-way doors."
+      },
+      "options": [
+        {
+          "id": "A",
+          "label": "Agree on the spot. It's a huge win",
+          "immediate": "The buyer is delighted. You shake hands and he says he'll send the paperwork.",
+          "deferred": {
+            "headline": "{{company.name}} hit with penalties after summer exclusivity deal",
+            "standfirst": "The factory couldn't guarantee summer supply at the fixed price the rep agreed.",
+            "weight": 6,
+            "outcome": "bad"
+          },
+          "facilitator": {
+            "doorType": "one-way"
+          },
+          "grade": {
+            "grade": "worst",
+            "tag": "tooFast",
+            "rules": [
+              2
+            ],
+            "rationale": "A 12-month commitment is never a one-person decision."
+          },
+          "icon": "/content/media/options/Q401.png"
+        },
+        {
+          "id": "B",
+          "label": "Decline. It's above your level",
+          "immediate": "You thank the buyer and say no. He looks surprised, and says he'll talk to other suppliers.",
+          "deferred": {
+            "headline": "Rival juice brand wins exclusive deal at three {{chain.name}} branches",
+            "standfirst": "An opportunity nobody at {{company.name}} got to consider.",
+            "weight": 4,
+            "outcome": "mixed"
+          },
+          "facilitator": {
+            "doorType": "one-way"
+          },
+          "grade": {
+            "grade": "okay",
+            "tag": "tooFast",
+            "rules": [
+              2
+            ],
+            "rationale": "Saying no alone closed a door nobody else got to look at."
+          },
+          "icon": "/content/media/options/Q402.png"
+        },
+        {
+          "id": "call",
+          "label": "Call your area manager",
+          "immediate": "Your area manager takes it straight to the commercial team. It costs you a day, but the deal is in the right hands.",
+          "deferred": {
+            "headline": "{{company.name}} signs three-branch deal on terms the factory can meet",
+            "standfirst": "Commercial restructured the offer before signing.",
+            "weight": 5,
+            "outcome": "good"
+          },
+          "facilitator": {
+            "doorType": "n/a"
+          },
+          "grade": {
+            "grade": "best",
+            "tag": null,
+            "rules": [
+              2
+            ],
+            "rationale": "Exactly the kind of decision to take to your manager."
+          },
+          "icon": "/content/media/options/Q403.png"
+        }
+      ]
+    },
+    {
+      "id": "d5-tasting",
+      "order": 5,
+      "location": {
+        "name": "{{chain.name}}, {{branches.alRashidiya}}"
+      },
+      "situation": "A competitor is handing out free samples next to your shelf. You could run your own tasting this Saturday, but it would use half your sampling budget for the whole quarter.",
+      "hotspot": {
+        "x": 12,
+        "y": 55,
+        "w": 23,
+        "h": 25
+      },
+      "facilitator": {
+        "difficulty": "murky",
+        "note": "Money spent can't come back (one-way), but the amount is small. Both doors cost the same. Debate door."
+      },
+      "options": [
+        {
+          "id": "A",
+          "label": "Run the tasting",
+          "immediate": "You book a promoter for Saturday. The tasting table goes up by the entrance.",
+          "deferred": {
+            "headline": "Saturday tasting wins {{branches.alRashidiya}}, but Q3 launch has no sampling budget left",
+            "standfirst": "A strong weekend now, a thinner launch later.",
+            "weight": 3,
+            "outcome": "mixed"
+          },
+          "facilitator": {
+            "doorType": "murky"
+          },
+          "grade": {
+            "grade": "judgment",
+            "tag": null,
+            "rules": [],
+            "rationale": "A judgment call. We'll discuss this one."
+          },
+          "icon": "/content/media/options/Q501.png"
+        },
+        {
+          "id": "B",
+          "label": "Save the budget",
+          "immediate": "You let the competitor have the weekend. Your budget stays intact.",
+          "deferred": {
+            "headline": "Competitor tasting wins the weekend at {{branches.alRashidiya}}",
+            "standfirst": "{{company.name}} keeps its sampling budget for the Q3 launch.",
+            "weight": 3,
+            "outcome": "mixed"
+          },
+          "facilitator": {
+            "doorType": "murky"
+          },
+          "grade": {
+            "grade": "judgment",
+            "tag": null,
+            "rules": [],
+            "rationale": "A judgment call. We'll discuss this one."
+          },
+          "icon": "/content/media/options/Q502.png"
+        },
+        {
+          "id": "call",
+          "label": "Call your area manager",
+          "immediate": "\"It's your budget.\" By the time you've called back, there's no promoter available for Saturday.",
+          "deferred": {
+            "headline": "Competitor tasting wins the weekend while {{company.name}} waits",
+            "standfirst": "The budget was saved, mostly by default.",
+            "weight": 3,
+            "outcome": "bad"
+          },
+          "facilitator": {
+            "doorType": "n/a"
+          },
+          "grade": {
+            "grade": "poor",
+            "tag": "tooSlow",
+            "rules": [
+              3
+            ],
+            "rationale": "Your budget, your call."
+          },
+          "icon": "/content/media/options/Q503.png"
+        }
+      ]
+    },
+    {
+      "id": "d6-price-promise",
+      "order": 6,
+      "location": {
+        "name": "{{chain.name}}, {{branches.universityCity}}"
+      },
+      "situation": "The chain's category manager emails you. She wants written confirmation that the current promotional price will hold until the end of the year.",
+      "hotspot": {
+        "x": 73,
+        "y": 52,
+        "w": 10,
+        "h": 11
+      },
+      "facilitator": {
+        "difficulty": "hard",
+        "note": "Looks easy (it's the price we already have), but it's a written commitment beyond this month: a one-way door. The playbook covers it (rule 2), so declining yourself is fine and calling isn't needed."
+      },
+      "options": [
+        {
+          "id": "A",
+          "label": "Reply yes. It's the price we already have",
+          "immediate": "You reply in two lines. She thanks you and files it.",
+          "deferred": {
+            "headline": "Price U-turn row: {{chain.namePlural}} forwards rep's email to {{company.name}} commercial",
+            "standfirst": "{{company.name}} raised prices in October. The buyer had it in writing that they wouldn't.",
+            "weight": 5,
+            "outcome": "bad"
+          },
+          "facilitator": {
+            "doorType": "one-way"
+          },
+          "grade": {
+            "grade": "worst",
+            "tag": "tooFast",
+            "rules": [
+              2
+            ],
+            "rationale": "A written promise beyond this month, made alone."
+          },
+          "icon": "/content/media/options/Q601.png"
+        },
+        {
+          "id": "B",
+          "label": "Reply that promotional prices are set monthly, so you can't confirm beyond that",
+          "immediate": "She's a little annoyed, but thanks you for being straight with her.",
+          "deferred": {
+            "headline": "Monthly pricing holds at {{chain.namePlural}} despite buyer grumbles",
+            "standfirst": "No surprises when prices changed in October.",
+            "weight": 2,
+            "outcome": "good"
+          },
+          "facilitator": {
+            "doorType": "one-way"
+          },
+          "grade": {
+            "grade": "best",
+            "tag": null,
+            "rules": [
+              2,
+              4
+            ],
+            "rationale": "Honest, and within what you're allowed to promise."
+          },
+          "icon": "/content/media/options/Q602.png"
+        },
+        {
+          "id": "call",
+          "label": "Call your area manager",
+          "immediate": "Your area manager replies to her with exactly what the playbook says. It costs you a day.",
+          "deferred": {
+            "headline": "Monthly pricing holds at {{chain.namePlural}} after manager steps in",
+            "standfirst": "The same answer the rep could have given a day earlier.",
+            "weight": 2,
+            "outcome": "mixed"
+          },
+          "facilitator": {
+            "doorType": "n/a"
+          },
+          "grade": {
+            "grade": "okay",
+            "tag": "tooSlow",
+            "rules": [
+              3
+            ],
+            "rationale": "The right answer, but the playbook had already given it to you."
+          },
+          "icon": "/content/media/options/Q603.png"
+        }
+      ]
+    }
+  ],
+  "reveal": {
+    "title": "One month later",
+    "masthead": "The Shelf Report",
+    "dateline": "Sharjah & Ajman edition, one month on"
+  },
+  "scoring": {
+    "grades": {
+      "best": {
+        "label": "Best",
+        "points": 2
+      },
+      "judgment": {
+        "label": "Judgment call",
+        "points": 2
+      },
+      "okay": {
+        "label": "Okay",
+        "points": 1
+      },
+      "poor": {
+        "label": "Poor",
+        "points": 0
+      },
+      "worst": {
+        "label": "Worst",
+        "points": -1
+      }
+    },
+    "maxPointsPerDecision": 2,
+    "tags": {
+      "tooSlow": {
+        "name": "Too slow",
+        "zero": "Nothing waited that was yours to decide.",
+        "withBranches": "Waited on decisions that were yours: {branches}."
+      },
+      "tooFast": {
+        "name": "Too fast",
+        "zero": "Nothing went ahead that needed a check.",
+        "withBranches": "Went ahead without a check: {branches}."
+      }
+    },
+    "styles": {
+      "operatorMaxLost": 2,
+      "bottleneckMinLostEach": 2,
+      "axes": {
+        "columns": [
+          "Quick on small calls",
+          "Slow on small calls"
+        ],
+        "rows": [
+          "Careful on big calls",
+          "Rushed on big calls"
+        ]
+      },
+      "labels": {
+        "operator": {
+          "name": "The Navigator",
+          "grid": "top-left",
+          "ideal": true,
+          "band": "good",
+          "description": "You moved fast on what you could undo, and slowed down on what you couldn't.",
+          "hover": "Navigators move fast on what they can undo, and slow down on what they can't.",
+          "tip": "Keep doing what you're doing."
+        },
+        "escalator": {
+          "name": "The Escalator",
+          "grid": "top-right",
+          "band": "mixed",
+          "description": "You kept things safe by checking in, even when the call was yours to make.",
+          "hover": "Escalators keep things safe by checking in, even when the call is theirs to make.",
+          "tip": "Where the decision is easy and cheap to reverse, just take it."
+        },
+        "cowboy": {
+          "name": "The Sprinter",
+          "grid": "bottom-left",
+          "band": "mixed",
+          "description": "You kept things moving, including promises that weren't yours to make.",
+          "hover": "Sprinters keep things moving, including promises that aren't theirs to make.",
+          "tip": "If you couldn't undo it before the next visit, pause and bring someone in."
+        },
+        "bottleneck": {
+          "name": "The Bottleneck",
+          "grid": "bottom-right",
+          "band": "poor",
+          "description": "You held back on the small calls and rushed the big ones.",
+          "hover": "Bottlenecks hold back on the small calls and rush the big ones.",
+          "tip": "Take the easy reversals on the spot. Slow down only when you couldn't undo it."
+        }
+      }
+    },
+    "ui": {
+      "styleHeading": "Your decision-making style",
+      "thisWeek": "What you did:",
+      "weekBoth": "You waited on decisions that were yours to make. But went ahead with some that needed a check.",
+      "weekSlow": "You waited on decisions that were yours to make.",
+      "weekFast": "You went ahead with some that needed a check.",
+      "weekClear": "Nothing waited that was yours to decide, and nothing went ahead that needed a check.",
+      "suggestion": "Suggestion:",
+      "yourStyle": "Your style",
+      "idealMarker": "Aim",
+      "resultMarker": "UR",
+      "rightPlace": "You're in the right place"
+    }
+  }
+}

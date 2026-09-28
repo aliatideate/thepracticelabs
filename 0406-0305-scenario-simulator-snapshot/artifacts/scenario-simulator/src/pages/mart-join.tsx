@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { ArrowLeft, Lock } from "lucide-react";
 import {
   MART_CONFIG_PATH,
+  MART_WORKSHOP_CODE,
   MART_DURATION_MINUTES,
   MART_SESSION_LABEL,
   TEAM_EMOJIS,
@@ -26,7 +27,7 @@ export default function MartJoin() {
   const [, setLocation] = useLocation();
   const game = useDecisionGame();
   const room = useSessionRoom();
-  const workshopCode = room?.runtimeWorkshopCode || room?.workshopCode || "MART";
+  const workshopCode = room?.runtimeWorkshopCode || room?.workshopCode || MART_WORKSHOP_CODE;
   const teamSlots = TEAM_NAMES.slice(0, room?.teamCount ?? TEAM_NAMES.length);
   const stored = typeof window !== "undefined" ? readMartTeam() : null;
   const [sessions, setSessions] = useState<MartSession[]>([]);
@@ -121,7 +122,7 @@ export default function MartJoin() {
   return (
     <div className="min-h-screen">
       <Header
-        configPath={MART_CONFIG_PATH}
+        configPath={`${MART_CONFIG_PATH}?workshopCode=${encodeURIComponent(workshopCode)}`}
         sessionLabel={MART_SESSION_LABEL}
         titleOverride={game.scenario.title}
       />

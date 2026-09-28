@@ -2,8 +2,8 @@ import { assertFacilitator } from "../lib/auth";
 import { Router, type IRouter } from "express";
 import { asc, eq } from "drizzle-orm";
 import { db, sessionsTable, workshopsTable } from "@workspace/db";
-import { loadScenario } from "../lib/content";
 import { WORKSHOP_CODE } from "../lib/workshop";
+import { scenarioForCode } from "../lib/workshop-session";
 
 const router: IRouter = Router();
 
@@ -15,12 +15,16 @@ function csvEscape(value: string): string {
 router.get("/export", async (req, res) => {
   if (!(await assertFacilitator(req, res))) return;
   const format = String(req.query.format ?? "json");
-  const scenario = loadScenario();
+  const workshopCode =
+    typeof req.query.workshopCode === "string" && req.query.workshopCode.trim()
+      ? req.query.workshopCode.trim().toUpperCase()
+      : WORKSHOP_CODE;
+  const scenario = await scenarioForCode(workshopCode);
 
   const ws = await db
     .select()
     .from(workshopsTable)
-    .where(eq(workshopsTable.code, WORKSHOP_CODE))
+    .where(eq(workshopsTable.code, workshopCode))
     .limit(1);
   if (!ws[0]) return res.json(format === "csv" ? "" : []);
 

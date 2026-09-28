@@ -356,7 +356,9 @@ export default function FacilitatePage() {
     }
   };
   const download = async (format: "csv" | "json") => {
-    const res = await call(`/api/export?format=${format}`);
+    const res = await call(
+      `/api/export?format=${format}&workshopCode=${encodeURIComponent(workshopCode)}`,
+    );
     if (!res) return;
     const blob = await res.blob();
     const a = document.createElement("a");

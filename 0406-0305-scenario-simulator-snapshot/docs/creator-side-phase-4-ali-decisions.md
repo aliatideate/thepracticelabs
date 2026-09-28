@@ -1,82 +1,75 @@
-# Phase 4 — Ali decisions (2026-09-29) + answers
+# Phase 4 — Ali decisions (2026-09-29) + implementation notes
 
-Companion to `creator-side-phase-4-occurrence-report.md`. Still **no tokenisation committed** until intro sentence + remaining OKs land.
-
----
-
-## 1. GBC-W35 filenames
-
-**What W35 is:** calendar **week 35** (2026). Demand evidence copy refers to “week 35” / value `2026 W35` (control-tower snapshot). So `GBC-W35-…` = company short code + week label + doc type.
-
-**v2 behaviour (agreed):** do not hardcode `GBC`. Build download labels from the session’s resolved short name (slug) + week token, e.g. `{shortSlug}-W35-availability.xlsx`. If short name is empty, fall back to workshop/session code. Implementation waits for tokenisation pass.
+Companion to `creator-side-phase-4-occurrence-report.md`.
 
 ---
 
-## 2. Long weekend + Sharjah/Ajman dateline
+## Approved (paste message, 2026-09-29)
 
-- **long weekend:** **LOCK** (UAE pack; region packs later).
-- **`$.reveal.dateline` = `Sharjah & Ajman edition, one month on`:** this is a **general regional newspaper dateline**, not one of the six branch areas.
-  - Six branches: Al Nahda, Muwaileh, Al Majaz, Ajman Corniche, Al Rashidiya, University City.
-  - “Ajman” appears inside branch **Ajman Corniche**, but the dateline names the emirates Sharjah & Ajman as an edition, not that store.
-  - **LOCK** the dateline for v2 (UAE-only renames). Cross-country / currency / weekend / dateline packs later.
+1. **Mart intro** — commit as `You're a field rep for {{company.name}}.`  
+   Check (a): **default v2 is identical to v1 except this sentence.**
+2. **“The Gulf Beverages Playbook”** — keep wording; validate company name **cannot start with “The ”**.
+3. **Chain name** — stays tokenisable; plural derived from singular (`name + "s"`), shown next to the field.
+4. **Rename limits** — UAE-only and beverage/FMCG-only for now; note on customise screen (scene art implies drinks).
+5. **Tokens resolve** in facilitator notes Markdown **and** CSV/JSON exports.
+6. **Filename slug** — lowercase ASCII hyphens; session code fallback.
+7. **Logo preview** — dark + light surfaces, wide + square frames on customise.
 
----
-
-## 3. Mart intro — proposed sentence (awaiting commit OK)
-
-**Current:** `You're a Gulf Beverages field rep.`  
-**Proposed:** `You're a field rep for Gulf Beverages.`
-
-With token: `You're a field rep for {{company.name}}.`
-
-### Other article / possessive checks (Mart + Demand)
-
-| Location | Text | Risk | Action |
-| --- | --- | --- | --- |
-| Mart `$.intro.role` | You're a Gulf Beverages field rep. | a/an | Rephrase as above |
-| Mart `$.playbook.title` | The Gulf Beverages Playbook | “The” + name; doubles if client name already starts with “The” | Keep pattern; rare edge case — note in customise helper later if needed |
-| Elsewhere | No `Gulf Beverages'`, `an Gulf`, `a Saha`, `Saha Mart's` | — | None found |
-
-Demand has no a/an attachment of company name into a following noun phrase beyond “Gulf Beverages Co. is …”.
+Tokenisation into v2 proceeds on those terms. Show diff + long-name preview before final sign-off.
 
 ---
 
-## 4. Media audit (legible text / branding)
+## 1. Intro sentence — old vs new
 
-Treat **none** as replaceable until Ali confirms. Chain name stays tokenisable in **copy** unless you lock it after review.
-
-| File | Legible text / branding |
+| | Sentence |
 | --- | --- |
-| `gulf-logo.png` | **Yes — company logo.** Text “Gulf / Beverages / Co.” + orange+wave emblem. (Demand logo variable; not a Mart scene lock.) |
-| `mart-scene.png` … `mart-scene-6.png` | **No legible text.** No “Saha Mart” on signage. Generic store interiors; product labels are abstract colour blocks. |
-| `mart-travel-1.png` (and siblings, same art language) | **No legible text.** White car with **orange fruit + leaf** door mark (graphic only). |
-| `mart-door.svg` | Door graphic only — no text. |
-| `mart-phone.svg` | Phone graphic only — no text. |
-| `options/Icons.png` | Symbols only: barcode gun, “…”, shelf with **`%`**, hanging sign with **orange fruit**, juice carton with same fruit, notebook. **No alphanumeric brand names.** |
-| `options/Q101–Q603.png` | Sampled Q101/Q201/Q401/Q601: icons (shelf+`%`, handshake, sealed envelope with sprout stamp, etc.). **No “Saha” / “Gulf” lettering found.** Remaining Q* follow same icon set. |
-| `options/Icons 2.png` | Sheet variant of icon set (same language). |
+| **v1 (old)** | `You're a Gulf Beverages field rep.` |
+| **v2 template** | `You're a field rep for {{company.name}}.` |
+| **v2 default resolved** | `You're a field rep for Gulf Beverages.` |
 
-**Implication for chain name:** no storefront “Saha Mart” in scene art → copy tokenisation of `Saha Mart` / `Saha Marts` can stay **PROPOSE** unless you still want to lock after eyeballing.
+Information: both identify the learner as a field rep for the company. The rephrase moves the company name after “for” so a/an never attaches to a client brand. No other meaning is dropped.
+
+---
+
+## 2. GBC-W35 filenames
+
+**What W35 is:** calendar **week 35** (2026).
+
+**v2 behaviour:** `{shortSlug}-W35-availability.xlsx` (etc.). Slug from `company.shortName`; if empty, session/workshop code; else `gbc`.
+
+---
+
+## 3. Long weekend + Sharjah/Ajman dateline
+
+**LOCK** (UAE pack).
+
+---
+
+## 4. Media / chain
+
+No “Saha Mart” lettering in scene art → chain stays tokenisable. Plural derived.
 
 ---
 
 ## 5. Plant city (Dubai)
 
-All three Demand occurrences are **plain location labels** (overview “site in Dubai”, memo “Dubai factory”, “The Dubai plant runs…”). **No** copy ties Dubai to distance/transit time to KSA or Qatar.  
-→ **PROPOSE** `company.plantCity` for v2.
+**Tokenised** as `company.plantCity`.
 
 ---
 
-## 6. Pre-approval checks (will do before asking you to sign off v2)
+## 6. Pre-approval checks
 
-(a) Render v2 with **default** variable values → byte/string-identical to v1 content (show diff).  
-(b) v1 rows + Unilever sessions/archives **untouched**.  
-(c) Every variable has `maxLength`; customise UI demonstrates long-name layout impact.
+(a) Default v2 ≡ v1 **except** Mart `$.intro.role` (see above). Demand identical except added optional `company.shortName` field.  
+(b) v1 rows + Unilever `DEFAULT` / `MART` sessions stay on frozen v1 snapshots.  
+(c) Every variable has `maxLength`; customise “Preview long names” demonstrates layout impact.
 
 ---
 
-## Open for Ali
+## 7. Facilitator notes + exports
 
-1. OK to commit Mart intro as: `You're a field rep for Gulf Beverages.`?  
-2. After media list above: keep chain name tokenisable, or lock?  
-3. Any other cut before we implement tokenisation + (a)(b)(c)?
+| Surface | Token resolution |
+| --- | --- |
+| `exercise_versions.facilitator_notes` (Markdown) | Resolved into `workshop_sessions.resolved_facilitator_notes` on create |
+| In-content Mart `decisions[*].facilitator.note` | Via `resolved_content` walk (no company names today) |
+| Demand `/api/export` CSV+JSON | Uses `scenarioForCode(workshopCode)` |
+| Mart `/api/mart/export` CSV+JSON | Uses `decisionGameFacilitatorForCode(workshopCode)` |

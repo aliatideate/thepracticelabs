@@ -20,6 +20,7 @@ export interface Scenario {
     descriptor: string;
     logo: string;
     logoUrl: string;
+    shortName?: string;
     overview: string;
     facts: { label: string; value: string }[];
   };

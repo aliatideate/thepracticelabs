@@ -1,6 +1,6 @@
 # Creator side — Phase 4 plan (tokenisation)
 
-Status: **occurrence reports ready for Ali review**. No tokenised content committed until approved.
+Status: **tokenisation implemented on v2** (awaiting Ali sign-off on diff + long-name preview).
 
 Brief §4 + §8 phase 4. Depends on Phase 3/5 (resolve + customise UI exist; variables still `[]`).
 

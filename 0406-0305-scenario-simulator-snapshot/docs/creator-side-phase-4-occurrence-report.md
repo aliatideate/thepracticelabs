@@ -1,7 +1,7 @@
 # Phase 4 — Occurrence report (review before tokenisation)
 
-**Do not tokenise until Ali approves this report.**  
-Sources: `content/scenario.json`, `content/decision-game.json`, plus noted UI constants / media.
+**Approved for v2 tokenisation (2026-09-29)** — see `creator-side-phase-4-ali-decisions.md`.  
+Sources: `content/scenario.json`, `content/decision-game.json`, v2 tokenised siblings, facilitator notes, exports.
 
 Legend: **PROPOSE** = candidate to tokenise · **FLAG** = needs your call · **LOCK** = leave as teaching geography / mechanics.
 
@@ -145,6 +145,17 @@ No `Gulf Beverages Co.` in Mart. No separate shortName needed unless you want pa
 
 ---
 
-## D. After approval
+## D. Facilitator notes + exports (also token-resolved)
+
+| Surface | Demand | Mart |
+| --- | --- | --- |
+| Version Markdown `facilitator_notes` | Tokenised; resolved on session create | Tokenised; resolved on session create |
+| In-content facilitator notes | n/a | `decisions[*].facilitator.note` (mechanics only today — no company/chain strings) |
+| CSV/JSON download | `/api/export?workshopCode=` → `scenarioForCode` | `/api/mart/export?workshopCode=` → `decisionGameFacilitatorForCode` |
+| Evidence download labels | `{shortSlug}-W35-…` from `company.shortName` | n/a |
+
+## E. After approval
 
 Tokenise → insert exercise_versions **v2** with `variables` → wire customise → staging smoke with a renamed client → only then production. Unilever historical sessions stay on v1 resolved snapshots.
+
+**Implemented:** `content/scenario.v2.json`, `content/decision-game.v2.json`, `seed:creator:phase4`, resolve + customise UI. Diff proof: default v2 ≡ v1 except Mart intro sentence.

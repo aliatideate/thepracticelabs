@@ -18,7 +18,13 @@ import {
   type WorkshopSessionMode,
 } from "@workspace/db";
 import { issueWorkshopFacilitatorToken, requireAuth } from "../lib/auth";
-import { allocateUniqueWorkshopCode, resolveContentTokens } from "../lib/resolve-content";
+import {
+  allocateUniqueWorkshopCode,
+  prepareVariableValues,
+  resolveContentTokens,
+  resolveFacilitatorNotes,
+  validateVariableValues,
+} from "../lib/resolve-content";
 
 const router: IRouter = Router();
 
@@ -680,17 +686,32 @@ async function createWorkshopSession(opts: {
   const published = await latestPublishedVersion(exerciseId, opts.user.orgId);
   if (!published) return { error: "exercise not found or not published", status: 404 as const };
 
+  const mergedValues = prepareVariableValues({
+    definitions: published.version.variables ?? [],
+    values: variableValues,
+    logoAssetId,
+  });
+  const validation = validateVariableValues(
+    published.version.variables ?? [],
+    mergedValues,
+  );
+  if (validation) return validation;
+
   const copy = await upsertClientCopy({
     orgId: opts.user.orgId,
     clientId,
     exerciseId,
     exerciseVersionId: published.version.id,
-    variableValues,
+    variableValues: mergedValues,
     logoAssetId,
     createdBy: opts.user.id,
   });
 
-  const resolvedContent = resolveContentTokens(published.version.content, variableValues);
+  const resolvedContent = resolveContentTokens(published.version.content, mergedValues);
+  const resolvedFacilitatorNotes = resolveFacilitatorNotes(
+    published.version.facilitatorNotes,
+    mergedValues,
+  );
   const code = await allocateUniqueWorkshopCode();
 
   const [workshop] = await db
@@ -713,7 +734,7 @@ async function createWorkshopSession(opts: {
       clientId,
       clientCopyId: copy.id,
       exerciseVersionId: published.version.id,
-      variableValues,
+      variableValues: mergedValues,
       title: title.trim(),
       durationMinutes: Math.round(durationMinutes),
       teamCount,
@@ -721,7 +742,7 @@ async function createWorkshopSession(opts: {
       workshopCode: code,
       runtimeWorkshopId: workshop.id,
       resolvedContent,
-      resolvedFacilitatorNotes: published.version.facilitatorNotes,
+      resolvedFacilitatorNotes,
       status: "ready",
       isPreview,
       previewExpiresAt: isPreview ? new Date(Date.now() + 24 * 60 * 60 * 1000) : null,
@@ -837,6 +858,7 @@ router.get("/create/sessions/:id", async (req, res) => {
     mode: row.session.mode,
     isPreview: row.session.isPreview,
     variableValues: row.session.variableValues,
+    resolvedFacilitatorNotes: row.session.resolvedFacilitatorNotes,
     createdAt: row.session.createdAt.toISOString(),
     endedAt: row.session.endedAt?.toISOString() ?? null,
     archives: archives.map((a) => ({
