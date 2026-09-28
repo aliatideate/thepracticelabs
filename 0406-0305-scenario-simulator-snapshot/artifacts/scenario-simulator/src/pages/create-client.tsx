@@ -96,9 +96,12 @@ function ClientDetail() {
             href={`/create/sessions/${s.id}`}
             className="block bg-white border border-[#E7E4DD] rounded-xl p-4 no-underline text-inherit hover:border-[#301CA0]"
           >
-            <div className="font-semibold text-[18px]">{s.title}</div>
+            <div className="flex items-baseline justify-between gap-3">
+              <div className="font-semibold text-[18px] min-w-0 truncate">{s.title}</div>
+              <span className="text-[14px] text-[#6C6975] shrink-0">{s.status}</span>
+            </div>
             <div className="text-[14px] text-[#6C6975] mt-1">
-              {s.status} · code {s.workshopCode} · {s.teamCount} teams · {s.durationMinutes} min
+              code {s.workshopCode} · {s.teamCount} teams · {s.durationMinutes} min
             </div>
           </Link>
         ))}
@@ -115,10 +118,11 @@ function ClientDetail() {
             href={`/create/sessions/${s.id}`}
             className="block bg-white border border-[#E7E4DD] rounded-xl p-4 no-underline text-inherit hover:border-[#301CA0]"
           >
-            <div className="font-semibold text-[18px]">{s.title}</div>
-            <div className="text-[14px] text-[#6C6975] mt-1">
-              ended · code {s.workshopCode}
+            <div className="flex items-baseline justify-between gap-3">
+              <div className="font-semibold text-[18px] min-w-0 truncate">{s.title}</div>
+              <span className="text-[14px] text-[#6C6975] shrink-0">{s.status}</span>
             </div>
+            <div className="text-[14px] text-[#6C6975] mt-1">code {s.workshopCode}</div>
           </Link>
         ))}
         {past.length === 0 && <p className="text-[#6C6975]">No past sessions yet.</p>}
