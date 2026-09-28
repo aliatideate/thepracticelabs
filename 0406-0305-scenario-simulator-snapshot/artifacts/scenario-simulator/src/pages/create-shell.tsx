@@ -5,8 +5,7 @@ import { Header } from "../simulation/components";
 const TABS = [
   { key: "clients", label: "Clients", href: "/create" },
   { key: "library", label: "Library", href: "/create/library" },
-  { key: "boards", label: "Facilitator boards", href: "/create/boards" },
-] as const;
+  { key: "boards", label: "Boards", href: "/create/boards" },] as const;
 
 export type CreateTab = (typeof TABS)[number]["key"];
 
