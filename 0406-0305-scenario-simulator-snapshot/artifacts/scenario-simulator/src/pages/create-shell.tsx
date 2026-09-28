@@ -34,17 +34,20 @@ export function CreateShell({
       <Header hideFlowNav clock={{ startedAt: null, durationMinutes: 30, endedAt: null }} />
       <div className="mx-auto max-w-[960px] px-6 py-10">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-          <nav className="flex items-center gap-1" aria-label="Creator sections">
+          <nav
+            className="inline-flex items-center gap-1 rounded-full border border-[#E7E4DD] bg-white p-1 shadow-[inset_0_1px_0_#fff,0_0_0_1px_rgba(48,28,160,0.04)]"
+            aria-label="Creator sections"
+          >
             {TABS.map((tab) => {
               const isActive = selected === tab.key;
               return (
                 <Link
                   key={tab.key}
                   href={tab.href}
-                  className={`px-4 py-2 text-[16px] font-semibold rounded-lg no-underline transition-colors ${
+                  className={`rounded-full px-5 py-2 text-[15px] font-semibold no-underline whitespace-nowrap transition-all duration-200 ${
                     isActive
-                      ? "bg-white text-[#301CA0] border border-[#E7E4DD] shadow-[inset_0_1px_0_#fff]"
-                      : "text-[#6C6975] border border-transparent hover:text-[#301CA0]"
+                      ? "bg-gradient-to-r from-[#301CA0] to-[#1A0F58] text-white shadow-[0_8px_24px_rgba(48,28,160,0.28)]"
+                      : "text-[#6C6975] hover:bg-[#EAE8F6] hover:text-[#301CA0]"
                   }`}
                   aria-current={isActive ? "page" : undefined}
                 >
