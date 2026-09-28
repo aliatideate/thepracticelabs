@@ -48,6 +48,7 @@ router.get("/create/clients", async (req, res) => {
       status: workshopSessionsTable.status,
       workshopCode: workshopSessionsTable.workshopCode,
       createdAt: workshopSessionsTable.createdAt,
+      updatedAt: workshopSessionsTable.updatedAt,
       isPreview: workshopSessionsTable.isPreview,
     })
     .from(workshopSessionsTable)
@@ -57,25 +58,34 @@ router.get("/create/clients", async (req, res) => {
         eq(workshopSessionsTable.isPreview, false),
       ),
     )
-    .orderBy(desc(workshopSessionsTable.createdAt));
+    .orderBy(desc(workshopSessionsTable.updatedAt));
 
   return res.json({
-    clients: clients.map((c) => ({
-      id: c.id,
-      name: c.name,
-      notes: c.notes,
-      createdAt: c.createdAt.toISOString(),
-      sessions: sessions
-        .filter((s) => s.clientId === c.id)
-        .slice(0, 8)
-        .map((s) => ({
+    clients: clients.map((c) => {
+      const clientSessions = sessions.filter((s) => s.clientId === c.id);
+      const timestamps = [
+        c.updatedAt.getTime(),
+        c.createdAt.getTime(),
+        ...clientSessions.map((s) => s.updatedAt.getTime()),
+      ];
+      const lastModifiedAt = new Date(Math.max(...timestamps)).toISOString();
+      return {
+        id: c.id,
+        name: c.name,
+        notes: c.notes,
+        createdAt: c.createdAt.toISOString(),
+        updatedAt: c.updatedAt.toISOString(),
+        lastModifiedAt,
+        sessions: clientSessions.map((s) => ({
           id: s.id,
           title: s.title,
           status: s.status,
           workshopCode: s.workshopCode,
           createdAt: s.createdAt.toISOString(),
+          updatedAt: s.updatedAt.toISOString(),
         })),
-    })),
+      };
+    }),
   });
 });
 

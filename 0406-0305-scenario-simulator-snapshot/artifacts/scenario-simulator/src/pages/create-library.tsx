@@ -69,13 +69,13 @@ function Library() {
       {[...grouped.entries()].map(([cat, list]) => (
         <section key={cat} className="mb-10">
           <h2 className="text-[20px] mt-0 mb-3">{LABELS[cat] ?? cat}</h2>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {list.map((ex) => (
               <button
                 key={ex.id}
                 type="button"
                 onClick={() => setOpenId(openId === ex.id ? null : ex.id)}
-                className="w-full text-left bg-white border border-[#E7E4DD] rounded-xl p-4 hover:border-[#301CA0]"
+                className="w-full text-left bg-white border border-[#E7E4DD] rounded-xl p-5 hover:border-[#301CA0]"
               >
                 <div className="font-semibold text-[18px]">{ex.title}</div>
                 <div className="text-[14px] text-[#6C6975] mt-1">
@@ -104,10 +104,10 @@ function Library() {
                 )}
               </button>
             ))}
-            {list.length === 0 && (
-              <p className="text-[#6C6975]">No exercises in this category yet.</p>
-            )}
           </div>
+          {list.length === 0 && (
+            <p className="text-[#6C6975]">No exercises in this category yet.</p>
+          )}
         </section>
       ))}
     </CreateShell>

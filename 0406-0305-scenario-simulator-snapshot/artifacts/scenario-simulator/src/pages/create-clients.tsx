@@ -10,8 +10,23 @@ type ClientRow = {
   name: string;
   notes: string | null;
   createdAt: string;
-  sessions: { id: string; title: string; status: string; workshopCode: string; createdAt: string }[];
+  lastModifiedAt: string;
+  sessions: {
+    id: string;
+    title: string;
+    status: string;
+    workshopCode: string;
+    createdAt: string;
+  }[];
 };
+
+function formatModifiedAgo(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  const days = Math.max(0, Math.floor(ms / (24 * 60 * 60 * 1000)));
+  if (days === 0) return "Modified today";
+  if (days === 1) return "Modified 1 day ago";
+  return `Modified ${days} days ago`;
+}
 
 function ClientsHome() {
   const queryClient = useQueryClient();
@@ -101,33 +116,52 @@ function ClientsHome() {
           </div>
         </form>
       )}
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {(data?.clients ?? []).map((c) => (
-          <Link
+          <div
             key={c.id}
-            href={`/create/clients/${c.id}`}
-            className="block bg-white border border-[#E7E4DD] rounded-xl p-5 hover:border-[#301CA0] no-underline text-inherit"
+            className="bg-white border border-[#E7E4DD] rounded-xl p-5 hover:border-[#301CA0]"
           >
-            <div className="flex justify-between gap-4">
-              <div>
-                <h2 className="text-[22px] m-0 mb-1">{c.name}</h2>
-                {c.notes && <p className="text-[15px] text-[#6C6975] m-0">{c.notes}</p>}
+            <div className="flex justify-between gap-4 items-start">
+              <div className="min-w-0">
+                <Link
+                  href={`/create/clients/${c.id}`}
+                  className="text-[22px] font-semibold text-[#1D1D24] no-underline hover:text-[#301CA0]"
+                >
+                  {c.name}
+                </Link>
+                {c.notes && <p className="text-[15px] text-[#6C6975] m-0 mt-1">{c.notes}</p>}
               </div>
-              <span className="text-[14px] text-[#6C6975] whitespace-nowrap">
-                {c.sessions.length} session{c.sessions.length === 1 ? "" : "s"}
+              <span className="text-[14px] text-[#6C6975] whitespace-nowrap shrink-0">
+                {formatModifiedAgo(c.lastModifiedAt ?? c.createdAt)}
               </span>
             </div>
-            {c.sessions[0] && (
-              <p className="text-[14px] text-[#6C6975] mt-3 mb-0">
-                Latest: {c.sessions[0].title} · {c.sessions[0].status}
-              </p>
-            )}
-          </Link>
+
+            <div className="mt-4 pt-4 border-t border-[#E7E4DD]">
+              {c.sessions.length === 0 ? (
+                <p className="text-[14px] text-[#6C6975] m-0">No sessions yet</p>
+              ) : (
+                <ul className="m-0 p-0 list-none space-y-2">
+                  {c.sessions.map((s) => (
+                    <li key={s.id}>
+                      <Link
+                        href={`/create/sessions/${s.id}`}
+                        className="text-[15px] text-[#301CA0] no-underline hover:underline"
+                      >
+                        {s.title}
+                      </Link>
+                      <span className="text-[14px] text-[#6C6975]"> · {s.status}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
         ))}
-        {!isLoading && (data?.clients.length ?? 0) === 0 && (
-          <p className="text-[#6C6975]">No clients yet. Create one to start a session.</p>
-        )}
       </div>
+      {!isLoading && (data?.clients.length ?? 0) === 0 && (
+        <p className="text-[#6C6975]">No clients yet. Create one to start a session.</p>
+      )}
     </CreateShell>
   );
 }
