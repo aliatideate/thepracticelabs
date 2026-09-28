@@ -536,6 +536,10 @@ components:
           type: string
         teamName:
           type: string
+        displayName:
+          type: string
+        emoji:
+          type: string
         currentScreen:
           type: string
         selectedStakeholder:
@@ -575,6 +579,8 @@ components:
         - workshopId
         - workshopCode
         - teamName
+        - displayName
+        - emoji
         - currentScreen
         - selectedStakeholder
         - selectedEvidenceSource
@@ -695,7 +701,14 @@ components:
         teamName:
           type: string
           minLength: 1
-      required: [workshopCode, teamName]
+        displayName:
+          type: string
+          minLength: 2
+          maxLength: 24
+        emoji:
+          type: string
+          minLength: 1
+      required: [workshopCode, teamName, displayName, emoji]
 
     UpdateSessionInput:
       type: object

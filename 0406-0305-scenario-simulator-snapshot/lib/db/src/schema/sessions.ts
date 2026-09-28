@@ -28,6 +28,8 @@ export const sessionsTable = pgTable(
       .notNull()
       .references(() => workshopsTable.id, { onDelete: "cascade" }),
     teamName: text("team_name").notNull(),
+    displayName: text("display_name").notNull().default(""),
+    emoji: text("emoji").notNull().default(""),
     currentScreen: text("current_screen").notNull().default("brief"),
     selectedStakeholder: text("selected_stakeholder"),
     selectedEvidenceSource: text("selected_evidence_source"),

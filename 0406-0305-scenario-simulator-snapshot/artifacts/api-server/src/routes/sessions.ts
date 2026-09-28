@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { Router, type IRouter } from "express";
 import { eq, isNotNull, asc, and } from "drizzle-orm";
 // listSessions added so the moderator dashboard can show live progress.
@@ -25,7 +26,15 @@ import {
 } from "@workspace/db";
 import { submissionsBus } from "../lib/events";
 import { loadScenario } from "../lib/content";
-import { WORKSHOP_CODE, checkFacilitatorSecret, isAllowedTeamName } from "../lib/workshop";
+import {
+  WORKSHOP_CODE,
+  DEMAND_TRY_WORKSHOP_CODE,
+  checkAnyFacilitatorSecret,
+  checkFacilitatorSecret,
+  isAllowedTeamEmoji,
+  isAllowedTeamName,
+  normalizeDisplayName,
+} from "../lib/workshop";
 import { clearClock, defaultWorkshopId, startTimerIfIdle } from "../lib/session-clock";
 
 const router: IRouter = Router();
@@ -35,6 +44,7 @@ interface SerializeContext {
 }
 
 const INTERVIEW_LOCKED_SCREENS = new Set(["evidence", "define", "confirm"]);
+const MIN_INTERVIEW_QUESTIONS = 2;
 
 function screenToStep(screen: string, submitted: boolean): StepKey | null {
   if (submitted) return "submit";
@@ -115,6 +125,8 @@ function serialize(row: SessionRow, ctx: SerializeContext) {
     workshopId: row.workshopId,
     workshopCode: ctx.workshopCode,
     teamName: row.teamName,
+    displayName: row.displayName ?? "",
+    emoji: row.emoji ?? "",
     currentScreen: row.currentScreen,
     selectedStakeholder: row.selectedStakeholder,
     selectedEvidenceSource: row.selectedEvidenceSource,
@@ -157,6 +169,11 @@ router.get("/sessions", async (req, res) => {
     return res.status(400).json({ error: query.error.flatten() });
   }
   const filterCode = query.data.workshopCode?.toUpperCase();
+  if (filterCode === DEMAND_TRY_WORKSHOP_CODE) {
+    if (!checkAnyFacilitatorSecret(String(req.headers["x-facilitator-secret"] ?? ""))) {
+      return res.status(401).json({ error: "unauthorized" });
+    }
+  }
 
   let workshopId: string | null = null;
   if (filterCode) {
@@ -181,8 +198,11 @@ router.get("/sessions", async (req, res) => {
         .orderBy(asc(sessionsTable.teamName));
 
   const codeMap = await loadWorkshopCodeMap(rows.map((r) => r.workshopId));
+  const visible = filterCode
+    ? rows
+    : rows.filter((r) => codeMap.get(r.workshopId) !== DEMAND_TRY_WORKSHOP_CODE);
   return res.json(
-    rows.map((r) => serialize(r, { workshopCode: codeMap.get(r.workshopId) ?? "" })),
+    visible.map((r) => serialize(r, { workshopCode: codeMap.get(r.workshopId) ?? "" })),
   );
 });
 
@@ -204,11 +224,20 @@ router.post("/sessions", async (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.flatten() });
   }
-  const teamName = parsed.data.teamName.trim();
   const workshopCode = parsed.data.workshopCode.trim().toUpperCase();
+  const displayName = normalizeDisplayName(parsed.data.displayName);
+  const emoji = parsed.data.emoji.trim();
+  const teamName =
+    workshopCode === DEMAND_TRY_WORKSHOP_CODE
+      ? `try-${randomBytes(4).toString("hex")}`
+      : parsed.data.teamName.trim();
   if (!teamName) return res.status(400).json({ error: "teamName required" });
   if (!workshopCode)
     return res.status(400).json({ error: "workshopCode required" });
+  if (!displayName) return res.status(400).json({ error: "invalid displayName" });
+  if (!isAllowedTeamEmoji(emoji)) {
+    return res.status(400).json({ error: "invalid emoji" });
+  }
   if (workshopCode === WORKSHOP_CODE && !isAllowedTeamName(teamName)) {
     return res.status(400).json({ error: "invalid team" });
   }
@@ -241,6 +270,8 @@ router.post("/sessions", async (req, res) => {
     .insert(sessionsTable)
     .values({
       teamName,
+      displayName,
+      emoji,
       workshopId: workshop.id,
       currentScreen: "brief",
       stepTimings: advanceTimings(null, screenToStep("brief", false), now),
@@ -253,7 +284,9 @@ router.post("/sessions", async (req, res) => {
     return res.status(500).json({ error: "insert failed" });
   }
   publish("submission.created", row.id, workshop.id, workshop.code);
-  await startTimerIfIdle(now);
+  if (workshop.code === WORKSHOP_CODE) {
+    await startTimerIfIdle(now);
+  }
   return res.json(serialize(row, { workshopCode: workshop.code }));
 });
 
@@ -307,6 +340,15 @@ router.patch("/sessions/:id", async (req, res) => {
     return res.status(409).json({ error: "evidence locked" });
   }
 
+  const nextScreen = body.data.currentScreen;
+  if (nextScreen && INTERVIEW_LOCKED_SCREENS.has(nextScreen)) {
+    const alreadyPastInterview = INTERVIEW_LOCKED_SCREENS.has(existing.currentScreen);
+    const answerCount = (body.data.answers ?? existing.answers ?? []).length;
+    if (!alreadyPastInterview && answerCount < MIN_INTERVIEW_QUESTIONS) {
+      return res.status(409).json({ error: "ask at least two questions" });
+    }
+  }
+
   if (body.data.answers !== undefined) {
     const prev = existing.answers ?? [];
     const next = body.data.answers;
@@ -354,7 +396,12 @@ router.patch("/sessions/:id", async (req, res) => {
     updates.selectedStakeholder = body.data.selectedStakeholder ?? null;
   if (body.data.selectedEvidenceSource !== undefined)
     updates.selectedEvidenceSource = body.data.selectedEvidenceSource ?? null;
-  if (body.data.answers !== undefined) updates.answers = body.data.answers;
+  if (body.data.answers !== undefined) {
+    updates.answers = body.data.answers.map((a) => ({
+      questionId: a.questionId,
+      askedAt: a.askedAt instanceof Date ? a.askedAt.toISOString() : String(a.askedAt),
+    }));
+  }
   if (body.data.problemStatement !== undefined)
     updates.problemStatement = body.data.problemStatement;
   if (body.data.confidence !== undefined)

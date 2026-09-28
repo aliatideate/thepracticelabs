@@ -44,7 +44,7 @@ export default function PrintPack() {
           {s.questions.map((q) => (
             <div key={q.id} className="mb-4">
               <p className="font-semibold m-0">{q.text}</p>
-              <p className="mt-1">{withMarketFlags(q.answer)}</p>
+              <p className="mt-1">{q.answer}</p>
             </div>
           ))}
         </section>

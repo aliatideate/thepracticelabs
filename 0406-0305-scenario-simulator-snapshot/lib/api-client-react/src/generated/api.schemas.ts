@@ -72,6 +72,8 @@ export interface Session {
   workshopId: string;
   workshopCode: string;
   teamName: string;
+  displayName: string;
+  emoji: string;
   currentScreen: string;
   selectedStakeholder: string | null;
   selectedEvidenceSource: string | null;
@@ -147,6 +149,13 @@ export interface CreateSessionInput {
   workshopCode: string;
   /** @minLength 1 */
   teamName: string;
+  /**
+   * @minLength 2
+   * @maxLength 24
+   */
+  displayName: string;
+  /** @minLength 1 */
+  emoji: string;
 }
 
 export interface UpdateSessionInput {

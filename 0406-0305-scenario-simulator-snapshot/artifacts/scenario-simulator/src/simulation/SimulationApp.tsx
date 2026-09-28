@@ -9,11 +9,14 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ALL_SCREENS,
+  MIN_INTERVIEW_QUESTIONS,
   type Screen,
   screenIndex,
 } from "../lib/constants";
-import { clearStoredTeam } from "../lib/teamStorage";
+import { clearDemandTryTeam, clearStoredTeam } from "../lib/teamStorage";
+import { AnimatePresence, motion } from "framer-motion";
 import { Header, TimeBanner, useSessionConfig } from "./components";
+import { useScenario } from "../lib/scenario";
 import {
   ScreenBrief,
   ScreenConfirm,
@@ -23,9 +26,12 @@ import {
   ScreenStakeholder,
 } from "./screens";
 
-export default function SimulationApp() {
+export default function SimulationApp({ mode = "live" }: { mode?: "live" | "try" }) {
   const { sessionId, screen } = useParams<{ sessionId: string; screen: string }>();
   const [, setLocation] = useLocation();
+  const scenario = useScenario();
+  const playBase = mode === "try" ? "/demand/try/play" : "/demand/play";
+  const joinPath = mode === "try" ? "/demand/try" : "/demand";
   const queryClient = useQueryClient();
   const currentScreen = ((ALL_SCREENS as readonly string[]).includes(screen)
     ? screen
@@ -41,14 +47,17 @@ export default function SimulationApp() {
 
   useEffect(() => {
     if (!isError) return;
-    clearStoredTeam();
-    setLocation("/");
-  }, [isError, setLocation]);
+    if (mode === "try") clearDemandTryTeam();
+    else clearStoredTeam();
+    setLocation(joinPath);
+  }, [isError, setLocation, mode, joinPath]);
   const updateSession = useUpdateSession();
   const submitSession = useSubmitSession();
-  const config = useSessionConfig();
+  const liveConfig = useSessionConfig(mode === "try" ? undefined : "/api/session-config");
 
   const [localProblem, setLocalProblem] = useState("");
+  const [attentionBlinking, setAttentionBlinking] = useState(false);
+  const attentionTimer = useRef<number | null>(null);
   const initializedForId = useRef<string | null>(null);
   const lastSavedProblem = useRef("");
   const mutateRef = useRef(updateSession.mutate);
@@ -66,10 +75,10 @@ export default function SimulationApp() {
         serverScreen !== currentScreen &&
         (ALL_SCREENS as readonly string[]).includes(serverScreen)
       ) {
-        setLocation(`/play/${session.id}/${serverScreen}`, { replace: true });
+        setLocation(`${playBase}/${session.id}/${serverScreen}`, { replace: true });
       }
     }
-  }, [session, currentScreen, setLocation]);
+  }, [session, currentScreen, setLocation, playBase]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
@@ -89,10 +98,20 @@ export default function SimulationApp() {
   const furthestIndex = session ? screenIndex(session.currentScreen) : 0;
   const viewingIndex = screenIndex(currentScreen);
   const readOnly = viewingIndex < furthestIndex || !!session?.submittedAt;
+  const interviewComplete =
+    (session?.answers?.length ?? 0) >= MIN_INTERVIEW_QUESTIONS ||
+    screenIndex(session?.currentScreen ?? "brief") > screenIndex("interview");
+
+  useEffect(() => {
+    if (!session || !sessionId) return;
+    if (interviewComplete) return;
+    if (screenIndex(currentScreen) <= screenIndex("interview")) return;
+    setLocation(`${playBase}/${sessionId}/interview`, { replace: true });
+  }, [session, sessionId, currentScreen, interviewComplete, setLocation, playBase]);
 
   const goTo = useCallback(
     (s: Screen, persist = true) => {
-      setLocation(`/play/${sessionId}/${s}`);
+      setLocation(`${playBase}/${sessionId}/${s}`);
       if (!persist || !session) return;
       if (screenIndex(s) >= screenIndex(session.currentScreen)) {
         mutateRef.current({ id: sessionId, data: { currentScreen: s } });
@@ -101,7 +120,7 @@ export default function SimulationApp() {
         );
       }
     },
-    [session, sessionId, setLocation, queryClient],
+    [session, sessionId, setLocation, queryClient, playBase],
   );
 
   const patch = (data: Record<string, unknown>) => {
@@ -117,6 +136,28 @@ export default function SimulationApp() {
     if (target) goTo(target, false);
   };
 
+  const askModerator = () => {
+    const ok = window.confirm(
+      "Ask the moderator to join your breakout room?",
+    );
+    if (!ok || !sessionId) return;
+    void fetch(`/api/sessions/${sessionId}/flag`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ flagged: true }),
+    });
+    setAttentionBlinking(true);
+    if (attentionTimer.current) window.clearTimeout(attentionTimer.current);
+    attentionTimer.current = window.setTimeout(() => {
+      setAttentionBlinking(false);
+      attentionTimer.current = null;
+    }, 15_000);
+  };
+
+  useEffect(() => () => {
+    if (attentionTimer.current) window.clearTimeout(attentionTimer.current);
+  }, []);
+
   if (isLoading || !session) {
     return (
       <div className="min-h-screen flex items-center justify-center text-[#6C6975]">Loading team…</div>
@@ -126,16 +167,37 @@ export default function SimulationApp() {
   const interviewLocked = screenIndex(session.currentScreen) > screenIndex("interview");
   const stakeholderLocked = !!session.selectedStakeholder;
   const evidenceLocked = !!session.selectedEvidenceSource;
+  const config =
+    mode === "try"
+      ? {
+          startedAt: session.createdAt,
+          durationMinutes: scenario.timing.defaultMinutes,
+          endedAt: session.submittedAt,
+        }
+      : liveConfig;
 
   return (
     <div className="min-h-screen bg-[#F8F6EF]">
       <Header
-        teamName={session.teamName}
+        teamName={session.displayName?.trim() || session.teamName}
+        teamEmoji={session.emoji || undefined}
         currentScreen={currentScreen}
         furthestIndex={furthestIndex}
         onStepClick={onStepClick}
+        onAskModerator={askModerator}
+        attentionBlinking={attentionBlinking}
+        configPath={mode === "try" ? undefined : "/api/session-config"}
+        clock={mode === "try" ? config : undefined}
       />
       <TimeBanner config={config} />
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentScreen}
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -12 }}
+          transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+        >
       {currentScreen === "brief" && <ScreenBrief onNext={() => goTo("stakeholder")} />}
       {currentScreen === "stakeholder" && (
         <ScreenStakeholder
@@ -160,7 +222,10 @@ export default function SimulationApp() {
             ];
             patch({ answers: next });
           }}
-          onContinue={() => goTo("evidence")}
+          onContinue={() => {
+            if ((session.answers || []).length < MIN_INTERVIEW_QUESTIONS) return;
+            goTo("evidence");
+          }}
         />
       )}
       {currentScreen === "evidence" && (
@@ -208,11 +273,14 @@ export default function SimulationApp() {
       )}
       {currentScreen === "confirm" && (
         <ScreenConfirm
-          teamName={session.teamName}
+          teamName={session.displayName?.trim() || session.teamName}
+          teamEmoji={session.emoji || undefined}
           problem={session.problemStatement || localProblem}
           confidence={session.confidence}
         />
       )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
