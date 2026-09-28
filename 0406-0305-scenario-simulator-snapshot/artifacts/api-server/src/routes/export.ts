@@ -47,8 +47,22 @@ router.get("/export", async (req, res) => {
       return q?.text ?? a.questionId;
     });
     const timings = row.stepTimings?.totals ?? {};
+    const toSec = (ms: number | undefined) => Number(((ms ?? 0) / 1000).toFixed(1));
+    const stepTimingsSeconds = {
+      brief: toSec(timings.brief),
+      stakeholder: toSec(timings.stakeholder),
+      interview: toSec(timings.interview),
+      evidence: toSec(timings.evidence),
+      define: toSec(timings.define),
+      submit: toSec(timings.submit),
+    };
     return {
-      team: row.teamName,
+      team: row.displayName?.trim()
+        ? `${row.emoji ? `${row.emoji} ` : ""}${row.displayName.trim()}`
+        : row.teamName,
+      slot: row.teamName,
+      emoji: row.emoji || "",
+      displayName: row.displayName || "",
       stakeholderId: row.selectedStakeholder,
       stakeholderName: stakeholder?.name ?? null,
       evidenceId: row.selectedEvidenceSource,
@@ -57,7 +71,7 @@ router.get("/export", async (req, res) => {
       questionIds: answers.map((a) => a.questionId),
       problemStatement: row.problemStatement,
       confidence: row.confidence,
-      stepTimingsMs: timings,
+      stepTimingsSeconds,
       submittedAt: row.submittedAt ? row.submittedAt.toISOString() : null,
       currentScreen: row.currentScreen,
     };
@@ -66,34 +80,40 @@ router.get("/export", async (req, res) => {
   if (format === "csv") {
     const header = [
       "team",
+      "slot",
       "stakeholder",
       "evidence",
-      "questions_asked",
+      "question_1",
+      "question_2",
+      "question_3",
       "problem_statement",
       "confidence",
-      "ms_brief",
-      "ms_stakeholder",
-      "ms_interview",
-      "ms_evidence",
-      "ms_define",
-      "ms_submit",
+      "s_brief",
+      "s_stakeholder",
+      "s_interview",
+      "s_evidence",
+      "s_define",
+      "s_submit",
     ];
     const lines = [header.join(",")];
     for (const r of records) {
       lines.push(
         [
           csvEscape(r.team),
+          csvEscape(r.slot),
           csvEscape(r.stakeholderName ?? ""),
           csvEscape(r.evidenceTitle ?? ""),
-          csvEscape(r.questionsAsked.join(" | ")),
+          csvEscape(r.questionsAsked[0] ?? ""),
+          csvEscape(r.questionsAsked[1] ?? ""),
+          csvEscape(r.questionsAsked[2] ?? ""),
           csvEscape(r.problemStatement),
           csvEscape(r.confidence ?? ""),
-          String(r.stepTimingsMs.brief ?? 0),
-          String(r.stepTimingsMs.stakeholder ?? 0),
-          String(r.stepTimingsMs.interview ?? 0),
-          String(r.stepTimingsMs.evidence ?? 0),
-          String(r.stepTimingsMs.define ?? 0),
-          String(r.stepTimingsMs.submit ?? 0),
+          String(r.stepTimingsSeconds.brief),
+          String(r.stepTimingsSeconds.stakeholder),
+          String(r.stepTimingsSeconds.interview),
+          String(r.stepTimingsSeconds.evidence),
+          String(r.stepTimingsSeconds.define),
+          String(r.stepTimingsSeconds.submit),
         ].join(","),
       );
     }

@@ -14,6 +14,8 @@ export interface Session {
   workshopId: string;
   workshopCode: string;
   teamName: string;
+  displayName: string;
+  emoji: string;
   currentScreen: string;
   selectedStakeholder: string | null;
   selectedEvidenceSource: string | null;

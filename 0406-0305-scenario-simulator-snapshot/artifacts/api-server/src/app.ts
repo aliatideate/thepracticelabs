@@ -5,8 +5,10 @@ import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { contentDir, loadScenario } from "./lib/content";
+import { loadDecisionGame } from "./lib/decision-game";
 
 loadScenario();
+loadDecisionGame();
 
 const app: Express = express();
 

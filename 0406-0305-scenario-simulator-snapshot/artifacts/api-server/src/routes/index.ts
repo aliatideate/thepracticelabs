@@ -7,6 +7,8 @@ import moderatorRouter from "./moderator";
 import scenarioRouter from "./scenario";
 import sessionConfigRouter from "./session-config";
 import exportRouter from "./export";
+import archivesRouter from "./archives";
+import martRouter from "./mart";
 
 const router: IRouter = Router();
 
@@ -18,5 +20,7 @@ router.use(moderatorRouter);
 router.use(scenarioRouter);
 router.use(sessionConfigRouter);
 router.use(exportRouter);
+router.use(archivesRouter);
+router.use(martRouter);
 
 export default router;

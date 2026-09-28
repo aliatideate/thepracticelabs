@@ -85,13 +85,15 @@ export const ListSessionsResponseItem = zod.object({
   workshopId: zod.string().uuid(),
   workshopCode: zod.string(),
   teamName: zod.string(),
+  displayName: zod.string(),
+  emoji: zod.string(),
   currentScreen: zod.string(),
   selectedStakeholder: zod.string().nullable(),
   selectedEvidenceSource: zod.string().nullable(),
   answers: zod.array(
     zod.object({
       questionId: zod.string(),
-      askedAt: zod.string(),
+      askedAt: zod.coerce.date(),
     }),
   ),
   problemStatement: zod.string(),
@@ -132,9 +134,17 @@ export const ListSessionsResponse = zod.array(ListSessionsResponseItem);
  * @summary Create or resume a team session by team name
  */
 
+export const createOrResumeSessionBodyDisplayNameMin = 2;
+export const createOrResumeSessionBodyDisplayNameMax = 24;
+
 export const CreateOrResumeSessionBody = zod.object({
   workshopCode: zod.string().min(1),
   teamName: zod.string().min(1),
+  displayName: zod
+    .string()
+    .min(createOrResumeSessionBodyDisplayNameMin)
+    .max(createOrResumeSessionBodyDisplayNameMax),
+  emoji: zod.string().min(1),
 });
 
 export const createOrResumeSessionResponseStepTimingsTotalsMinOne = 0;
@@ -144,13 +154,15 @@ export const CreateOrResumeSessionResponse = zod.object({
   workshopId: zod.string().uuid(),
   workshopCode: zod.string(),
   teamName: zod.string(),
+  displayName: zod.string(),
+  emoji: zod.string(),
   currentScreen: zod.string(),
   selectedStakeholder: zod.string().nullable(),
   selectedEvidenceSource: zod.string().nullable(),
   answers: zod.array(
     zod.object({
       questionId: zod.string(),
-      askedAt: zod.string(),
+      askedAt: zod.coerce.date(),
     }),
   ),
   problemStatement: zod.string(),
@@ -199,13 +211,15 @@ export const GetSessionResponse = zod.object({
   workshopId: zod.string().uuid(),
   workshopCode: zod.string(),
   teamName: zod.string(),
+  displayName: zod.string(),
+  emoji: zod.string(),
   currentScreen: zod.string(),
   selectedStakeholder: zod.string().nullable(),
   selectedEvidenceSource: zod.string().nullable(),
   answers: zod.array(
     zod.object({
       questionId: zod.string(),
-      askedAt: zod.string(),
+      askedAt: zod.coerce.date(),
     }),
   ),
   problemStatement: zod.string(),
@@ -260,7 +274,7 @@ export const UpdateSessionBody = zod.object({
     .array(
       zod.object({
         questionId: zod.string(),
-        askedAt: zod.string(),
+        askedAt: zod.coerce.date(),
       }),
     )
     .optional(),
@@ -278,13 +292,15 @@ export const UpdateSessionResponse = zod.object({
   workshopId: zod.string().uuid(),
   workshopCode: zod.string(),
   teamName: zod.string(),
+  displayName: zod.string(),
+  emoji: zod.string(),
   currentScreen: zod.string(),
   selectedStakeholder: zod.string().nullable(),
   selectedEvidenceSource: zod.string().nullable(),
   answers: zod.array(
     zod.object({
       questionId: zod.string(),
-      askedAt: zod.string(),
+      askedAt: zod.coerce.date(),
     }),
   ),
   problemStatement: zod.string(),
@@ -334,13 +350,15 @@ export const ResetSessionResponse = zod.object({
   workshopId: zod.string().uuid(),
   workshopCode: zod.string(),
   teamName: zod.string(),
+  displayName: zod.string(),
+  emoji: zod.string(),
   currentScreen: zod.string(),
   selectedStakeholder: zod.string().nullable(),
   selectedEvidenceSource: zod.string().nullable(),
   answers: zod.array(
     zod.object({
       questionId: zod.string(),
-      askedAt: zod.string(),
+      askedAt: zod.coerce.date(),
     }),
   ),
   problemStatement: zod.string(),
@@ -395,13 +413,15 @@ export const SubmitSessionResponse = zod.object({
   workshopId: zod.string().uuid(),
   workshopCode: zod.string(),
   teamName: zod.string(),
+  displayName: zod.string(),
+  emoji: zod.string(),
   currentScreen: zod.string(),
   selectedStakeholder: zod.string().nullable(),
   selectedEvidenceSource: zod.string().nullable(),
   answers: zod.array(
     zod.object({
       questionId: zod.string(),
-      askedAt: zod.string(),
+      askedAt: zod.coerce.date(),
     }),
   ),
   problemStatement: zod.string(),
@@ -454,13 +474,15 @@ export const ListSubmissionsResponseItem = zod.object({
   workshopId: zod.string().uuid(),
   workshopCode: zod.string(),
   teamName: zod.string(),
+  displayName: zod.string(),
+  emoji: zod.string(),
   currentScreen: zod.string(),
   selectedStakeholder: zod.string().nullable(),
   selectedEvidenceSource: zod.string().nullable(),
   answers: zod.array(
     zod.object({
       questionId: zod.string(),
-      askedAt: zod.string(),
+      askedAt: zod.coerce.date(),
     }),
   ),
   problemStatement: zod.string(),
@@ -515,13 +537,15 @@ export const SetSessionFlagResponse = zod.object({
   workshopId: zod.string().uuid(),
   workshopCode: zod.string(),
   teamName: zod.string(),
+  displayName: zod.string(),
+  emoji: zod.string(),
   currentScreen: zod.string(),
   selectedStakeholder: zod.string().nullable(),
   selectedEvidenceSource: zod.string().nullable(),
   answers: zod.array(
     zod.object({
       questionId: zod.string(),
-      askedAt: zod.string(),
+      askedAt: zod.coerce.date(),
     }),
   ),
   problemStatement: zod.string(),

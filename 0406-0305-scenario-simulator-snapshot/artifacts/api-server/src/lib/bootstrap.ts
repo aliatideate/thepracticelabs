@@ -20,12 +20,29 @@ export async function bootstrapDatabase(): Promise<void> {
       VALUES ('DEFAULT', 'Unilever Session 1')
       ON CONFLICT (code) DO NOTHING
     `);
+    await client.query(`
+      INSERT INTO workshops (code, label)
+      VALUES ('MART', 'Unilever Session 2 — A Week in the Field')
+      ON CONFLICT (code) DO NOTHING
+    `);
+    await client.query(`
+      INSERT INTO workshops (code, label)
+      VALUES ('MART-TRY', 'Session 2 try-out')
+      ON CONFLICT (code) DO NOTHING
+    `);
+    await client.query(`
+      INSERT INTO workshops (code, label)
+      VALUES ('DEMAND-TRY', 'Session 1 try-out')
+      ON CONFLICT (code) DO NOTHING
+    `);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS sessions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         workshop_id UUID NOT NULL REFERENCES workshops(id) ON DELETE CASCADE,
         team_name TEXT NOT NULL,
+        display_name TEXT NOT NULL DEFAULT '',
+        emoji TEXT NOT NULL DEFAULT '',
         current_screen TEXT NOT NULL DEFAULT 'brief',
         selected_stakeholder TEXT,
         selected_evidence_source TEXT,
@@ -46,6 +63,12 @@ export async function bootstrapDatabase(): Promise<void> {
     `);
     await client.query(`
       ALTER TABLE sessions ADD COLUMN IF NOT EXISTS step_timings JSONB NOT NULL DEFAULT '{"totals":{},"currentStep":null,"currentStepStartedAt":null}'::jsonb
+    `);
+    await client.query(`
+      ALTER TABLE sessions ADD COLUMN IF NOT EXISTS display_name TEXT NOT NULL DEFAULT ''
+    `);
+    await client.query(`
+      ALTER TABLE sessions ADD COLUMN IF NOT EXISTS emoji TEXT NOT NULL DEFAULT ''
     `);
 
     await client.query(`
@@ -93,6 +116,21 @@ export async function bootstrapDatabase(): Promise<void> {
       SELECT id, 30 FROM workshops WHERE code = 'DEFAULT'
       ON CONFLICT (workshop_id) DO NOTHING
     `);
+    await client.query(`
+      INSERT INTO session_config (workshop_id, duration_minutes)
+      SELECT id, 15 FROM workshops WHERE code = 'MART'
+      ON CONFLICT (workshop_id) DO NOTHING
+    `);
+    await client.query(`
+      INSERT INTO session_config (workshop_id, duration_minutes)
+      SELECT id, 15 FROM workshops WHERE code = 'MART-TRY'
+      ON CONFLICT (workshop_id) DO NOTHING
+    `);
+    await client.query(`
+      INSERT INTO session_config (workshop_id, duration_minutes)
+      SELECT id, 30 FROM workshops WHERE code = 'DEMAND-TRY'
+      ON CONFLICT (workshop_id) DO NOTHING
+    `);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS moderator_notes (
@@ -118,6 +156,55 @@ export async function bootstrapDatabase(): Promise<void> {
     await client.query(`
       CREATE UNIQUE INDEX IF NOT EXISTS access_requests_pending_per_session
       ON access_requests (session_id) WHERE status = 'pending'
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS session_archives (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        workshop_id UUID NOT NULL REFERENCES workshops(id) ON DELETE CASCADE,
+        saved_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        team_count INTEGER NOT NULL DEFAULT 0,
+        submitted_count INTEGER NOT NULL DEFAULT 0,
+        duration_minutes INTEGER NOT NULL DEFAULT 30,
+        started_at TIMESTAMPTZ,
+        ended_at TIMESTAMPTZ,
+        scenario_id TEXT NOT NULL DEFAULT '',
+        payload JSONB NOT NULL
+      )
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS session_archives_workshop_saved_at
+      ON session_archives (workshop_id, saved_at DESC)
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS decision_sessions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        workshop_id UUID NOT NULL REFERENCES workshops(id) ON DELETE CASCADE,
+        team_name TEXT NOT NULL,
+        display_name TEXT NOT NULL DEFAULT '',
+        emoji TEXT NOT NULL DEFAULT '',
+        current_screen TEXT NOT NULL DEFAULT 'intro',
+        decision_index INTEGER NOT NULL DEFAULT 0,
+        choices JSONB NOT NULL DEFAULT '[]'::jsonb,
+        flagged_for_debrief BOOLEAN NOT NULL DEFAULT FALSE,
+        started_at TIMESTAMPTZ,
+        finished_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'decision_sessions_workshop_team_unique'
+        ) THEN
+          ALTER TABLE decision_sessions
+          ADD CONSTRAINT decision_sessions_workshop_team_unique UNIQUE (workshop_id, team_name);
+        END IF;
+      END $$
     `);
 
     await client.query("COMMIT");

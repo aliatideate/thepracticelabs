@@ -1,17 +1,24 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
+  ArrowDown,
   Calendar,
+  Check,
   Factory,
   FileText,
+  Files,
   Lock,
+  MessageSquare,
+  PenLine,
   Truck,
+  User,
   Wallet,
 } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { useScenario } from "../lib/scenario";
 import { Card, PageShell, PrimaryButton, TeamCallout, WaitStatus } from "./components";
 import { DocumentPanel } from "./documentBlocks";
-import { withMarketFlags, evidenceFilename } from "../lib/constants";
+import { withMarketFlags, evidenceFilename, MIN_INTERVIEW_QUESTIONS } from "../lib/constants";
 
 const STAKEHOLDER_ICON = {
   rohini: Calendar,
@@ -19,6 +26,61 @@ const STAKEHOLDER_ICON = {
   james: Factory,
   rakesh: Wallet,
 } as const;
+
+function TypedAnswer({
+  text,
+  animate,
+  onDone,
+  onProgress,
+}: {
+  text: string;
+  animate: boolean;
+  onDone?: () => void;
+  onProgress?: () => void;
+}) {
+  const full = text;
+  const [shown, setShown] = useState(() => (animate ? "" : full));
+  const onDoneRef = useRef(onDone);
+  const onProgressRef = useRef(onProgress);
+  onDoneRef.current = onDone;
+  onProgressRef.current = onProgress;
+
+  useEffect(() => {
+    if (!animate) {
+      setShown(full);
+      return;
+    }
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      setShown(full);
+      onDoneRef.current?.();
+      return;
+    }
+    const chars = Array.from(full);
+    setShown("");
+    let i = 0;
+    const id = window.setInterval(() => {
+      i = Math.min(chars.length, i + 5);
+      setShown(chars.slice(0, i).join(""));
+      requestAnimationFrame(() => onProgressRef.current?.());
+      if (i >= chars.length) {
+        window.clearInterval(id);
+        onDoneRef.current?.();
+      }
+    }, 24);
+    return () => window.clearInterval(id);
+  }, [animate, full]);
+
+  const typing = animate && shown.length < full.length;
+  return (
+    <p className="text-[16px] leading-relaxed m-0">
+      {shown}
+      {typing ? <span className="tpl-caret" aria-hidden /> : null}
+    </p>
+  );
+}
 
 export function ScreenBrief({ onNext }: { onNext: () => void }) {
   const { company, situation } = useScenario();
@@ -36,38 +98,35 @@ export function ScreenBrief({ onNext }: { onNext: () => void }) {
       <p className="text-[16px] text-[#6C6975] mb-8">
         Start here. You can come back to this page at any time.
       </p>
-      <div className="bg-white border border-[#E7E4DD] rounded-xl p-8 mb-6">
-        <div className="flex items-center gap-6 pb-6 border-b border-[#E7E4DD] mb-6">
-          <div className="rounded-lg bg-black px-3 py-2 shrink-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-8 items-stretch">
+        <div className="bg-white border border-[#E7E4DD] rounded-xl p-8">
+          <div className="pb-6 border-b border-[#E7E4DD] mb-6">
             <img
               src={company.logoUrl}
               alt={company.name}
-              className="h-12 w-auto object-contain"
+              className="h-[83px] w-auto object-contain"
             />
           </div>
-          <div>
-            <h2 className="text-[28px] m-0">{company.name}</h2>
-            <p className="text-[16px] text-[#6C6975] m-0">{company.descriptor}</p>
-          </div>
+          <p className="text-[16px] leading-relaxed m-0">{company.overview}</p>
         </div>
-        <p className="text-[16px] leading-relaxed m-0">{company.overview}</p>
+        <div className="flex flex-col gap-3">
+          {company.facts.map((f) => (
+            <div key={f.label} className="bg-white border border-[#E7E4DD] rounded-xl p-4 flex-1">
+              <div className="text-[14px] text-[#6C6975] uppercase tracking-wide mb-1">{f.label}</div>
+              <div className="text-[16px]">{withMarketFlags(f.value)}</div>
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
-        {company.facts.map((f) => (
-          <div key={f.label} className="bg-white border border-[#E7E4DD] rounded-xl p-4">
-            <div className="text-[14px] text-[#6C6975] uppercase tracking-wide mb-1">{f.label}</div>
-            <div className="text-[16px]">{withMarketFlags(f.value)}</div>
-          </div>
-        ))}
-      </div>
-      <div className="bg-white border border-[#E7E4DD] rounded-xl p-8 mb-8 shadow-[inset_0_1px_0_#fff,0_0_0_1px_rgba(48,28,160,0.05)]">
-        <div className="flex items-start gap-4">
-          <div className="shrink-0 rounded-lg bg-[#EAE8F6] text-[#301CA0] p-2">
+      <div className="tpl-situation tpl-nav-mesh rounded-xl p-8 mb-8 text-white">
+        <div className="animated-gradient" aria-hidden />
+        <div className="relative z-10 flex items-start gap-4">
+          <div className="shrink-0 rounded-lg bg-white/15 text-white p-2">
             <AlertTriangle className="h-5 w-5" strokeWidth={2} />
           </div>
           <div>
-            <h2 className="text-[24px] mt-0 mb-3">The situation</h2>
-            <p className="text-[16px] leading-relaxed m-0">{situation}</p>
+            <h2 className="text-[24px] mt-0 mb-3 text-white">The situation</h2>
+            <p className="text-[16px] leading-relaxed m-0 text-white/90">{situation}</p>
           </div>
         </div>
       </div>
@@ -97,14 +156,65 @@ export function ScreenStakeholder({
 }) {
   const { stakeholders, evidence } = useScenario();
   const [pending, setPending] = useState<string | null>(selectedId);
+  const [ready, setReady] = useState(!!locked || !!selectedId);
   useEffect(() => setPending(selectedId), [selectedId]);
+  useEffect(() => {
+    if (locked || selectedId) setReady(true);
+  }, [locked, selectedId]);
+
+  const askLimit = stakeholders[0]?.askLimit ?? 3;
+  const flowSteps = [
+    { text: "Select 1 stakeholder to interview", Icon: User },
+    { text: `Ask at least 2 questions (up to ${askLimit})`, Icon: MessageSquare },
+    { text: "Pick 1 document to review", Icon: FileText },
+    { text: "Review all the evidence you've gathered", Icon: Files },
+    { text: "Write down what you think the key problem is", Icon: PenLine },
+  ];
 
   return (
     <PageShell>
+      {!ready && (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center p-6 bg-[#1A0F58]/50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="need-to-do-title"
+        >
+          <div className="bg-[#F8F6EF] rounded-xl border-2 border-white shadow-[0_24px_64px_rgba(26,15,88,0.35)] max-w-[640px] w-full max-h-[90vh] overflow-y-auto p-8">
+            <h2 id="need-to-do-title" className="text-[28px] mt-0 mb-2">
+              What you need to do
+            </h2>
+            <p className="text-[15px] text-[#6C6975] m-0 mb-6">
+              Limited time before you brief the executive team on the exact problem.
+            </p>
+            <div className="flex flex-col mb-5">
+              {flowSteps.map((step, i) => (
+                <React.Fragment key={step.text}>
+                  {i > 0 && (
+                    <div className="flex py-1 pl-[18px]" aria-hidden>
+                      <ArrowDown className="h-4 w-4 text-[#301CA0]" strokeWidth={2.25} />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3 rounded-xl border border-[#E7E4DD] bg-white px-4 py-2.5 text-[16px]">
+                    <step.Icon className="h-4 w-4 shrink-0 text-[#301CA0]" strokeWidth={2} />
+                    <span>{step.text}</span>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+            <p className="text-[15px] text-[#1D1D24] m-0 mb-6">
+              Pick the combination you believe will get you the best understanding of the problem.
+            </p>
+            <div className="flex justify-end">
+              <PrimaryButton onClick={() => setReady(true)}>Continue</PrimaryButton>
+            </div>
+          </div>
+        </div>
+      )}
       <h1 className="text-[32px] mb-2">Pick a stakeholder</h1>
       <p className="text-[16px] text-[#6C6975] max-w-3xl mb-8">
-        You interview one stakeholder and review one document. A mis-click costs the team the
-        exercise — select, then confirm.
+        You interview one stakeholder (at least 2 questions, up to {askLimit}) and later review one
+        document. Select, then confirm.
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         {stakeholders.map((s) => (
@@ -129,7 +239,13 @@ export function ScreenStakeholder({
                 <div className={locked && selectedId === s.id ? "text-white/80" : "text-[#301CA0]"}>
                   {s.role}
                 </div>
-                <p className="text-[15px] mt-2 mb-0 opacity-90">{s.blurb}</p>
+                <p
+                  className={`text-[15px] mt-2 mb-0 ${
+                    locked && selectedId === s.id ? "text-white/75" : "opacity-90"
+                  }`}
+                >
+                  {s.blurb}
+                </p>
               </div>
             </div>
           </Card>
@@ -177,11 +293,23 @@ export function ScreenInterview({
   const scenario = useScenario();
   const stakeholder = scenario.stakeholders.find((s) => s.id === stakeholderId);
   const [wait, setWait] = useState<{ id: string; stage: "thinking" | "typing" } | null>(null);
+  const [typingId, setTypingId] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const threadRef = useRef<HTMLDivElement>(null);
+  const finishTyping = useRef(() => {});
+  finishTyping.current = () => setTypingId(null);
+  const stickThread = () => {
+    const el = threadRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  };
 
   useEffect(() => () => {
     if (timer.current) clearTimeout(timer.current);
   }, []);
+  useLayoutEffect(() => {
+    stickThread();
+  }, [answers.length, wait, typingId]);
 
   if (!stakeholder) {
     return (
@@ -198,7 +326,7 @@ export function ScreenInterview({
   const remaining = stakeholder.questions.filter((q) => !askedIds.has(q.id));
   const askedCount = answers.length;
   const atLimit = askedCount >= stakeholder.askLimit;
-  const canAsk = !locked && !atLimit && !wait;
+  const canAsk = !locked && !atLimit && !wait && !typingId;
 
   const handleAsk = (id: string) => {
     if (!canAsk) return;
@@ -208,6 +336,7 @@ export function ScreenInterview({
       timer.current = setTimeout(() => {
         onAsk(id);
         setWait(null);
+        setTypingId(id);
       }, 900);
     }, 700);
   };
@@ -230,13 +359,18 @@ export function ScreenInterview({
             </div>
           </div>
 
-          <div className="space-y-4 mb-6 max-h-[420px] overflow-y-auto pr-1">
+          <div ref={threadRef} className="space-y-4 mb-6 max-h-[420px] overflow-y-auto pr-1">
             {history.map((q) => (
               <div key={q!.id} className="bg-white border border-[#E7E4DD] rounded-xl p-5">
                 <div className="text-[14px] text-[#6C6975] mb-2">You asked</div>
                 <p className="text-[16px] font-medium m-0 mb-3">{q!.text}</p>
                 <div className="text-[14px] text-[#301CA0] mb-1">{stakeholder.name} answered</div>
-                <p className="text-[16px] leading-relaxed m-0">{withMarketFlags(q!.answer)}</p>
+                <TypedAnswer
+                  text={q!.answer}
+                  animate={typingId === q!.id}
+                  onDone={() => finishTyping.current()}
+                  onProgress={stickThread}
+                />
               </div>
             ))}
             {wait && (
@@ -272,15 +406,17 @@ export function ScreenInterview({
             </div>
           )}
 
-          {!locked && askedCount > 0 && (
+          {!locked && askedCount >= MIN_INTERVIEW_QUESTIONS && (
             <div className="flex justify-end">
-              <PrimaryButton onClick={onContinue} disabled={!!wait}>
+              <PrimaryButton onClick={onContinue} disabled={!!wait || !!typingId}>
                 Continue to Evidence
               </PrimaryButton>
             </div>
           )}
-          {!locked && askedCount === 0 && (
-            <p className="text-[14px] text-[#6C6975]">Ask at least one question, or wait — you may continue after the first answer.</p>
+          {!locked && askedCount < MIN_INTERVIEW_QUESTIONS && (
+            <p className="text-[14px] text-[#6C6975]">
+              Ask at least {MIN_INTERVIEW_QUESTIONS} questions before you continue to evidence.
+            </p>
           )}
         </div>
         <aside>
@@ -335,17 +471,30 @@ export function ScreenEvidence({
     <PageShell>
       <h1 className="text-[32px] mb-2">Review evidence</h1>
       {stakeholder && (
-        <div className="bg-white border border-[#E7E4DD] rounded-xl p-5 mb-6">
-          <div className="text-[14px] text-[#6C6975] mb-2">Interview so far · {stakeholder.name}</div>
+        <div className="bg-white border border-[#E7E4DD] rounded-xl p-6 mb-6">
+          <h2 className="text-[20px] mt-0 mb-5">{stakeholder.name}&apos;s responses</h2>
           {answers.length === 0 ? (
             <p className="m-0 text-[16px]">No questions were asked.</p>
           ) : (
-            <ul className="m-0 pl-5 text-[16px]">
+            <div
+              className={`grid grid-cols-1 gap-5 ${
+                answers.length === 1 ? "" : answers.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3"
+              }`}
+            >
               {answers.map((a) => {
                 const q = stakeholder.questions.find((qq) => qq.id === a.questionId);
-                return <li key={a.questionId}>{q?.text ?? a.questionId}</li>;
+                return (
+                  <div key={a.questionId} className="rounded-xl bg-[#F8F6EF] px-5 py-5">
+                    <div className="text-[15px] font-semibold mb-3 leading-snug">
+                      {q?.text ?? a.questionId}
+                    </div>
+                    <p className="m-0 text-[15px] leading-relaxed text-[#6C6975]">
+                      {q?.answer ?? ""}
+                    </p>
+                  </div>
+                );
               })}
-            </ul>
+            </div>
           )}
         </div>
       )}
@@ -420,7 +569,7 @@ export function ScreenEvidence({
         </>
       )}
 
-      {doc && !opening && !readOnly && (
+      {doc && !opening && (
         <div className="flex justify-end mt-8">
           <PrimaryButton onClick={onNext}>Continue to define the problem</PrimaryButton>
         </div>
@@ -449,7 +598,11 @@ export function ScreenDefine({
   const { submission } = useScenario();
   return (
     <PageShell>
-      <h1 className="text-[32px] mb-4">Define the problem</h1>
+      <h1 className="text-[32px] mb-2">Define the problem</h1>
+      <p className="text-[16px] text-[#6C6975] mb-3 max-w-3xl">
+        Write this for the executive team. They need a problem they can take action on — not a
+        generic request for more stock.
+      </p>
       <p className="text-[16px] leading-relaxed mb-6 max-w-3xl">{submission.prompt}</p>
       <textarea
         value={problem}
@@ -501,39 +654,210 @@ export function ScreenDefine({
 
 export function ScreenConfirm({
   teamName,
+  teamEmoji,
   problem,
   confidence,
 }: {
   teamName: string;
+  teamEmoji?: string;
   problem: string;
   confidence: string | null;
 }) {
+  const reduceMotion = useReducedMotion();
   return (
     <PageShell>
-      <h1 className="text-[32px] mb-2">Submitted</h1>
-      <div className="bg-white border border-[#2E7D5B] rounded-xl p-8 max-w-3xl mb-8">
-        <div className="text-[14px] uppercase tracking-wide text-[#2E7D5B] font-semibold mb-4">
-          Team output
+      <SubmitConfetti />
+      <motion.div
+        initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={
+          reduceMotion
+            ? { duration: 0 }
+            : { duration: 0.55, delay: 1.05, ease: [0.22, 1, 0.36, 1] }
+        }
+      >
+        <h1 className="text-[32px] mb-2 flex items-center gap-3">
+          <span
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#2E7D5B]"
+            aria-hidden
+          >
+            <Check className="h-4 w-4 text-white" strokeWidth={2.75} />
+          </span>
+          Submitted
+        </h1>
+        <div className="bg-white border border-[#2E7D5B] rounded-xl p-8 max-w-3xl mb-8">
+          <div className="text-[14px] uppercase tracking-wide text-[#2E7D5B] font-semibold mb-4">
+            Team output
+          </div>
+          <dl className="space-y-3">
+            <div>
+              <dt className="text-[14px] text-[#6C6975]">Team</dt>
+              <dd className="m-0 text-[18px] font-semibold inline-flex items-center gap-2">
+                {teamEmoji ? <span className="text-[22px] leading-none">{teamEmoji}</span> : null}
+                {teamName}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[14px] text-[#6C6975]">Confidence</dt>
+              <dd className="m-0 text-[18px]">
+                {confidence ? (
+                  <span
+                    className={`inline-flex items-center gap-2 font-semibold ${
+                      confidence === "Low"
+                        ? "text-[#B42318]"
+                        : confidence === "High"
+                          ? "text-[#2E7D5B]"
+                          : "text-[#B7791F]"
+                    }`}
+                  >
+                    <span
+                      className={`h-2.5 w-2.5 rounded-full ${
+                        confidence === "Low"
+                          ? "bg-[#B42318]"
+                          : confidence === "High"
+                            ? "bg-[#2E7D5B]"
+                            : "bg-[#B7791F]"
+                      }`}
+                      aria-hidden
+                    />
+                    {confidence}
+                  </span>
+                ) : (
+                  "—"
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[14px] text-[#6C6975]">Problem statement</dt>
+              <dd className="m-0 text-[16px] leading-relaxed whitespace-pre-wrap">{problem}</dd>
+            </div>
+          </dl>
         </div>
-        <dl className="space-y-3">
-          <div>
-            <dt className="text-[14px] text-[#6C6975]">Team</dt>
-            <dd className="m-0 text-[18px] font-semibold">{teamName}</dd>
-          </div>
-          <div>
-            <dt className="text-[14px] text-[#6C6975]">Confidence</dt>
-            <dd className="m-0 text-[18px]">{confidence ?? "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-[14px] text-[#6C6975]">Problem statement</dt>
-            <dd className="m-0 text-[16px] leading-relaxed whitespace-pre-wrap">{problem}</dd>
-          </div>
-        </dl>
-      </div>
-      <p className="text-[16px] max-w-2xl">
-        Stay in your breakout until the facilitator calls time, then return to the main workshop
-        room. There is nothing further to click here.
-      </p>
+        <p className="text-[16px] max-w-2xl m-0 font-bold">
+          Thank you for submitting your problem statement!
+        </p>
+        <p className="text-[16px] max-w-2xl mt-3 mb-0">
+          You can join the main workshop link at any time to debrief with the wider group.
+        </p>
+      </motion.div>
     </PageShell>
+  );
+}
+
+const CONFETTI_COLORS = ["#301CA0", "#5B4BD1", "#84C5B1", "#2E7D5B", "#F4D35E", "#FF8A5B", "#FFFFFF"];
+
+type ConfettiPiece = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  w: number;
+  h: number;
+  rot: number;
+  vr: number;
+  color: string;
+  shape: "rect" | "ribbon" | "circle";
+  born: number;
+};
+
+function spawnBurst(originX: number, originY: number, count: number, born: number): ConfettiPiece[] {
+  return Array.from({ length: count }, () => {
+    const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.85;
+    const speed = 3.4 + Math.random() * 6.2;
+    const roll = Math.random();
+    const shape: ConfettiPiece["shape"] = roll < 0.22 ? "circle" : roll < 0.55 ? "ribbon" : "rect";
+    return {
+      x: originX + (Math.random() - 0.5) * 90,
+      y: originY + (Math.random() - 0.5) * 28,
+      vx: Math.cos(angle) * speed + (Math.random() - 0.5) * 1.4,
+      vy: Math.sin(angle) * speed,
+      w: shape === "ribbon" ? 4 + Math.random() * 3 : 9 + Math.random() * 8,
+      h: shape === "ribbon" ? 14 + Math.random() * 12 : shape === "circle" ? 7 + Math.random() * 6 : 10 + Math.random() * 8,
+      rot: Math.random() * Math.PI,
+      vr: (Math.random() - 0.5) * 0.18,
+      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]!,
+      shape,
+      born,
+    };
+  });
+}
+
+function SubmitConfetti() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (reduceMotion) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const resize = () => {
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = `${window.innerHeight}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+
+    const contentLeft = Math.max(24, (window.innerWidth - 1280) / 2 + 24);
+    const originX = contentLeft + 240;
+    const pieces = [
+      ...spawnBurst(originX, 176, 70, 0),
+      ...spawnBurst(originX + 70, 248, 55, 14),
+      ...spawnBurst(originX - 30, 210, 40, 28),
+    ];
+
+    const duration = 150;
+    let frame = 0;
+    let raf = 0;
+    const tick = () => {
+      frame += 1;
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      for (const p of pieces) {
+        if (frame < p.born) continue;
+        const age = frame - p.born;
+        p.vy += 0.11;
+        p.vx *= 0.996;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+        const life = Math.max(0, 1 - age / (duration - p.born));
+        if (life <= 0) continue;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.globalAlpha = Math.min(1, life * 1.15);
+        ctx.fillStyle = p.color;
+        if (p.shape === "circle") {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.w / 2, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        }
+        ctx.restore();
+      }
+      if (frame < duration) raf = requestAnimationFrame(tick);
+      else ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    };
+    raf = requestAnimationFrame(tick);
+    window.addEventListener("resize", resize);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+    };
+  }, [reduceMotion]);
+
+  if (reduceMotion) return null;
+  return (
+    <canvas
+      ref={canvasRef}
+      className="pointer-events-none fixed inset-0 z-[90]"
+      aria-hidden
+    />
   );
 }

@@ -11,4 +11,11 @@ export interface CreateSessionInput {
   workshopCode: string;
   /** @minLength 1 */
   teamName: string;
+  /**
+   * @minLength 2
+   * @maxLength 24
+   */
+  displayName: string;
+  /** @minLength 1 */
+  emoji: string;
 }
