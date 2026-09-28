@@ -15,6 +15,7 @@ export const briefsTable = pgTable("briefs", {
     .notNull()
     .references(() => organisationsTable.id, { onDelete: "cascade" }),
   clientId: uuid("client_id").references(() => clientsTable.id),
+  title: text("title").notNull(),
   category: text("category", { enum: EXERCISE_CATEGORIES }).notNull(),
   audience: text("audience").notNull(),
   skill: text("skill").notNull(),

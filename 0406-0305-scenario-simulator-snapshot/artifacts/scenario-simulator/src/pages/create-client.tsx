@@ -3,7 +3,7 @@ import { Link, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Header, PrimaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
-import { formatStatus } from "./create-shell";
+import { StatusTag, formatRanOn } from "./create-shell";
 
 function Shell({
   title,
@@ -55,6 +55,7 @@ function ClientDetail() {
           teamCount: number;
           mode: string;
           createdAt: string;
+          endedAt: string | null;
         }[];
       }>;
     },
@@ -97,11 +98,9 @@ function ClientDetail() {
             href={`/create/sessions/${s.id}`}
             className="block bg-white border border-[#E7E4DD] rounded-xl p-4 no-underline text-inherit hover:border-[#301CA0]"
           >
-            <div className="flex items-baseline justify-between gap-3">
+            <div className="flex items-start justify-between gap-3">
               <div className="font-semibold text-[18px] min-w-0 truncate">{s.title}</div>
-              <span className="text-[14px] text-[#6C6975] shrink-0">
-                {formatStatus(s.status)}
-              </span>
+              <StatusTag status={s.status} />
             </div>
             <div className="text-[14px] text-[#6C6975] mt-1">
               code {s.workshopCode} · {s.teamCount} teams · {s.durationMinutes} min
@@ -115,21 +114,25 @@ function ClientDetail() {
 
       <h2 className="text-[20px] mt-0 mb-3">Past</h2>
       <div className="space-y-3">
-        {past.map((s) => (
-          <Link
-            key={s.id}
-            href={`/create/sessions/${s.id}`}
-            className="block bg-white border border-[#E7E4DD] rounded-xl p-4 no-underline text-inherit hover:border-[#301CA0]"
-          >
-            <div className="flex items-baseline justify-between gap-3">
-              <div className="font-semibold text-[18px] min-w-0 truncate">{s.title}</div>
-              <span className="text-[14px] text-[#6C6975] shrink-0">
-                {formatStatus(s.status)}
-              </span>
-            </div>
-            <div className="text-[14px] text-[#6C6975] mt-1">code {s.workshopCode}</div>
-          </Link>
-        ))}
+        {past.map((s) => {
+          const ranOn = formatRanOn(s.endedAt);
+          return (
+            <Link
+              key={s.id}
+              href={`/create/sessions/${s.id}`}
+              className="block bg-white border border-[#E7E4DD] rounded-xl p-4 no-underline text-inherit hover:border-[#301CA0]"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="font-semibold text-[18px] min-w-0 truncate">{s.title}</div>
+                <StatusTag status={s.status} />
+              </div>
+              <div className="text-[14px] text-[#6C6975] mt-1">
+                code {s.workshopCode}
+                {ranOn ? ` · Ran ${ranOn}` : ""}
+              </div>
+            </Link>
+          );
+        })}
         {past.length === 0 && <p className="text-[#6C6975]">No past sessions yet.</p>}
       </div>
     </Shell>

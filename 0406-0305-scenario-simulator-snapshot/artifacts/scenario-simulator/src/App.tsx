@@ -23,6 +23,7 @@ import CreateNewSessionPage from "./pages/create-new-session";
 import CreateSessionPage from "./pages/create-session";
 import CreateLibraryPage from "./pages/create-library";
 import CreateBoardsPage from "./pages/create-boards";
+import CreateBriefPage from "./pages/create-brief";
 
 const queryClient = new QueryClient();
 
@@ -212,6 +213,7 @@ function Router() {
         <Route path="/" component={HomeRedirect} />
         <Route path="/create/library" component={CreateLibraryPage} />
         <Route path="/create/boards" component={CreateBoardsPage} />
+        <Route path="/create/briefs/:id" component={CreateBriefPage} />
         <Route path="/create/sessions/:id" component={CreateSessionPage} />
         <Route path="/create/clients/:id/new" component={CreateNewSessionPage} />
         <Route path="/create/clients/:id" component={CreateClientPage} />

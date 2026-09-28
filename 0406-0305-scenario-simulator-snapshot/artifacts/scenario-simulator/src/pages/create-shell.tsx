@@ -5,14 +5,68 @@ import { Header } from "../simulation/components";
 const TABS = [
   { key: "clients", label: "Clients", href: "/create" },
   { key: "library", label: "Library", href: "/create/library" },
-  { key: "boards", label: "Boards", href: "/create/boards" },] as const;
+  { key: "boards", label: "Boards", href: "/create/boards" },
+] as const;
 
 export type CreateTab = (typeof TABS)[number]["key"];
+
+const STATUS_LABELS: Record<string, string> = {
+  ready: "Ready",
+  live: "Live",
+  ended: "Ended",
+  published: "Published",
+  in_design: "In design",
+};
+
+const STATUS_TAG_CLASS: Record<string, string> = {
+  ready: "bg-[#E8F1FB] text-[#1B4F8A] border-[#C5DBF0]",
+  live: "bg-[#E7F6ED] text-[#1B6B3A] border-[#B9E0C7]",
+  ended: "bg-[#F1F0EC] text-[#5C5A55] border-[#DDDAD2]",
+  published: "bg-[#EAE8F6] text-[#301CA0] border-[#D0CBE8]",
+  in_design: "bg-[#F4F3F0] text-[#6C6975] border-[#E0DDD4]",
+};
 
 /** Display helper for API statuses (`ready` → `Ready`). */
 export function formatStatus(status: string): string {
   if (!status) return status;
-  return status.charAt(0).toUpperCase() + status.slice(1);
+  return STATUS_LABELS[status] ?? status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, " ");
+}
+
+export function StatusTag({ status }: { status: string }) {
+  const label = formatStatus(status);
+  const tone = STATUS_TAG_CLASS[status] ?? STATUS_TAG_CLASS.in_design;
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[12px] font-semibold whitespace-nowrap shrink-0 ${tone}`}
+    >
+      {label}
+    </span>
+  );
+}
+
+export function formatExerciseFormat(format: string): string {
+  if (!format) return format;
+  return format.charAt(0).toUpperCase() + format.slice(1);
+}
+
+/** Briefs don't store format; map category → display format label. */
+export function formatFromCategory(category: string): string {
+  if (category === "problem-framing") return "Investigation";
+  if (category === "decision-making") return "Branching";
+  if (category === "ideation") return "Ideation";
+  if (category === "prototyping") return "Prototyping";
+  return formatStatus(category);
+}
+
+export function formatRanOn(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function tabFromPath(path: string): CreateTab {

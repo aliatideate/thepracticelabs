@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PrimaryButton, SecondaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
-import { CreateShell, formatStatus } from "./create-shell";
+import { CreateShell, StatusTag, formatRanOn } from "./create-shell";
 
 type ClientRow = {
   id: string;
@@ -17,6 +17,7 @@ type ClientRow = {
     status: string;
     workshopCode: string;
     createdAt: string;
+    endedAt: string | null;
   }[];
 };
 
@@ -142,19 +143,28 @@ function ClientsHome() {
                 <p className="text-[14px] text-[#6C6975] m-0">No sessions yet</p>
               ) : (
                 <ul className="m-0 p-0 list-none space-y-2">
-                  {c.sessions.map((s) => (
-                    <li key={s.id} className="flex items-baseline justify-between gap-3">
-                      <Link
-                        href={`/create/sessions/${s.id}`}
-                        className="text-[15px] text-[#301CA0] no-underline hover:underline min-w-0 truncate"
-                      >
-                        {s.title}
-                      </Link>
-                      <span className="text-[14px] text-[#6C6975] shrink-0">
-                        {formatStatus(s.status)}
-                      </span>
-                    </li>
-                  ))}
+                  {c.sessions.map((s) => {
+                    const ranOn =
+                      s.status === "ended" ? formatRanOn(s.endedAt) : null;
+                    return (
+                      <li key={s.id} className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <Link
+                            href={`/create/sessions/${s.id}`}
+                            className="text-[15px] text-[#301CA0] no-underline hover:underline block truncate"
+                          >
+                            {s.title}
+                          </Link>
+                          {ranOn && (
+                            <div className="text-[13px] text-[#6C6975] mt-0.5">
+                              Ran {ranOn}
+                            </div>
+                          )}
+                        </div>
+                        <StatusTag status={s.status} />
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>

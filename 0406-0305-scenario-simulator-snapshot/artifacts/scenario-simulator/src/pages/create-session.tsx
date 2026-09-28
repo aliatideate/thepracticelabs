@@ -3,7 +3,7 @@ import { Link, useParams } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Header, PrimaryButton, SecondaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
-import { formatStatus } from "./create-shell";
+import { StatusTag, formatRanOn } from "./create-shell";
 
 function SessionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -29,6 +29,7 @@ function SessionDetail() {
         durationMinutes: number;
         teamCount: number;
         mode: string;
+        endedAt: string | null;
         variableValues: Record<string, unknown>;
         archives: { id: string; savedAt: string; teamCount: number; submittedCount: number }[];
         paths: {
@@ -95,11 +96,16 @@ function SessionDetail() {
             {data.clientName}
           </Link>
         </p>
-        <h1 className="text-[32px] mt-0 mb-2">{data.title}</h1>
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <h1 className="text-[32px] mt-0 mb-0">{data.title}</h1>
+          <StatusTag status={data.status} />
+        </div>
         <p className="text-[16px] text-[#6C6975] mb-8">
-          {data.exerciseTitle} · {formatStatus(data.status)} · {data.teamCount} teams ·{" "}
-          {data.durationMinutes} min ·{" "}
+          {data.exerciseTitle} · {data.teamCount} teams · {data.durationMinutes} min ·{" "}
           {data.mode.replace("_", " ")}
+          {data.status === "ended" && formatRanOn(data.endedAt)
+            ? ` · Ran ${formatRanOn(data.endedAt)}`
+            : ""}
         </p>
 
         <div className="bg-white border border-[#E7E4DD] rounded-xl p-6 space-y-5 mb-8">

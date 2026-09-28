@@ -1,7 +1,8 @@
 import { Router, type IRouter, type Request } from "express";
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, max } from "drizzle-orm";
 import {
   assetsTable,
+  briefsTable,
   clientCopiesTable,
   clientsTable,
   db,
@@ -14,6 +15,7 @@ import {
   EXERCISE_CATEGORIES,
   WORKSHOP_SESSION_MODES,
   type ExerciseCategory,
+  type WorkshopSessionMode,
 } from "@workspace/db";
 import { issueWorkshopFacilitatorToken, requireAuth } from "../lib/auth";
 import { allocateUniqueWorkshopCode, resolveContentTokens } from "../lib/resolve-content";
@@ -49,6 +51,7 @@ router.get("/create/clients", async (req, res) => {
       workshopCode: workshopSessionsTable.workshopCode,
       createdAt: workshopSessionsTable.createdAt,
       updatedAt: workshopSessionsTable.updatedAt,
+      endedAt: workshopSessionsTable.endedAt,
       isPreview: workshopSessionsTable.isPreview,
     })
     .from(workshopSessionsTable)
@@ -83,9 +86,58 @@ router.get("/create/clients", async (req, res) => {
           workshopCode: s.workshopCode,
           createdAt: s.createdAt.toISOString(),
           updatedAt: s.updatedAt.toISOString(),
+          endedAt: s.endedAt?.toISOString() ?? null,
         })),
       };
     }),
+  });
+});
+
+/** All creator sessions (for Boards tab). Preview try-outs excluded. */
+router.get("/create/sessions", async (req, res) => {
+  const user = orgUser(req);
+  if (!user) return res.status(401).json({ error: "unauthorized" });
+  const rows = await db
+    .select({
+      id: workshopSessionsTable.id,
+      title: workshopSessionsTable.title,
+      status: workshopSessionsTable.status,
+      workshopCode: workshopSessionsTable.workshopCode,
+      endedAt: workshopSessionsTable.endedAt,
+      clientId: clientsTable.id,
+      clientName: clientsTable.name,
+      format: exercisesTable.format,
+    })
+    .from(workshopSessionsTable)
+    .innerJoin(clientsTable, eq(clientsTable.id, workshopSessionsTable.clientId))
+    .innerJoin(
+      exerciseVersionsTable,
+      eq(exerciseVersionsTable.id, workshopSessionsTable.exerciseVersionId),
+    )
+    .innerJoin(exercisesTable, eq(exercisesTable.id, exerciseVersionsTable.exerciseId))
+    .where(
+      and(
+        eq(workshopSessionsTable.orgId, user.orgId),
+        eq(workshopSessionsTable.isPreview, false),
+      ),
+    )
+    .orderBy(asc(workshopSessionsTable.title));
+
+  return res.json({
+    sessions: rows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      status: r.status,
+      workshopCode: r.workshopCode,
+      endedAt: r.endedAt?.toISOString() ?? null,
+      clientId: r.clientId,
+      clientName: r.clientName,
+      format: r.format,
+      paths: {
+        facilitate: `/s/${r.workshopCode}/facilitate`,
+        session: `/create/sessions/${r.id}`,
+      },
+    })),
   });
 });
 
@@ -194,11 +246,10 @@ router.get("/create/exercises", async (req, res) => {
   const rows = await db
     .select({
       exercise: exercisesTable,
-      latestVersion: sql<number>`(
-        SELECT MAX(v.version) FROM exercise_versions v WHERE v.exercise_id = ${exercisesTable.id}
-      )`.as("latest_version"),
+      latestVersion: max(exerciseVersionsTable.version),
     })
     .from(exercisesTable)
+    .leftJoin(exerciseVersionsTable, eq(exerciseVersionsTable.exerciseId, exercisesTable.id))
     .where(
       category
         ? and(
@@ -207,19 +258,208 @@ router.get("/create/exercises", async (req, res) => {
           )
         : eq(exercisesTable.orgId, user.orgId),
     )
+    .groupBy(exercisesTable.id)
     .orderBy(asc(exercisesTable.category), asc(exercisesTable.title));
+
+  const briefs = await db
+    .select({
+      brief: briefsTable,
+      clientName: clientsTable.name,
+    })
+    .from(briefsTable)
+    .leftJoin(clientsTable, eq(clientsTable.id, briefsTable.clientId))
+    .where(
+      category
+        ? and(
+            eq(briefsTable.orgId, user.orgId),
+            eq(briefsTable.category, category as ExerciseCategory),
+          )
+        : eq(briefsTable.orgId, user.orgId),
+    )
+    .orderBy(asc(briefsTable.category), asc(briefsTable.title));
 
   return res.json({
     categories: EXERCISE_CATEGORIES,
     exercises: rows.map((r) => ({
       id: r.exercise.id,
+      kind: "exercise" as const,
       title: r.exercise.title,
       category: r.exercise.category,
       format: r.exercise.format,
       status: r.exercise.status,
-      latestVersion: r.latestVersion,
+      latestVersion: r.latestVersion == null ? null : Number(r.latestVersion),
+    })),
+    briefs: briefs.map((r) => ({
+      id: r.brief.id,
+      kind: "brief" as const,
+      title: r.brief.title,
+      category: r.brief.category,
+      status: r.brief.status,
+      clientId: r.brief.clientId,
+      clientName: r.clientName,
+      durationMinutes: r.brief.durationMinutes,
+      teamCount: r.brief.teamCount,
+      mode: r.brief.mode,
     })),
   });
+});
+
+function parseBriefBody(body: unknown): {
+  title: string;
+  category: ExerciseCategory;
+  audience: string;
+  skill: string;
+  debriefFocus: string;
+  setting: string;
+  durationMinutes: number;
+  teamCount: number;
+  mode: WorkshopSessionMode;
+  clientId: string | null;
+} | { error: string } {
+  const b = (body ?? {}) as Record<string, unknown>;
+  const title = String(b.title ?? "").trim();
+  const category = String(b.category ?? "");
+  const audience = String(b.audience ?? "").trim();
+  const skill = String(b.skill ?? "").trim();
+  const debriefFocus = String(b.debriefFocus ?? "").trim();
+  const setting = String(b.setting ?? "").trim();
+  const durationMinutes = Number(b.durationMinutes);
+  const teamCount = Number(b.teamCount);
+  const mode = String(b.mode ?? "");
+  const clientId =
+    b.clientId == null || b.clientId === "" ? null : String(b.clientId);
+
+  if (!title || title.length > 160) return { error: "title required (max 160)" };
+  if (!(EXERCISE_CATEGORIES as readonly string[]).includes(category)) {
+    return { error: "invalid category" };
+  }
+  if (!audience || !skill || !debriefFocus || !setting) {
+    return { error: "audience, skill, debriefFocus, setting required" };
+  }
+  if (!Number.isFinite(durationMinutes) || durationMinutes < 5 || durationMinutes > 480) {
+    return { error: "durationMinutes must be 5–480" };
+  }
+  if (!Number.isFinite(teamCount) || teamCount < 1 || teamCount > 40) {
+    return { error: "teamCount must be 1–40" };
+  }
+  if (!(WORKSHOP_SESSION_MODES as readonly string[]).includes(mode)) {
+    return { error: "invalid mode" };
+  }
+  return {
+    title,
+    category: category as ExerciseCategory,
+    audience,
+    skill,
+    debriefFocus,
+    setting,
+    durationMinutes,
+    teamCount,
+    mode: mode as WorkshopSessionMode,
+    clientId,
+  };
+}
+
+router.get("/create/briefs/:id", async (req, res) => {
+  const user = orgUser(req);
+  if (!user) return res.status(401).json({ error: "unauthorized" });
+  const id = String(req.params.id);
+  const rows = await db
+    .select({
+      brief: briefsTable,
+      clientName: clientsTable.name,
+    })
+    .from(briefsTable)
+    .leftJoin(clientsTable, eq(clientsTable.id, briefsTable.clientId))
+    .where(and(eq(briefsTable.id, id), eq(briefsTable.orgId, user.orgId)))
+    .limit(1);
+  const row = rows[0];
+  if (!row) return res.status(404).json({ error: "not_found" });
+  return res.json({
+    id: row.brief.id,
+    title: row.brief.title,
+    category: row.brief.category,
+    audience: row.brief.audience,
+    skill: row.brief.skill,
+    debriefFocus: row.brief.debriefFocus,
+    setting: row.brief.setting,
+    durationMinutes: row.brief.durationMinutes,
+    teamCount: row.brief.teamCount,
+    mode: row.brief.mode,
+    status: row.brief.status,
+    clientId: row.brief.clientId,
+    clientName: row.clientName,
+    createdAt: row.brief.createdAt.toISOString(),
+    updatedAt: row.brief.updatedAt.toISOString(),
+  });
+});
+
+router.post("/create/briefs", async (req, res) => {
+  const user = orgUser(req);
+  if (!user) return res.status(401).json({ error: "unauthorized" });
+  const parsed = parseBriefBody(req.body);
+  if ("error" in parsed) return res.status(400).json({ error: parsed.error });
+  if (parsed.clientId) {
+    const clients = await db
+      .select({ id: clientsTable.id })
+      .from(clientsTable)
+      .where(and(eq(clientsTable.id, parsed.clientId), eq(clientsTable.orgId, user.orgId)))
+      .limit(1);
+    if (!clients[0]) return res.status(400).json({ error: "client not found" });
+  }
+  const [row] = await db
+    .insert(briefsTable)
+    .values({
+      orgId: user.orgId,
+      createdBy: user.id,
+      clientId: parsed.clientId,
+      title: parsed.title,
+      category: parsed.category,
+      audience: parsed.audience,
+      skill: parsed.skill,
+      debriefFocus: parsed.debriefFocus,
+      setting: parsed.setting,
+      durationMinutes: parsed.durationMinutes,
+      teamCount: parsed.teamCount,
+      mode: parsed.mode,
+      status: "in_design",
+    })
+    .returning();
+  return res.status(201).json({ id: row.id });
+});
+
+router.patch("/create/briefs/:id", async (req, res) => {
+  const user = orgUser(req);
+  if (!user) return res.status(401).json({ error: "unauthorized" });
+  const id = String(req.params.id);
+  const parsed = parseBriefBody(req.body);
+  if ("error" in parsed) return res.status(400).json({ error: parsed.error });
+  if (parsed.clientId) {
+    const clients = await db
+      .select({ id: clientsTable.id })
+      .from(clientsTable)
+      .where(and(eq(clientsTable.id, parsed.clientId), eq(clientsTable.orgId, user.orgId)))
+      .limit(1);
+    if (!clients[0]) return res.status(400).json({ error: "client not found" });
+  }
+  const updated = await db
+    .update(briefsTable)
+    .set({
+      clientId: parsed.clientId,
+      title: parsed.title,
+      category: parsed.category,
+      audience: parsed.audience,
+      skill: parsed.skill,
+      debriefFocus: parsed.debriefFocus,
+      setting: parsed.setting,
+      durationMinutes: parsed.durationMinutes,
+      teamCount: parsed.teamCount,
+      mode: parsed.mode,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(briefsTable.id, id), eq(briefsTable.orgId, user.orgId)))
+    .returning();
+  if (!updated[0]) return res.status(404).json({ error: "not_found" });
+  return res.json({ id: updated[0].id });
 });
 
 router.get("/create/exercises/:id", async (req, res) => {
@@ -598,6 +838,7 @@ router.get("/create/sessions/:id", async (req, res) => {
     isPreview: row.session.isPreview,
     variableValues: row.session.variableValues,
     createdAt: row.session.createdAt.toISOString(),
+    endedAt: row.session.endedAt?.toISOString() ?? null,
     archives: archives.map((a) => ({
       id: a.id,
       savedAt: a.savedAt.toISOString(),
