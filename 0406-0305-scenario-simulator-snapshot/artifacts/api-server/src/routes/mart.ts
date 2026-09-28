@@ -1,3 +1,4 @@
+import { assertFacilitator, resolveAuth } from "../lib/auth";
 import { randomBytes } from "node:crypto";
 import { Router, type IRouter } from "express";
 import { and, asc, desc, eq } from "drizzle-orm";
@@ -13,8 +14,7 @@ import {
   MART_DURATION_MINUTES,
   MART_TRY_WORKSHOP_CODE,
   MART_WORKSHOP_CODE,
-  checkDecisionFacilitatorSecret,
-  isAllowedTeamEmoji,
+    isAllowedTeamEmoji,
   isAllowedTeamName,
   normalizeDisplayName,
 } from "../lib/workshop";
@@ -97,10 +97,8 @@ router.get("/decision-game", (_req, res) => {
   return res.json(publicDecisionGame());
 });
 
-router.get("/decision-game/facilitator", (req, res) => {
-  if (!checkDecisionFacilitatorSecret(String(req.headers["x-facilitator-secret"] ?? ""))) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+router.get("/decision-game/facilitator", async (req, res) => {
+  if (!(await assertFacilitator(req, res))) return;
   return res.json(loadDecisionGame());
 });
 
@@ -110,9 +108,7 @@ router.get("/mart/session-config", async (_req, res) => {
 });
 
 router.post("/mart/session-config/start", async (req, res) => {
-  if (!checkDecisionFacilitatorSecret(String(req.headers["x-facilitator-secret"] ?? ""))) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+  if (!(await assertFacilitator(req, res))) return;
   const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
   const now = new Date();
   const updated = await db
@@ -129,9 +125,7 @@ router.post("/mart/session-config/start", async (req, res) => {
 });
 
 router.patch("/mart/session-config", async (req, res) => {
-  if (!checkDecisionFacilitatorSecret(String(req.headers["x-facilitator-secret"] ?? ""))) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+  if (!(await assertFacilitator(req, res))) return;
   const body = req.body as { durationMinutes?: number; end?: boolean };
   const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
   const now = new Date();
@@ -152,7 +146,8 @@ router.patch("/mart/session-config", async (req, res) => {
 
 router.get("/mart/sessions", async (req, res) => {
   const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
-  const fac = checkDecisionFacilitatorSecret(String(req.headers["x-facilitator-secret"] ?? ""));
+  // Public list for join UI; facilitator fields only when authenticated.
+  const fac = !!(await resolveAuth(req));
   const rows = await db
     .select()
     .from(decisionSessionsTable)
@@ -205,9 +200,7 @@ router.post("/mart/sessions", async (req, res) => {
 });
 
 router.post("/mart/sessions/reset-all", async (req, res) => {
-  if (!checkDecisionFacilitatorSecret(String(req.headers["x-facilitator-secret"] ?? ""))) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+  if (!(await assertFacilitator(req, res))) return;
   const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
   const deleted = await db
     .delete(decisionSessionsTable)
@@ -320,9 +313,7 @@ router.post("/mart/sessions/:id/flag", async (req, res) => {
 });
 
 router.delete("/mart/sessions/:id", async (req, res) => {
-  if (!checkDecisionFacilitatorSecret(String(req.headers["x-facilitator-secret"] ?? ""))) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+  if (!(await assertFacilitator(req, res))) return;
   const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
   const row = await loadDecision(String(req.params.id), workshopId);
   if (!row) return res.status(404).json({ error: "not found" });
@@ -331,9 +322,7 @@ router.delete("/mart/sessions/:id", async (req, res) => {
 });
 
 router.get("/mart/export", async (req, res) => {
-  if (!checkDecisionFacilitatorSecret(String(req.headers["x-facilitator-secret"] ?? req.query.secret ?? ""))) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+  if (!(await assertFacilitator(req, res))) return;
   const game = loadDecisionGame();
   const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
   const rows = await db
@@ -395,9 +384,7 @@ router.get("/mart/export", async (req, res) => {
 });
 
 router.get("/try/sessions", async (req, res) => {
-  if (!checkDecisionFacilitatorSecret(String(req.headers["x-facilitator-secret"] ?? ""))) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+  if (!(await assertFacilitator(req, res))) return;
   const workshopId = await workshopIdFor(MART_TRY_WORKSHOP_CODE);
   const rows = await db
     .select()
@@ -522,9 +509,7 @@ router.post("/try/sessions/:id/choice", async (req, res) => {
 });
 
 router.get("/mart/archives", async (req, res) => {
-  if (!checkDecisionFacilitatorSecret(String(req.headers["x-facilitator-secret"] ?? ""))) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+  if (!(await assertFacilitator(req, res))) return;
   const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
   const rows = await db
     .select()
@@ -535,9 +520,7 @@ router.get("/mart/archives", async (req, res) => {
 });
 
 router.get("/mart/archives/:id", async (req, res) => {
-  if (!checkDecisionFacilitatorSecret(String(req.headers["x-facilitator-secret"] ?? ""))) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+  if (!(await assertFacilitator(req, res))) return;
   const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
   const rows = await db
     .select()
@@ -555,9 +538,7 @@ router.get("/mart/archives/:id", async (req, res) => {
 });
 
 router.post("/mart/archives", async (req, res) => {
-  if (!checkDecisionFacilitatorSecret(String(req.headers["x-facilitator-secret"] ?? ""))) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+  if (!(await assertFacilitator(req, res))) return;
   const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
   const game = loadDecisionGame();
   const clock = await getOrCreateConfig(MART_WORKSHOP_CODE);

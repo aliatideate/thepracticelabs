@@ -1,11 +1,9 @@
+import { assertFacilitator } from "../lib/auth";
 import { Router, type IRouter } from "express";
 import { asc, eq } from "drizzle-orm";
 import { db, sessionsTable, workshopsTable } from "@workspace/db";
 import { loadScenario } from "../lib/content";
-import {
-  WORKSHOP_CODE,
-  checkFacilitatorSecret,
-} from "../lib/workshop";
+import { WORKSHOP_CODE } from "../lib/workshop";
 
 const router: IRouter = Router();
 
@@ -15,9 +13,7 @@ function csvEscape(value: string): string {
 }
 
 router.get("/export", async (req, res) => {
-  if (!checkFacilitatorSecret(String(req.headers["x-facilitator-secret"] ?? req.query.secret ?? ""))) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+  if (!(await assertFacilitator(req, res))) return;
   const format = String(req.query.format ?? "json");
   const scenario = loadScenario();
 

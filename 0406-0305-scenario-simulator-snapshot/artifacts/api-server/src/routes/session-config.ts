@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { db, sessionConfigTable } from "@workspace/db";
 import { loadScenario } from "../lib/content";
-import { checkFacilitatorSecret } from "../lib/workshop";
+import { assertFacilitator } from "../lib/auth";
 import { defaultWorkshopId, getOrCreateConfig } from "../lib/session-clock";
 
 const router: IRouter = Router();
@@ -22,9 +22,7 @@ router.get("/session-config", async (_req, res) => {
 });
 
 router.post("/session-config/start", async (req, res) => {
-  if (!checkFacilitatorSecret(String(req.headers["x-facilitator-secret"] ?? ""))) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+  if (!(await assertFacilitator(req, res))) return;
   const scenario = loadScenario();
   const workshopId = await defaultWorkshopId();
   const now = new Date();
@@ -43,9 +41,7 @@ router.post("/session-config/start", async (req, res) => {
 });
 
 router.patch("/session-config", async (req, res) => {
-  if (!checkFacilitatorSecret(String(req.headers["x-facilitator-secret"] ?? ""))) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+  if (!(await assertFacilitator(req, res))) return;
   const body = req.body as {
     durationMinutes?: number;
     end?: boolean;
