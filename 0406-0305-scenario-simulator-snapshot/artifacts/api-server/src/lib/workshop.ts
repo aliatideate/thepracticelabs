@@ -56,22 +56,27 @@ export const MART_WORKSHOP_CODE = "MART";
 export const MART_TRY_WORKSHOP_CODE = "MART-TRY";
 export const MART_DURATION_MINUTES = 15;
 
+/** @deprecated Phase 2 — use assertFacilitator / requireFacilitator (cookie or session token). */
 export function facilitatorSecret(): string {
-  return process.env.FACILITATOR_SECRET ?? "unilever-s1";
+  return process.env.FACILITATOR_SECRET ?? "";
 }
 
-export function checkFacilitatorSecret(reqSecret: string | undefined): boolean {
-  return !!reqSecret && reqSecret === facilitatorSecret();
+/** @deprecated Phase 2 — secrets no longer gate APIs; kept only for any residual env checks. */
+export function checkFacilitatorSecret(_reqSecret: string | undefined): boolean {
+  return false;
 }
 
+/** @deprecated Phase 2 */
 export function decisionFacilitatorSecret(): string {
-  return process.env.FACILITATOR_SECRET_S2 ?? "unilever-s2";
+  return process.env.FACILITATOR_SECRET_S2 ?? "";
 }
 
-export function checkDecisionFacilitatorSecret(reqSecret: string | undefined): boolean {
-  return !!reqSecret && reqSecret === decisionFacilitatorSecret();
+/** @deprecated Phase 2 */
+export function checkDecisionFacilitatorSecret(_reqSecret: string | undefined): boolean {
+  return false;
 }
 
-export function checkAnyFacilitatorSecret(reqSecret: string | undefined): boolean {
-  return checkFacilitatorSecret(reqSecret) || checkDecisionFacilitatorSecret(reqSecret);
+/** @deprecated Phase 2 */
+export function checkAnyFacilitatorSecret(_reqSecret: string | undefined): boolean {
+  return false;
 }

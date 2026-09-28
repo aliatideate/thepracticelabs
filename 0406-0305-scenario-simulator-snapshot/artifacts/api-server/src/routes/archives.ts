@@ -7,7 +7,7 @@ import {
   type SessionRow,
 } from "@workspace/db";
 import { loadScenario } from "../lib/content";
-import { checkFacilitatorSecret } from "../lib/workshop";
+import { assertFacilitator } from "../lib/auth";
 import { defaultWorkshopId, getOrCreateConfig } from "../lib/session-clock";
 
 const router: IRouter = Router();
@@ -39,14 +39,6 @@ function serializeTeam(row: SessionRow, workshopCode: string) {
   };
 }
 
-function requireFacilitator(req: { headers: Record<string, unknown> }, res: { status: (n: number) => { json: (b: unknown) => unknown } }) {
-  const secret = String(req.headers["x-facilitator-secret"] ?? "");
-  if (!checkFacilitatorSecret(secret)) {
-    res.status(401).json({ error: "unauthorized" });
-    return false;
-  }
-  return true;
-}
 
 function summary(row: typeof sessionArchivesTable.$inferSelect) {
   return {
@@ -62,7 +54,7 @@ function summary(row: typeof sessionArchivesTable.$inferSelect) {
 }
 
 router.get("/archives", async (req, res) => {
-  if (!requireFacilitator(req, res)) return;
+  if (!(await assertFacilitator(req, res))) return;
   const workshopId = await defaultWorkshopId();
   const rows = await db
     .select()
@@ -73,7 +65,7 @@ router.get("/archives", async (req, res) => {
 });
 
 router.get("/archives/:id", async (req, res) => {
-  if (!requireFacilitator(req, res)) return;
+  if (!(await assertFacilitator(req, res))) return;
   const workshopId = await defaultWorkshopId();
   const rows = await db
     .select()
@@ -91,7 +83,7 @@ router.get("/archives/:id", async (req, res) => {
 });
 
 router.post("/archives", async (req, res) => {
-  if (!requireFacilitator(req, res)) return;
+  if (!(await assertFacilitator(req, res))) return;
   const workshopId = await defaultWorkshopId();
   const scenario = loadScenario();
   const clock = await getOrCreateConfig();

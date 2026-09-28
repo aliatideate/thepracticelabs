@@ -3,7 +3,6 @@ import { Switch, Route, Router as WouterRouter, useLocation, useParams, useSearc
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ScenarioProvider } from "@/lib/scenario";
 import { DecisionGameProvider } from "@/lib/decisionGame";
-import { DEMAND_FACILITATOR_SECRET, MART_FACILITATOR_SECRET } from "@/lib/constants";
 import JoinScreen from "./pages/join";
 import SimulationApp from "./simulation/SimulationApp";
 import FacilitatePage from "./pages/facilitate";
@@ -13,7 +12,8 @@ import MartApp from "./pages/MartApp";
 import TryJoin from "./pages/try-join";
 import DemandTryJoin from "./pages/demand-try-join";
 import PrintPack from "./pages/print";
-import FacilitateUnlock from "./pages/facilitate-unlock";
+import AuthGate from "./pages/auth-gate";
+import LoginPage from "./pages/login";
 import DesktopGate from "./pages/DesktopGate";
 import NotFound from "./pages/not-found";
 
@@ -37,10 +37,9 @@ function LegacyTryPlayRedirect() {
   return <Redirect to={`/mart/try/play/${sessionId}`} />;
 }
 
+/** Old /facilitate/:secret bookmarks → hub (auth via cookie, not URL secret). */
 function LegacyFacilitatorRedirect() {
-  const { secret } = useParams<{ secret: string }>();
-  const tab = secret === MART_FACILITATOR_SECRET ? "mart" : "demand";
-  return <Redirect to={`/facilitate?tab=${tab}`} />;
+  return <Redirect to="/facilitate" />;
 }
 
 function FacilitateHub() {
@@ -49,12 +48,12 @@ function FacilitateHub() {
   const board =
     tab === "mart" ? (
       <DecisionGameProvider>
-        <MartFacilitate secret={MART_FACILITATOR_SECRET} />
+        <MartFacilitate />
       </DecisionGameProvider>
     ) : (
-      <FacilitatePage secret={DEMAND_FACILITATOR_SECRET} />
+      <FacilitatePage />
     );
-  return <FacilitateUnlock>{board}</FacilitateUnlock>;
+  return <AuthGate>{board}</AuthGate>;
 }
 
 function MartJoinGate() {
@@ -121,6 +120,7 @@ function Router() {
         <Route path="/mart" component={MartJoinGate} />
         <Route path="/try/play/:sessionId" component={LegacyTryPlayRedirect} />
         <Route path="/try" component={TryHomeRedirect} />
+        <Route path="/login" component={LoginPage} />
         <Route path="/facilitate/:secret" component={LegacyFacilitatorRedirect} />
         <Route path="/facilitate" component={FacilitateHub} />
         <Route path="/print" component={PrintPack} />

@@ -7,3 +7,4 @@ export * from "./assets";
 export * from "./client-copies";
 export * from "./workshop-sessions";
 export * from "./briefs";
+export * from "./auth-sessions";

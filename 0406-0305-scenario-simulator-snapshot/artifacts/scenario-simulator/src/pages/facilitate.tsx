@@ -12,8 +12,8 @@ import { formatCountdown, isExpired, remainingMs, type SessionConfig } from "../
 import { ActivityTabs } from "./activityTabs";
 import { DownloadMenu } from "./facilitatorDownload";
 
-function secretHeader(secret: string) {
-  return { "x-facilitator-secret": secret };
+function authHeaders(extra: Record<string, string> = {}) {
+  return { ...extra };
 }
 
 type TeamSnapshot = {
@@ -178,7 +178,7 @@ function TeamProgressCard({
   );
 }
 
-export default function FacilitatePage({ secret }: { secret: string }) {
+export default function FacilitatePage() {
   const scenario = useScenario();
   const listParams = { workshopCode: WORKSHOP_CODE };
   const { data: sessions = [], refetch } = useListSessions(listParams, {
@@ -196,18 +196,18 @@ export default function FacilitatePage({ secret }: { secret: string }) {
   const [viewingTry, setViewingTry] = useState<TeamSnapshot | null>(null);
 
   const loadArchives = React.useCallback(async () => {
-    const res = await fetch("/api/archives", { headers: secretHeader(secret) });
+    const res = await fetch("/api/archives", { headers: authHeaders() });
     if (!res.ok) return;
     setArchives((await res.json()) as ArchiveSummary[]);
-  }, [secret]);
+  }, []);
 
   const loadTryRuns = React.useCallback(async () => {
     const res = await fetch(`/api/sessions?workshopCode=${DEMAND_TRY_WORKSHOP_CODE}`, {
-      headers: secretHeader(secret),
+      headers: authHeaders(),
     });
     if (!res.ok) return;
     setTryRuns((await res.json()) as TeamSnapshot[]);
-  }, [secret]);
+  }, []);
 
   React.useEffect(() => {
     const load = async () => {
@@ -240,10 +240,10 @@ export default function FacilitatePage({ secret }: { secret: string }) {
   const call = async (url: string, init?: RequestInit) => {
     const res = await fetch(url, {
       ...init,
-      headers: { "content-type": "application/json", ...secretHeader(secret), ...init?.headers },
+      headers: { "content-type": "application/json", ...authHeaders(), ...init?.headers },
     });
     if (!res.ok) {
-      setMsg("Request failed. Check the facilitator secret in the URL.");
+      setMsg("Request failed. Try signing in again.");
       return null;
     }
     return res;
@@ -319,7 +319,7 @@ export default function FacilitatePage({ secret }: { secret: string }) {
     try {
       const res = await fetch("/api/archives", {
         method: "POST",
-        headers: { "content-type": "application/json", ...secretHeader(secret) },
+        headers: { "content-type": "application/json", ...authHeaders() },
       });
       if (!res.ok) {
         setMsg("Could not save this run.");
@@ -334,7 +334,7 @@ export default function FacilitatePage({ secret }: { secret: string }) {
   const openArchive = async (id: string) => {
     setOpeningId(id);
     try {
-      const res = await fetch(`/api/archives/${id}`, { headers: secretHeader(secret) });
+      const res = await fetch(`/api/archives/${id}`, { headers: authHeaders() });
       if (!res.ok) {
         setMsg("Could not open that saved session.");
         return;

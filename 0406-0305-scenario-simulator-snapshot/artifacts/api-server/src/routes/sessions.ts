@@ -1,3 +1,4 @@
+import { assertFacilitator } from "../lib/auth";
 import { randomBytes } from "node:crypto";
 import { Router, type IRouter } from "express";
 import { eq, isNotNull, asc, and } from "drizzle-orm";
@@ -29,8 +30,6 @@ import { loadScenario } from "../lib/content";
 import {
   WORKSHOP_CODE,
   DEMAND_TRY_WORKSHOP_CODE,
-  checkAnyFacilitatorSecret,
-  checkFacilitatorSecret,
   isAllowedTeamEmoji,
   isAllowedTeamName,
   normalizeDisplayName,
@@ -170,9 +169,7 @@ router.get("/sessions", async (req, res) => {
   }
   const filterCode = query.data.workshopCode?.toUpperCase();
   if (filterCode === DEMAND_TRY_WORKSHOP_CODE) {
-    if (!checkAnyFacilitatorSecret(String(req.headers["x-facilitator-secret"] ?? ""))) {
-      return res.status(401).json({ error: "unauthorized" });
-    }
+    if (!(await assertFacilitator(req, res))) return;
   }
 
   let workshopId: string | null = null;
@@ -207,9 +204,7 @@ router.get("/sessions", async (req, res) => {
 });
 
 router.post("/sessions/reset-all", async (req, res) => {
-  if (!checkFacilitatorSecret(String(req.headers["x-facilitator-secret"] ?? ""))) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+  if (!(await assertFacilitator(req, res))) return;
   const workshopId = await defaultWorkshopId();
   const deleted = await db
     .delete(sessionsTable)
@@ -422,9 +417,7 @@ router.patch("/sessions/:id", async (req, res) => {
 });
 
 router.delete("/sessions/:id", async (req, res) => {
-  if (!checkFacilitatorSecret(String(req.headers["x-facilitator-secret"] ?? ""))) {
-    return res.status(401).json({ error: "unauthorized" });
-  }
+  if (!(await assertFacilitator(req, res))) return;
   const parsed = DeleteSessionParams.safeParse(req.params);
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.flatten() });
