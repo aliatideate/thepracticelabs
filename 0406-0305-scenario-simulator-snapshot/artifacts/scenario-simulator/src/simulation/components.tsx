@@ -137,7 +137,7 @@ export function Header({
   hideFlowNav?: boolean;
   clock?: SessionConfig | null;
   liveLabel?: string;
-  /** Logo only — no session title / timer (creator area). */
+  /** Creator area: logo + "Creator Studio", no session title / timer. */
   brandOnly?: boolean;
 }) {
   const scenario = useScenario();
@@ -187,7 +187,14 @@ export function Header({
             alt="the Practice Labs"
             className="h-[33px] w-auto"
           />
-          {!brandOnly && (
+          {brandOnly ? (
+            <>
+              <div className="hidden lg:block h-8 w-px bg-white/25" />
+              <div className="min-w-0 hidden md:block">
+                <div className="text-[16px] font-medium truncate">Creator Studio</div>
+              </div>
+            </>
+          ) : (
             <>
               <div className="hidden lg:block h-8 w-px bg-white/25" />
               <div className="min-w-0 hidden md:block">
