@@ -7,6 +7,7 @@ import {
   decisionSessionsTable,
   sessionArchivesTable,
   sessionConfigTable,
+  workshopSessionsTable,
   type DecisionChoice,
   type DecisionSessionRow,
 } from "@workspace/db";
@@ -18,9 +19,14 @@ import {
   isAllowedTeamName,
   normalizeDisplayName,
 } from "../lib/workshop";
-import { publicDecisionGame, loadDecisionGame } from "../lib/decision-game";
+import { loadDecisionGame } from "../lib/decision-game";
 import { optionFor, revealBreakdown, revealStories, scoreOf, tagLine, weekLine } from "../lib/decision-engine";
 import { clearClock, startTimerIfIdle, workshopIdFor, getOrCreateConfig } from "../lib/session-clock";
+import {
+  decisionGameFacilitatorForCode,
+  decisionGameForCode,
+  setWorkshopSessionStatusByRuntimeCode,
+} from "../lib/workshop-session";
 
 const router: IRouter = Router();
 
@@ -93,13 +99,15 @@ function archiveSummary(row: typeof sessionArchivesTable.$inferSelect) {
   };
 }
 
-router.get("/decision-game", (_req, res) => {
-  return res.json(publicDecisionGame());
+router.get("/decision-game", async (req, res) => {
+  const code = typeof req.query.code === "string" ? req.query.code : undefined;
+  return res.json(await decisionGameForCode(code));
 });
 
 router.get("/decision-game/facilitator", async (req, res) => {
   if (!(await assertFacilitator(req, res))) return;
-  return res.json(loadDecisionGame());
+  const code = typeof req.query.code === "string" ? req.query.code : undefined;
+  return res.json(await decisionGameFacilitatorForCode(code));
 });
 
 router.get("/mart/session-config", async (_req, res) => {
@@ -141,6 +149,9 @@ router.patch("/mart/session-config", async (req, res) => {
     .where(eq(sessionConfigTable.workshopId, workshopId))
     .returning();
   if (!updated[0]) return res.status(404).json({ error: "not found" });
+  if (body.end === true) {
+    await setWorkshopSessionStatusByRuntimeCode(MART_WORKSHOP_CODE, "ended");
+  }
   return res.json(serializeClock(updated[0]));
 });
 
@@ -561,10 +572,16 @@ router.post("/mart/archives", async (req, res) => {
     },
     teams: serialized,
   };
+  const linked = await db
+    .select({ id: workshopSessionsTable.id })
+    .from(workshopSessionsTable)
+    .where(eq(workshopSessionsTable.runtimeWorkshopId, workshopId))
+    .limit(1);
   const inserted = await db
     .insert(sessionArchivesTable)
     .values({
       workshopId,
+      workshopSessionId: linked[0]?.id ?? null,
       teamCount: teams.length,
       submittedCount,
       durationMinutes: clock.durationMinutes,

@@ -3,7 +3,9 @@ import { eq } from "drizzle-orm";
 import { db, sessionConfigTable } from "@workspace/db";
 import { loadScenario } from "../lib/content";
 import { assertFacilitator } from "../lib/auth";
+import { WORKSHOP_CODE } from "../lib/workshop";
 import { defaultWorkshopId, getOrCreateConfig } from "../lib/session-clock";
+import { setWorkshopSessionStatusByRuntimeCode } from "../lib/workshop-session";
 
 const router: IRouter = Router();
 
@@ -65,6 +67,9 @@ router.patch("/session-config", async (req, res) => {
     .returning();
   const row = updated[0];
   if (!row) return res.status(404).json({ error: "not found" });
+  if (body.end === true) {
+    await setWorkshopSessionStatusByRuntimeCode(WORKSHOP_CODE, "ended");
+  }
   return res.json(serialize(row));
 });
 

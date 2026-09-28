@@ -109,11 +109,19 @@ export interface RevealPayload {
 
 const Ctx = createContext<DecisionGame | null>(null);
 
-export function DecisionGameProvider({ children }: { children: React.ReactNode }) {
+export function DecisionGameProvider({
+  children,
+  code,
+}: {
+  children: React.ReactNode;
+  /** workshop_sessions.workshop_code; omit for MART / legacy */
+  code?: string;
+}) {
   const { data, isError, isLoading } = useQuery({
-    queryKey: ["decision-game", "copy-v3"],
+    queryKey: ["decision-game", code ?? "MART", "copy-v3"],
     queryFn: async () => {
-      const res = await fetch("/api/decision-game");
+      const qs = code ? `?code=${encodeURIComponent(code)}` : "";
+      const res = await fetch(`/api/decision-game${qs}`);
       if (!res.ok) throw new Error("Failed to load decision game");
       return (await res.json()) as DecisionGame;
     },

@@ -2,8 +2,22 @@ import { Router, type IRouter } from "express";
 import { and, eq } from "drizzle-orm";
 import { db, workshopSessionsTable } from "@workspace/db";
 import { issueWorkshopFacilitatorToken, requireAuth } from "../lib/auth";
+import {
+  legacyAliasCodes,
+  workshopSessionSummary,
+} from "../lib/workshop-session";
 
 const router: IRouter = Router();
+
+router.get("/legacy-aliases", async (_req, res) => {
+  return res.json(await legacyAliasCodes());
+});
+
+router.get("/workshop-sessions/by-code/:code", async (req, res) => {
+  const summary = await workshopSessionSummary(String(req.params.code ?? ""));
+  if (!summary) return res.status(404).json({ error: "not_found" });
+  return res.json(summary);
+});
 
 /** Issue or regenerate a per-session facilitator token (raw returned once). */
 router.post(
@@ -32,7 +46,7 @@ router.post(
     return res.json({
       workshopSessionId: session.id,
       token,
-      facilitatePath: `/facilitate/session/${session.id}?token=${encodeURIComponent(token)}`,
+      facilitatePath: `/s/${session.workshopCode}/facilitate?token=${encodeURIComponent(token)}`,
     });
   },
 );

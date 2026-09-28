@@ -104,6 +104,74 @@ function DemandTryPlay() {
   return <SimulationApp mode="try" />;
 }
 
+/**
+ * Phase 3: /s/:code aliases onto the Unilever seeded sessions (DEFAULT / MART / *-TRY).
+ * New random codes land in Phase 5 create-flow; until then unknown codes 404.
+ */
+function sessionLegacyPath(code: string, suffix: string): string | null {
+  const normalized = code.toUpperCase();
+  const map: Record<string, string> = {
+    DEFAULT: `/demand${suffix}`,
+    "DEMAND-TRY": `/demand/try${suffix}`,
+    MART: `/mart${suffix}`,
+    "MART-TRY": `/mart/try${suffix}`,
+  };
+  return map[normalized] ?? null;
+}
+
+function SessionCodeRedirect() {
+  const { code } = useParams<{ code: string }>();
+  const to = sessionLegacyPath(code ?? "", "");
+  if (!to) return <NotFound />;
+  return <Redirect to={to} />;
+}
+
+function SessionTryRedirect() {
+  const { code } = useParams<{ code: string }>();
+  const to = sessionLegacyPath(code ?? "", "/try");
+  if (!to) return <NotFound />;
+  return <Redirect to={to} />;
+}
+
+function SessionFacilitateRedirect() {
+  const { code } = useParams<{ code: string }>();
+  const normalized = (code ?? "").toUpperCase();
+  if (normalized === "MART" || normalized === "MART-TRY") {
+    return <Redirect to="/facilitate?tab=mart" />;
+  }
+  if (normalized === "DEFAULT" || normalized === "DEMAND-TRY") {
+    return <Redirect to="/facilitate" />;
+  }
+  return <NotFound />;
+}
+
+function SessionPrintRedirect() {
+  const { code } = useParams<{ code: string }>();
+  const normalized = (code ?? "").toUpperCase();
+  if (normalized === "DEFAULT" || normalized === "DEMAND-TRY") {
+    return <Redirect to="/print" />;
+  }
+  return <NotFound />;
+}
+
+function SessionPlayRedirect() {
+  const params = useParams<{ code: string; sessionId: string; screen?: string }>();
+  const normalized = (params.code ?? "").toUpperCase();
+  if (normalized === "DEFAULT") {
+    return <Redirect to={`/demand/play/${params.sessionId}/${params.screen ?? "brief"}`} />;
+  }
+  if (normalized === "DEMAND-TRY") {
+    return <Redirect to={`/demand/try/play/${params.sessionId}/${params.screen ?? "brief"}`} />;
+  }
+  if (normalized === "MART") {
+    return <Redirect to={`/mart/play/${params.sessionId}`} />;
+  }
+  if (normalized === "MART-TRY") {
+    return <Redirect to={`/mart/try/play/${params.sessionId}`} />;
+  }
+  return <NotFound />;
+}
+
 function Router() {
   return (
     <DesktopGate>
@@ -124,6 +192,14 @@ function Router() {
         <Route path="/facilitate/:secret" component={LegacyFacilitatorRedirect} />
         <Route path="/facilitate" component={FacilitateHub} />
         <Route path="/print" component={PrintPack} />
+        <Route path="/s/:code/facilitate" component={SessionFacilitateRedirect} />
+        <Route path="/s/:code/print" component={SessionPrintRedirect} />
+        <Route path="/s/:code/play/:sessionId/:screen" component={SessionPlayRedirect} />
+        <Route path="/s/:code/play/:sessionId" component={SessionPlayRedirect} />
+        <Route path="/s/:code/try/play/:sessionId/:screen" component={SessionPlayRedirect} />
+        <Route path="/s/:code/try/play/:sessionId" component={SessionPlayRedirect} />
+        <Route path="/s/:code/try" component={SessionTryRedirect} />
+        <Route path="/s/:code" component={SessionCodeRedirect} />
         <Route component={NotFound} />
       </Switch>
     </DesktopGate>

@@ -15,6 +15,7 @@ import { clientsTable } from "./clients";
 import { clientCopiesTable } from "./client-copies";
 import { exerciseVersionsTable } from "./exercise-versions";
 import { usersTable } from "./users";
+import { workshopsTable } from "./workshops";
 
 export const WORKSHOP_SESSION_MODES = ["in_person", "remote", "hybrid"] as const;
 
@@ -53,6 +54,8 @@ export const workshopSessionsTable = pgTable(
     teamCount: integer("team_count").notNull(),
     mode: text("mode", { enum: WORKSHOP_SESSION_MODES }).notNull(),
     workshopCode: text("workshop_code").notNull(),
+    /** Runtime isolation key in `workshops` (e.g. DEFAULT / MART). */
+    runtimeWorkshopId: uuid("runtime_workshop_id").references(() => workshopsTable.id),
     resolvedContent: jsonb("resolved_content").$type<unknown>().notNull(),
     resolvedFacilitatorNotes: text("resolved_facilitator_notes"),
     facilitatorTokenHash: text("facilitator_token_hash"),

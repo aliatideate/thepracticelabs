@@ -210,6 +210,11 @@ export function publicDecisionGame(): unknown {
   return stripHidden(loadDecisionGame());
 }
 
+/** Strip facilitator-only fields from any decision-game JSON (file or resolved_content). */
+export function asPublicDecisionGame(game: unknown): unknown {
+  return stripHidden(game);
+}
+
 export function facilitatorDecisionGame(): DecisionGame {
   return loadDecisionGame();
 }
