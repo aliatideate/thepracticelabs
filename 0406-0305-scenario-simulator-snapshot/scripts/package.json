@@ -7,6 +7,7 @@
     "hello": "tsx ./src/hello.ts",
     "snapshot": "tsx ./src/snapshot.ts",
     "seed:creator": "tsx ./src/seed-creator-phase1.ts",
+    "seed:creator:phase3": "tsx ./src/seed-creator-phase3.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

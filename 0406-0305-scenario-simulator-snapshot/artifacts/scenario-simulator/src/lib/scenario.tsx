@@ -52,11 +52,19 @@ export interface Scenario {
 
 const ScenarioContext = createContext<Scenario | null>(null);
 
-export function ScenarioProvider({ children }: { children: React.ReactNode }) {
+export function ScenarioProvider({
+  children,
+  code,
+}: {
+  children: React.ReactNode;
+  /** workshop_sessions.workshop_code; omit for DEFAULT / legacy */
+  code?: string;
+}) {
   const { data, isError, isLoading } = useQuery({
-    queryKey: ["scenario"],
+    queryKey: ["scenario", code ?? "DEFAULT"],
     queryFn: async () => {
-      const res = await fetch("/api/scenario");
+      const qs = code ? `?code=${encodeURIComponent(code)}` : "";
+      const res = await fetch(`/api/scenario${qs}`);
       if (!res.ok) throw new Error("Failed to load scenario");
       return (await res.json()) as Scenario;
     },

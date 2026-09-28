@@ -4,6 +4,7 @@ import {
   db,
   sessionArchivesTable,
   sessionsTable,
+  workshopSessionsTable,
   type SessionRow,
 } from "@workspace/db";
 import { loadScenario } from "../lib/content";
@@ -106,10 +107,16 @@ router.post("/archives", async (req, res) => {
     },
     teams: serialized,
   };
+  const linked = await db
+    .select({ id: workshopSessionsTable.id })
+    .from(workshopSessionsTable)
+    .where(eq(workshopSessionsTable.runtimeWorkshopId, workshopId))
+    .limit(1);
   const inserted = await db
     .insert(sessionArchivesTable)
     .values({
       workshopId,
+      workshopSessionId: linked[0]?.id ?? null,
       teamCount: teams.length,
       submittedCount,
       durationMinutes: clock.durationMinutes,

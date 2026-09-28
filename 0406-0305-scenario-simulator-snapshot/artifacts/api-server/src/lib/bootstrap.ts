@@ -370,6 +370,7 @@ export async function bootstrapDatabase(): Promise<void> {
         team_count INTEGER NOT NULL,
         mode TEXT NOT NULL,
         workshop_code TEXT NOT NULL,
+        runtime_workshop_id UUID REFERENCES workshops(id),
         resolved_content JSONB NOT NULL,
         resolved_facilitator_notes TEXT,
         facilitator_token_hash TEXT,
@@ -392,12 +393,20 @@ export async function bootstrapDatabase(): Promise<void> {
       )
     `);
     await client.query(`
+      ALTER TABLE workshop_sessions
+      ADD COLUMN IF NOT EXISTS runtime_workshop_id UUID REFERENCES workshops(id)
+    `);
+    await client.query(`
       CREATE UNIQUE INDEX IF NOT EXISTS workshop_sessions_workshop_code_unique
       ON workshop_sessions (workshop_code)
     `);
     await client.query(`
       CREATE INDEX IF NOT EXISTS workshop_sessions_client_created_idx
       ON workshop_sessions (client_id, created_at DESC)
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS workshop_sessions_runtime_workshop_idx
+      ON workshop_sessions (runtime_workshop_id)
     `);
     await client.query(`
       CREATE INDEX IF NOT EXISTS workshop_sessions_org_status_idx
@@ -407,6 +416,28 @@ export async function bootstrapDatabase(): Promise<void> {
       CREATE INDEX IF NOT EXISTS workshop_sessions_preview_cleanup_idx
       ON workshop_sessions (preview_expires_at)
       WHERE is_preview = TRUE
+    `);
+
+    // Archives → creator session link (after workshop_sessions exists)
+    await client.query(`
+      ALTER TABLE session_archives
+      ADD COLUMN IF NOT EXISTS workshop_session_id UUID
+    `);
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'session_archives_workshop_session_id_fkey'
+        ) THEN
+          ALTER TABLE session_archives
+          ADD CONSTRAINT session_archives_workshop_session_id_fkey
+          FOREIGN KEY (workshop_session_id) REFERENCES workshop_sessions(id);
+        END IF;
+      END $$
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS session_archives_workshop_session_idx
+      ON session_archives (workshop_session_id)
     `);
 
     await client.query(`

@@ -2,6 +2,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { db, sessionConfigTable, workshopsTable } from "@workspace/db";
 import { loadScenario } from "./content";
 import { WORKSHOP_CODE, MART_WORKSHOP_CODE, MART_TRY_WORKSHOP_CODE, MART_DURATION_MINUTES } from "./workshop";
+import { setWorkshopSessionStatusByRuntimeCode } from "./workshop-session";
 
 export async function workshopIdFor(code: string): Promise<string> {
   const rows = await db
@@ -44,6 +45,11 @@ export async function getOrCreateConfig(code = WORKSHOP_CODE) {
 export async function startTimerIfIdle(now = new Date(), code = WORKSHOP_CODE) {
   await getOrCreateConfig(code);
   const workshopId = await workshopIdFor(code);
+  const before = await db
+    .select({ startedAt: sessionConfigTable.startedAt })
+    .from(sessionConfigTable)
+    .where(eq(sessionConfigTable.workshopId, workshopId))
+    .limit(1);
   await db
     .update(sessionConfigTable)
     .set({
@@ -57,6 +63,9 @@ export async function startTimerIfIdle(now = new Date(), code = WORKSHOP_CODE) {
         isNull(sessionConfigTable.startedAt),
       ),
     );
+  if (!before[0]?.startedAt) {
+    await setWorkshopSessionStatusByRuntimeCode(code, "live");
+  }
 }
 
 /** Clears the shared clock so the next team join starts a fresh countdown. */
@@ -76,4 +85,5 @@ export async function clearClock(now = new Date(), code = WORKSHOP_CODE) {
       updatedAt: now,
     })
     .where(eq(sessionConfigTable.workshopId, workshopId));
+  await setWorkshopSessionStatusByRuntimeCode(code, "ready");
 }

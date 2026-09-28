@@ -18,6 +18,8 @@ export const sessionArchivesTable = pgTable("session_archives", {
   workshopId: uuid("workshop_id")
     .notNull()
     .references(() => workshopsTable.id, { onDelete: "cascade" }),
+  /** Creator session link; FK enforced in bootstrap SQL to avoid schema import cycles. */
+  workshopSessionId: uuid("workshop_session_id"),
   savedAt: timestamp("saved_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
   teamCount: integer("team_count").notNull().default(0),
   submittedCount: integer("submitted_count").notNull().default(0),
