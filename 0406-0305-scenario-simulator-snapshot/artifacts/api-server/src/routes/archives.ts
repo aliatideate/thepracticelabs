@@ -7,9 +7,10 @@ import {
   workshopSessionsTable,
   type SessionRow,
 } from "@workspace/db";
-import { loadScenario } from "../lib/content";
 import { assertFacilitator } from "../lib/auth";
-import { defaultWorkshopId, getOrCreateConfig } from "../lib/session-clock";
+import { WORKSHOP_CODE } from "../lib/workshop";
+import { getOrCreateConfig, workshopIdFor } from "../lib/session-clock";
+import { scenarioForCode } from "../lib/workshop-session";
 
 const router: IRouter = Router();
 
@@ -40,7 +41,6 @@ function serializeTeam(row: SessionRow, workshopCode: string) {
   };
 }
 
-
 function summary(row: typeof sessionArchivesTable.$inferSelect) {
   return {
     id: row.id,
@@ -54,9 +54,20 @@ function summary(row: typeof sessionArchivesTable.$inferSelect) {
   };
 }
 
+function codeFrom(req: { query: Record<string, unknown>; body?: unknown }) {
+  const q = req.query.workshopCode;
+  if (typeof q === "string" && q.trim()) return q.trim().toUpperCase();
+  const body = req.body as { workshopCode?: string } | undefined;
+  if (typeof body?.workshopCode === "string" && body.workshopCode.trim()) {
+    return body.workshopCode.trim().toUpperCase();
+  }
+  return WORKSHOP_CODE;
+}
+
 router.get("/archives", async (req, res) => {
   if (!(await assertFacilitator(req, res))) return;
-  const workshopId = await defaultWorkshopId();
+  const code = codeFrom(req);
+  const workshopId = await workshopIdFor(code);
   const rows = await db
     .select()
     .from(sessionArchivesTable)
@@ -67,7 +78,8 @@ router.get("/archives", async (req, res) => {
 
 router.get("/archives/:id", async (req, res) => {
   if (!(await assertFacilitator(req, res))) return;
-  const workshopId = await defaultWorkshopId();
+  const code = codeFrom(req);
+  const workshopId = await workshopIdFor(code);
   const rows = await db
     .select()
     .from(sessionArchivesTable)
@@ -85,9 +97,10 @@ router.get("/archives/:id", async (req, res) => {
 
 router.post("/archives", async (req, res) => {
   if (!(await assertFacilitator(req, res))) return;
-  const workshopId = await defaultWorkshopId();
-  const scenario = loadScenario();
-  const clock = await getOrCreateConfig();
+  const code = codeFrom(req);
+  const workshopId = await workshopIdFor(code);
+  const scenario = await scenarioForCode(code);
+  const clock = await getOrCreateConfig(code);
   const teams = await db
     .select()
     .from(sessionsTable)
@@ -96,7 +109,7 @@ router.post("/archives", async (req, res) => {
   if (teams.length === 0) {
     return res.status(400).json({ error: "no teams to save" });
   }
-  const serialized = teams.map((t) => serializeTeam(t, "DEFAULT"));
+  const serialized = teams.map((t) => serializeTeam(t, code));
   const submittedCount = serialized.filter((t) => t.submittedAt).length;
   const payload = {
     scenarioId: scenario.id,

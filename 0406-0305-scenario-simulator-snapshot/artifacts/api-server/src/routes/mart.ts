@@ -30,6 +30,16 @@ import {
 
 const router: IRouter = Router();
 
+function martCodeFrom(req: { query: Record<string, unknown>; body?: unknown }) {
+  const q = req.query.workshopCode;
+  if (typeof q === "string" && q.trim()) return q.trim().toUpperCase();
+  const body = req.body as { workshopCode?: string } | undefined;
+  if (typeof body?.workshopCode === "string" && body.workshopCode.trim()) {
+    return body.workshopCode.trim().toUpperCase();
+  }
+  return MART_WORKSHOP_CODE;
+}
+
 function serializeClock(row: typeof sessionConfigTable.$inferSelect) {
   return {
     startedAt: row.startedAt ? row.startedAt.toISOString() : null,
@@ -110,32 +120,35 @@ router.get("/decision-game/facilitator", async (req, res) => {
   return res.json(await decisionGameFacilitatorForCode(code));
 });
 
-router.get("/mart/session-config", async (_req, res) => {
-  const row = await getOrCreateConfig(MART_WORKSHOP_CODE);
+router.get("/mart/session-config", async (req, res) => {
+  const row = await getOrCreateConfig(martCodeFrom(req));
   return res.json(serializeClock(row));
 });
 
 router.post("/mart/session-config/start", async (req, res) => {
   if (!(await assertFacilitator(req, res))) return;
-  const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
+  const code = martCodeFrom(req);
+  const workshopId = await workshopIdFor(code);
+  const existing = await getOrCreateConfig(code);
   const now = new Date();
   const updated = await db
     .update(sessionConfigTable)
     .set({
       startedAt: now,
       endedAt: null,
-      durationMinutes: MART_DURATION_MINUTES,
+      durationMinutes: existing.durationMinutes,
       updatedAt: now,
     })
     .where(eq(sessionConfigTable.workshopId, workshopId))
     .returning();
-  return res.json(serializeClock(updated[0] ?? (await getOrCreateConfig(MART_WORKSHOP_CODE))));
+  await setWorkshopSessionStatusByRuntimeCode(code, "live");
+  return res.json(serializeClock(updated[0] ?? existing));
 });
 
 router.patch("/mart/session-config", async (req, res) => {
   if (!(await assertFacilitator(req, res))) return;
   const body = req.body as { durationMinutes?: number; end?: boolean };
-  const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
+  const workshopId = await workshopIdFor(martCodeFrom(req));
   const now = new Date();
   const updates: Partial<typeof sessionConfigTable.$inferInsert> = { updatedAt: now };
   if (typeof body.durationMinutes === "number" && body.durationMinutes > 0) {
@@ -150,13 +163,13 @@ router.patch("/mart/session-config", async (req, res) => {
     .returning();
   if (!updated[0]) return res.status(404).json({ error: "not found" });
   if (body.end === true) {
-    await setWorkshopSessionStatusByRuntimeCode(MART_WORKSHOP_CODE, "ended");
+    await setWorkshopSessionStatusByRuntimeCode(martCodeFrom(req), "ended");
   }
   return res.json(serializeClock(updated[0]));
 });
 
 router.get("/mart/sessions", async (req, res) => {
-  const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
+  const workshopId = await workshopIdFor(martCodeFrom(req));
   // Public list for join UI; facilitator fields only when authenticated.
   const fac = !!(await resolveAuth(req));
   const rows = await db
@@ -176,7 +189,7 @@ router.post("/mart/sessions", async (req, res) => {
   if (!displayName) return res.status(400).json({ error: "invalid displayName" });
   if (!isAllowedTeamEmoji(emoji)) return res.status(400).json({ error: "invalid emoji" });
 
-  const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
+  const workshopId = await workshopIdFor(martCodeFrom(req));
   const existing = await db
     .select()
     .from(decisionSessionsTable)
@@ -206,30 +219,30 @@ router.post("/mart/sessions", async (req, res) => {
     .returning();
   const row = inserted[0];
   if (!row) return res.status(500).json({ error: "insert failed" });
-  await startTimerIfIdle(now, MART_WORKSHOP_CODE);
+  await startTimerIfIdle(now, martCodeFrom(req));
   return res.json(serialize(row, false));
 });
 
 router.post("/mart/sessions/reset-all", async (req, res) => {
   if (!(await assertFacilitator(req, res))) return;
-  const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
+  const workshopId = await workshopIdFor(martCodeFrom(req));
   const deleted = await db
     .delete(decisionSessionsTable)
     .where(eq(decisionSessionsTable.workshopId, workshopId))
     .returning({ id: decisionSessionsTable.id });
-  await clearClock(new Date(), MART_WORKSHOP_CODE);
+  await clearClock(new Date(), martCodeFrom(req));
   return res.json({ deleted: deleted.length });
 });
 
 router.get("/mart/sessions/:id", async (req, res) => {
-  const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
+  const workshopId = await workshopIdFor(martCodeFrom(req));
   const row = await loadDecision(String(req.params.id), workshopId);
   if (!row) return res.status(404).json({ error: "not found" });
   return res.json(serialize(row, false));
 });
 
 router.get("/mart/sessions/:id/reveal", async (req, res) => {
-  const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
+  const workshopId = await workshopIdFor(martCodeFrom(req));
   const row = await loadDecision(String(req.params.id), workshopId);
   if (!row) return res.status(404).json({ error: "not found" });
   if (row.currentScreen !== "reveal") {
@@ -249,7 +262,7 @@ router.get("/mart/sessions/:id/reveal", async (req, res) => {
 });
 
 router.post("/mart/sessions/:id/start", async (req, res) => {
-  const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
+  const workshopId = await workshopIdFor(martCodeFrom(req));
   const row = await loadDecision(String(req.params.id), workshopId);
   if (!row) return res.status(404).json({ error: "not found" });
   if (row.currentScreen !== "intro") return res.json(serialize(row, false));
@@ -275,7 +288,7 @@ router.post("/mart/sessions/:id/choice", async (req, res) => {
   const { decision, option } = optionFor(game, decisionId, optionId);
   if (!decision || !option) return res.status(400).json({ error: "invalid choice" });
 
-  const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
+  const workshopId = await workshopIdFor(martCodeFrom(req));
   const row = await loadDecision(String(req.params.id), workshopId);
   if (!row) return res.status(404).json({ error: "not found" });
   const existingChoices = row.choices ?? [];
@@ -310,7 +323,7 @@ router.post("/mart/sessions/:id/choice", async (req, res) => {
 });
 
 router.post("/mart/sessions/:id/flag", async (req, res) => {
-  const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
+  const workshopId = await workshopIdFor(martCodeFrom(req));
   const row = await loadDecision(String(req.params.id), workshopId);
   if (!row) return res.status(404).json({ error: "not found" });
   const flagged = Boolean((req.body as { flagged?: boolean }).flagged);
@@ -325,7 +338,7 @@ router.post("/mart/sessions/:id/flag", async (req, res) => {
 
 router.delete("/mart/sessions/:id", async (req, res) => {
   if (!(await assertFacilitator(req, res))) return;
-  const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
+  const workshopId = await workshopIdFor(martCodeFrom(req));
   const row = await loadDecision(String(req.params.id), workshopId);
   if (!row) return res.status(404).json({ error: "not found" });
   await db.delete(decisionSessionsTable).where(eq(decisionSessionsTable.id, row.id));
@@ -335,7 +348,7 @@ router.delete("/mart/sessions/:id", async (req, res) => {
 router.get("/mart/export", async (req, res) => {
   if (!(await assertFacilitator(req, res))) return;
   const game = loadDecisionGame();
-  const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
+  const workshopId = await workshopIdFor(martCodeFrom(req));
   const rows = await db
     .select()
     .from(decisionSessionsTable)
@@ -521,7 +534,7 @@ router.post("/try/sessions/:id/choice", async (req, res) => {
 
 router.get("/mart/archives", async (req, res) => {
   if (!(await assertFacilitator(req, res))) return;
-  const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
+  const workshopId = await workshopIdFor(martCodeFrom(req));
   const rows = await db
     .select()
     .from(sessionArchivesTable)
@@ -532,7 +545,7 @@ router.get("/mart/archives", async (req, res) => {
 
 router.get("/mart/archives/:id", async (req, res) => {
   if (!(await assertFacilitator(req, res))) return;
-  const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
+  const workshopId = await workshopIdFor(martCodeFrom(req));
   const rows = await db
     .select()
     .from(sessionArchivesTable)
@@ -550,9 +563,9 @@ router.get("/mart/archives/:id", async (req, res) => {
 
 router.post("/mart/archives", async (req, res) => {
   if (!(await assertFacilitator(req, res))) return;
-  const workshopId = await workshopIdFor(MART_WORKSHOP_CODE);
+  const workshopId = await workshopIdFor(martCodeFrom(req));
   const game = loadDecisionGame();
-  const clock = await getOrCreateConfig(MART_WORKSHOP_CODE);
+  const clock = await getOrCreateConfig(martCodeFrom(req));
   const teams = await db
     .select()
     .from(decisionSessionsTable)

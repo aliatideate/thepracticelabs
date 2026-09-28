@@ -4,6 +4,7 @@ import {
   useListSessions,
 } from "@workspace/api-client-react";
 import { DEMAND_TRY_WORKSHOP_CODE, WORKSHOP_CODE, formatTeamLabel } from "../lib/constants";
+import { useRuntimeWorkshopCode } from "../lib/sessionRoom";
 import { Bookmark, PencilLine, Phone, RotateCcw, X } from "lucide-react";
 import { Header, SecondaryButton } from "../simulation/components";
 import { useScenario, type Scenario } from "../lib/scenario";
@@ -180,7 +181,8 @@ function TeamProgressCard({
 
 export default function FacilitatePage() {
   const scenario = useScenario();
-  const listParams = { workshopCode: WORKSHOP_CODE };
+  const workshopCode = useRuntimeWorkshopCode(WORKSHOP_CODE);
+  const listParams = { workshopCode };
   const { data: sessions = [], refetch } = useListSessions(listParams, {
     query: { refetchInterval: 5000, queryKey: getListSessionsQueryKey(listParams) },
   });
@@ -195,11 +197,13 @@ export default function FacilitatePage() {
   const [tryRuns, setTryRuns] = useState<TeamSnapshot[]>([]);
   const [viewingTry, setViewingTry] = useState<TeamSnapshot | null>(null);
 
+  const qs = `workshopCode=${encodeURIComponent(workshopCode)}`;
+
   const loadArchives = React.useCallback(async () => {
-    const res = await fetch("/api/archives", { headers: authHeaders() });
+    const res = await fetch(`/api/archives?${qs}`, { headers: authHeaders() });
     if (!res.ok) return;
     setArchives((await res.json()) as ArchiveSummary[]);
-  }, []);
+  }, [qs]);
 
   const loadTryRuns = React.useCallback(async () => {
     const res = await fetch(`/api/sessions?workshopCode=${DEMAND_TRY_WORKSHOP_CODE}`, {
@@ -211,7 +215,7 @@ export default function FacilitatePage() {
 
   React.useEffect(() => {
     const load = async () => {
-      const res = await fetch("/api/session-config");
+      const res = await fetch(`/api/session-config?${qs}`);
       if (res.ok) {
         const data = (await res.json()) as SessionConfig;
         setConfig(data);
@@ -226,7 +230,7 @@ export default function FacilitatePage() {
       loadTryRuns();
     }, 5000);
     return () => clearInterval(id);
-  }, [loadArchives, loadTryRuns]);
+  }, [loadArchives, loadTryRuns, qs]);
 
   React.useEffect(() => {
     if (!viewing) return;
@@ -250,7 +254,10 @@ export default function FacilitatePage() {
   };
 
   const start = async () => {
-    const res = await call("/api/session-config/start", { method: "POST", body: "{}" });
+    const res = await call("/api/session-config/start", {
+      method: "POST",
+      body: JSON.stringify({ workshopCode }),
+    });
     if (res) {
       setConfig((await res.json()) as SessionConfig);
       setMsg("Exercise started.");
@@ -259,7 +266,7 @@ export default function FacilitatePage() {
   const adjust = async () => {
     const res = await call("/api/session-config", {
       method: "PATCH",
-      body: JSON.stringify({ durationMinutes: Number(duration) }),
+      body: JSON.stringify({ durationMinutes: Number(duration), workshopCode }),
     });
     if (res) {
       setConfig((await res.json()) as SessionConfig);
@@ -269,7 +276,7 @@ export default function FacilitatePage() {
   const end = async () => {
     const res = await call("/api/session-config", {
       method: "PATCH",
-      body: JSON.stringify({ end: true }),
+      body: JSON.stringify({ end: true, workshopCode }),
     });
     if (res) {
       setConfig((await res.json()) as SessionConfig);
@@ -287,10 +294,13 @@ export default function FacilitatePage() {
     if (!ok) return;
     setResetting(true);
     try {
-      const res = await call("/api/sessions/reset-all", { method: "POST", body: "{}" });
+      const res = await call("/api/sessions/reset-all", {
+        method: "POST",
+        body: JSON.stringify({ workshopCode }),
+      });
       if (!res) return;
       const data = (await res.json()) as { deleted: number };
-      const cfgRes = await fetch("/api/session-config");
+      const cfgRes = await fetch(`/api/session-config?${qs}`);
       if (cfgRes.ok) {
         const next = (await cfgRes.json()) as SessionConfig;
         setConfig(next);
@@ -320,6 +330,7 @@ export default function FacilitatePage() {
       const res = await fetch("/api/archives", {
         method: "POST",
         headers: { "content-type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ workshopCode }),
       });
       if (!res.ok) {
         setMsg("Could not save this run.");
@@ -334,7 +345,7 @@ export default function FacilitatePage() {
   const openArchive = async (id: string) => {
     setOpeningId(id);
     try {
-      const res = await fetch(`/api/archives/${id}`, { headers: authHeaders() });
+      const res = await fetch(`/api/archives/${id}?${qs}`, { headers: authHeaders() });
       if (!res.ok) {
         setMsg("Could not open that saved session.");
         return;

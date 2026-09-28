@@ -11,12 +11,14 @@ import archivesRouter from "./archives";
 import martRouter from "./mart";
 import authRouter from "./auth";
 import workshopSessionsRouter from "./workshop-sessions";
+import createRouter from "./create";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(authRouter);
 router.use(workshopSessionsRouter);
+router.use(createRouter);
 router.use(workshopsRouter);
 router.use(sessionsRouter);
 router.use(eventsRouter);
