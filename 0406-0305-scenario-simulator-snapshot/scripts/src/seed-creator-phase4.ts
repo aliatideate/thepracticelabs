@@ -1,7 +1,12 @@
 /**
- * Idempotent Phase 4 seed: insert exercise_versions v2 (tokenised) for
- * Demand Spike + Week in the Field. Leaves v1 rows immutable.
- * If v2 already exists, skips it (does not UPDATE in place).
+ * Idempotent Phase 4 seed: insert tokenised exercise_versions for
+ * Demand Spike + Week in the Field. Leaves existing rows immutable
+ * (never UPDATE in place).
+ *
+ * Behaviour:
+ * - No tokenised row yet → insert version 2
+ * - Latest row already declares every seed variable key → skip
+ * - Latest row exists but is missing seed variable keys → insert max(version)+1
  *
  * Requires Phase 1 creator seed first.
  *
@@ -11,7 +16,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import {
   db,
   exerciseVersionsTable,
@@ -188,7 +193,16 @@ function martDefaultAssets(content: unknown): Record<string, unknown> {
   };
 }
 
-async function ensureV2(input: {
+function variableKeys(defs: ExerciseVariableDef[] | null | undefined): Set<string> {
+  return new Set((defs ?? []).map((d) => d.key));
+}
+
+function hasAllKeys(existing: ExerciseVariableDef[] | null | undefined, required: ExerciseVariableDef[]): boolean {
+  const have = variableKeys(existing);
+  return required.every((d) => have.has(d.key));
+}
+
+async function ensureTokenisedVersion(input: {
   exerciseId: string;
   orgId: string;
   createdBy: string;
@@ -196,30 +210,29 @@ async function ensureV2(input: {
   variables: ExerciseVariableDef[];
   facilitatorNotes: string;
   defaultAssets: Record<string, unknown>;
-}): Promise<{ id: string; created: boolean }> {
-  const existing = await db
+}): Promise<{ id: string; version: number; action: "inserted" | "skipped" }> {
+  const latestRows = await db
     .select()
     .from(exerciseVersionsTable)
-    .where(
-      and(
-        eq(exerciseVersionsTable.exerciseId, input.exerciseId),
-        eq(exerciseVersionsTable.version, 2),
-      ),
-    )
+    .where(eq(exerciseVersionsTable.exerciseId, input.exerciseId))
+    .orderBy(desc(exerciseVersionsTable.version))
     .limit(1);
 
-  // Never edit an existing v2 row in place — exercise_versions are immutable.
-  // Re-runs are no-ops when v2 already exists (even if content/schema drifted).
-  if (existing[0]) {
-    return { id: existing[0].id, created: false };
+  const latest = latestRows[0];
+
+  // Never UPDATE existing rows — exercise_versions are immutable.
+  if (latest && latest.version >= 2 && hasAllKeys(latest.variables, input.variables)) {
+    return { id: latest.id, version: latest.version, action: "skipped" };
   }
+
+  const nextVersion = latest ? Math.max(latest.version + 1, 2) : 2;
 
   const [row] = await db
     .insert(exerciseVersionsTable)
     .values({
       orgId: input.orgId,
       exerciseId: input.exerciseId,
-      version: 2,
+      version: nextVersion,
       content: input.content,
       facilitatorNotes: input.facilitatorNotes,
       variables: input.variables,
@@ -227,7 +240,7 @@ async function ensureV2(input: {
       createdBy: input.createdBy,
     })
     .returning();
-  return { id: row.id, created: true };
+  return { id: row.id, version: row.version, action: "inserted" };
 }
 
 async function main(): Promise<void> {
@@ -270,7 +283,7 @@ async function main(): Promise<void> {
     const exercise = exercises[0];
     if (!exercise) throw new Error(`exercise missing: ${spec.title}`);
 
-    const result = await ensureV2({
+    const result = await ensureTokenisedVersion({
       exerciseId: exercise.id,
       orgId: org.id,
       createdBy: user.id,
@@ -280,13 +293,13 @@ async function main(): Promise<void> {
       defaultAssets: spec.assets,
     });
     console.log(
-      result.created
-        ? `v2 inserted for ${spec.title} (${result.id})`
-        : `v2 already exists for ${spec.title} (${result.id}) — skipped`,
+      result.action === "inserted"
+        ? `v${result.version} inserted for ${spec.title} (${result.id})`
+        : `v${result.version} already covers schema for ${spec.title} (${result.id}) — skipped`,
     );
   }
 
-  console.log("creator Phase 4 seed complete (v2 tokenised; v1 untouched).");
+  console.log("creator Phase 4 seed complete (tokenised versions immutable; v1 untouched).");
 }
 
 main()
