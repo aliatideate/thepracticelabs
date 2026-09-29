@@ -1,6 +1,7 @@
 /**
  * Idempotent Phase 4 seed: insert exercise_versions v2 (tokenised) for
  * Demand Spike + Week in the Field. Leaves v1 rows immutable.
+ * If v2 already exists, skips it (does not UPDATE in place).
  *
  * Requires Phase 1 creator seed first.
  *
@@ -187,7 +188,7 @@ function martDefaultAssets(content: unknown): Record<string, unknown> {
   };
 }
 
-async function upsertV2(input: {
+async function ensureV2(input: {
   exerciseId: string;
   orgId: string;
   createdBy: string;
@@ -195,7 +196,7 @@ async function upsertV2(input: {
   variables: ExerciseVariableDef[];
   facilitatorNotes: string;
   defaultAssets: Record<string, unknown>;
-}): Promise<string> {
+}): Promise<{ id: string; created: boolean }> {
   const existing = await db
     .select()
     .from(exerciseVersionsTable)
@@ -207,18 +208,10 @@ async function upsertV2(input: {
     )
     .limit(1);
 
+  // Never edit an existing v2 row in place — exercise_versions are immutable.
+  // Re-runs are no-ops when v2 already exists (even if content/schema drifted).
   if (existing[0]) {
-    const [row] = await db
-      .update(exerciseVersionsTable)
-      .set({
-        content: input.content,
-        variables: input.variables,
-        facilitatorNotes: input.facilitatorNotes,
-        defaultAssets: input.defaultAssets,
-      })
-      .where(eq(exerciseVersionsTable.id, existing[0].id))
-      .returning();
-    return row.id;
+    return { id: existing[0].id, created: false };
   }
 
   const [row] = await db
@@ -234,7 +227,7 @@ async function upsertV2(input: {
       createdBy: input.createdBy,
     })
     .returning();
-  return row.id;
+  return { id: row.id, created: true };
 }
 
 async function main(): Promise<void> {
@@ -277,7 +270,7 @@ async function main(): Promise<void> {
     const exercise = exercises[0];
     if (!exercise) throw new Error(`exercise missing: ${spec.title}`);
 
-    const id = await upsertV2({
+    const result = await ensureV2({
       exerciseId: exercise.id,
       orgId: org.id,
       createdBy: user.id,
@@ -286,7 +279,11 @@ async function main(): Promise<void> {
       facilitatorNotes: spec.notes,
       defaultAssets: spec.assets,
     });
-    console.log(`v2 ready for ${spec.title} (${id})`);
+    console.log(
+      result.created
+        ? `v2 inserted for ${spec.title} (${result.id})`
+        : `v2 already exists for ${spec.title} (${result.id}) — skipped`,
+    );
   }
 
   console.log("creator Phase 4 seed complete (v2 tokenised; v1 untouched).");
