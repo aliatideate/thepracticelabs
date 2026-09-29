@@ -34,11 +34,21 @@ type VariableDef = {
   required?: boolean;
 };
 
+type SchemaUpgrade = {
+  fromVersion: number;
+  toVersion: number;
+  orphanKeys: string[];
+  missingRequired: string[];
+};
+
 type CopyPrefill = {
   variableValues: Record<string, unknown>;
   variables: VariableDef[];
   exerciseVersionId: string;
   logoAssetId: string | null;
+  copyVersion: number | null;
+  latestVersion: number;
+  schemaUpgrade: SchemaUpgrade | null;
 };
 
 const LONG_NAME_SAMPLES: Record<string, string> = {
@@ -46,6 +56,7 @@ const LONG_NAME_SAMPLES: Record<string, string> = {
   "company.shortName": "Arabian Peninsula Refreshments",
   "company.plantCity": "Ras Al Khaimah Industrial",
   "chain.name": "Horizon Neighbourhood Market",
+  "chain.namePlural": "Horizon Neighbourhood Markets",
   "branches.alNahda": "Al Nahda North Extension",
   "branches.muwaileh": "Muwaileh Commercial Hub",
   "branches.alMajaz": "Al Majaz Waterfront East",
@@ -56,6 +67,11 @@ const LONG_NAME_SAMPLES: Record<string, string> = {
 
 function startsWithThe(value: string): boolean {
   return /^\s*the\s+/i.test(value);
+}
+
+function deriveChainPlural(name: string): string {
+  const trimmed = name.trim();
+  return trimmed ? `${trimmed}s` : "";
 }
 
 function NewSessionWizard() {
@@ -112,12 +128,20 @@ function NewSessionWizard() {
 
   const selected = inCategory.find((e) => e.id === exerciseId);
   const variables = copyQ.data?.variables ?? [];
+  const schemaUpgrade = copyQ.data?.schemaUpgrade ?? null;
 
   useEffect(() => {
     if (!copyQ.data) return;
     const next: Record<string, string> = {};
     for (const def of copyQ.data.variables) {
       if (def.type !== "text") continue;
+      if (def.key === "chain.namePlural") {
+        const fromCopy = copyQ.data.variableValues[def.key];
+        // Empty = use derived name+s; only keep an explicit override.
+        next[def.key] =
+          typeof fromCopy === "string" && fromCopy.trim() ? fromCopy : "";
+        continue;
+      }
       const fromCopy = copyQ.data.variableValues[def.key];
       next[def.key] =
         typeof fromCopy === "string" && fromCopy.trim()
@@ -150,10 +174,9 @@ function NewSessionWizard() {
     return next;
   }, [showLongNames, variableValues, variables]);
 
-  const chainPlural =
-    effectiveValues["chain.name"]?.trim()
-      ? `${effectiveValues["chain.name"].trim()}s`
-      : "";
+  const chainNameValue = effectiveValues["chain.name"]?.trim() ?? "";
+  const pluralOverride = effectiveValues["chain.namePlural"]?.trim() ?? "";
+  const resolvedPlural = pluralOverride || deriveChainPlural(chainNameValue);
 
   const companyNameError = (() => {
     for (const key of ["company.name", "company.shortName"] as const) {
@@ -198,12 +221,18 @@ function NewSessionWizard() {
       setError(companyNameError);
       return;
     }
+    const logoAllowed = variables.some((v) => v.type === "image" && v.key === "company.logo");
     setBusy(true);
     setError(null);
     try {
       const payloadValues: Record<string, string> = { ...variableValues };
       const name = variableValues["chain.name"]?.trim();
-      if (name) payloadValues["chain.namePlural"] = `${name}s`;
+      const customPlural = variableValues["chain.namePlural"]?.trim();
+      if (name) {
+        payloadValues["chain.namePlural"] = customPlural || deriveChainPlural(name);
+      } else {
+        delete payloadValues["chain.namePlural"];
+      }
       const res = await fetch(
         preview ? "/api/create/sessions/preview" : "/api/create/sessions",
         {
@@ -218,7 +247,8 @@ function NewSessionWizard() {
             teamCount,
             mode,
             variableValues: payloadValues,
-            logoAssetId,
+            // Demand only — Mart has no company.logo variable.
+            logoAssetId: logoAllowed ? logoAssetId : null,
           }),
         },
       );
@@ -241,13 +271,18 @@ function NewSessionWizard() {
     }
   };
 
-  const textVars = variables.filter((v) => v.type === "text");
+  const textVars = variables.filter(
+    (v) => v.type === "text" && v.key !== "chain.namePlural",
+  );
   const hasLogoVar = variables.some((v) => v.type === "image" && v.key === "company.logo");
   const hasChain = textVars.some((v) => v.key === "chain.name");
+  const hasPluralField = variables.some((v) => v.key === "chain.namePlural");
   const companyPreviewName =
     effectiveValues["company.shortName"] ||
     effectiveValues["company.name"] ||
     "Company";
+  const orphanSet = new Set(schemaUpgrade?.orphanKeys ?? []);
+  const missingRequiredSet = new Set(schemaUpgrade?.missingRequired ?? []);
 
   return (
     <div className="min-h-screen bg-[#F8F6EF]">
@@ -367,12 +402,29 @@ function NewSessionWizard() {
             {variables.length > 0 && (
               <>
                 <div className="rounded-xl border border-[#E7E4DD] bg-[#F8F6EF] px-4 py-3 mb-6 text-[14px] text-[#6C6975] leading-relaxed">
-                  Renames are <strong className="text-[#1A1A1A]">UAE-only</strong> and{" "}
-                  <strong className="text-[#1A1A1A]">beverage / FMCG-only</strong> for now.
-                  Scene art (fruit icons, juice cartons) implies a drinks company — a food or snack
-                  rename would mismatch the imagery. Markets, long weekend, and the Sharjah &amp;
-                  Ajman dateline stay locked.
+                  Renames work for UAE-based beverage or FMCG companies. Markets, currency, dates
+                  and scene imagery stay as designed.
                 </div>
+
+                {schemaUpgrade && (
+                  <div className="rounded-xl border border-[#D4A017] bg-[#FFF8E7] px-4 py-3 mb-6 text-[14px] text-[#5C4A00] leading-relaxed">
+                    Saved values are from published v{schemaUpgrade.fromVersion}; latest is v
+                    {schemaUpgrade.toVersion}. Prefilling saved values — review flagged fields
+                    before create. No silent migration.
+                    {schemaUpgrade.orphanKeys.length > 0 && (
+                      <div className="mt-2">
+                        No longer in schema:{" "}
+                        <strong>{schemaUpgrade.orphanKeys.join(", ")}</strong>
+                      </div>
+                    )}
+                    {schemaUpgrade.missingRequired.length > 0 && (
+                      <div className="mt-2">
+                        New required fields empty:{" "}
+                        <strong>{schemaUpgrade.missingRequired.join(", ")}</strong>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between gap-3 mb-3">
                   <h2 className="text-[18px] m-0">Company &amp; place names</h2>
@@ -389,7 +441,14 @@ function NewSessionWizard() {
 
                 {textVars.map((def) => (
                   <div key={def.key} className="mb-4">
-                    <label className="block text-[14px] font-semibold mb-2">{def.label}</label>
+                    <label className="block text-[14px] font-semibold mb-2">
+                      {def.label}
+                      {missingRequiredSet.has(def.key) && (
+                        <span className="ml-2 text-[#B42318] font-normal">
+                          (new — required)
+                        </span>
+                      )}
+                    </label>
                     <input
                       value={
                         showLongNames
@@ -401,7 +460,11 @@ function NewSessionWizard() {
                       onChange={(e) =>
                         setVariableValues((prev) => ({ ...prev, [def.key]: e.target.value }))
                       }
-                      className="w-full rounded-xl border border-[#E7E4DD] px-4 py-3 text-[18px]"
+                      className={`w-full rounded-xl border px-4 py-3 text-[18px] ${
+                        missingRequiredSet.has(def.key)
+                          ? "border-[#B42318]"
+                          : "border-[#E7E4DD]"
+                      }`}
                     />
                     {def.maxLength != null && (
                       <p className="text-[13px] text-[#6C6975] mt-1 mb-0">
@@ -412,15 +475,44 @@ function NewSessionWizard() {
                         /{def.maxLength}
                       </p>
                     )}
-                    {def.key === "chain.name" && hasChain && (
-                      <p className="text-[14px] text-[#6C6975] mt-2 mb-0">
-                        Plural in headlines:{" "}
-                        <strong className="text-[#1A1A1A]">{chainPlural || "—"}</strong>{" "}
-                        (derived as name + “s”)
-                      </p>
+                    {def.key === "chain.name" && hasChain && hasPluralField && (
+                      <div className="mt-3">
+                        <label className="block text-[14px] font-semibold mb-2">
+                          Plural (if different)
+                        </label>
+                        <input
+                          value={
+                            showLongNames
+                              ? effectiveValues["chain.namePlural"] ?? ""
+                              : variableValues["chain.namePlural"] ?? ""
+                          }
+                          disabled={showLongNames}
+                          maxLength={40}
+                          placeholder="Leave blank to use name + s"
+                          onChange={(e) =>
+                            setVariableValues((prev) => ({
+                              ...prev,
+                              "chain.namePlural": e.target.value,
+                            }))
+                          }
+                          className="w-full rounded-xl border border-[#E7E4DD] px-4 py-3 text-[18px]"
+                        />
+                        <p className="text-[14px] text-[#6C6975] mt-2 mb-0">
+                          Resolved plural:{" "}
+                          <strong className="text-[#1A1A1A]">{resolvedPlural || "—"}</strong>
+                          {!pluralOverride && chainNameValue ? " (name + s)" : ""}
+                        </p>
+                      </div>
                     )}
                   </div>
                 ))}
+
+                {orphanSet.size > 0 && (
+                  <div className="mb-6 rounded-xl border border-[#B42318]/30 bg-[#FEF3F2] px-4 py-3 text-[14px] text-[#B42318]">
+                    Saved keys no longer in this exercise version (ignored on create):{" "}
+                    {[...orphanSet].join(", ")}
+                  </div>
+                )}
 
                 {(effectiveValues["company.name"] || effectiveValues["chain.name"]) && (
                   <div className="mb-6 rounded-xl border border-[#E7E4DD] p-4">
@@ -441,7 +533,7 @@ function NewSessionWizard() {
                     {effectiveValues["chain.name"] && (
                       <p className="text-[16px] m-0 text-[#6C6975]">
                         {effectiveValues["chain.name"]},{" "}
-                        {effectiveValues["branches.alNahda"] || "Al Nahda"} · {chainPlural}
+                        {effectiveValues["branches.alNahda"] || "Al Nahda"} · {resolvedPlural}
                       </p>
                     )}
                   </div>

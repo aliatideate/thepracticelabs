@@ -15,14 +15,17 @@ import {
   EXERCISE_CATEGORIES,
   WORKSHOP_SESSION_MODES,
   type ExerciseCategory,
+  type ExerciseVariableDef,
   type WorkshopSessionMode,
 } from "@workspace/db";
 import { issueWorkshopFacilitatorToken, requireAuth } from "../lib/auth";
 import {
   allocateUniqueWorkshopCode,
+  findUnresolvedTokens,
   prepareVariableValues,
   resolveContentTokens,
   resolveFacilitatorNotes,
+  validateTokenDeclarations,
   validateVariableValues,
 } from "../lib/resolve-content";
 
@@ -686,16 +689,38 @@ async function createWorkshopSession(opts: {
   const published = await latestPublishedVersion(exerciseId, opts.user.orgId);
   if (!published) return { error: "exercise not found or not published", status: 404 as const };
 
+  const definitions = published.version.variables ?? [];
+  const tokenDecl = validateTokenDeclarations(
+    definitions,
+    published.version.content,
+    published.version.facilitatorNotes,
+  );
+  if (tokenDecl) return tokenDecl;
+
   const mergedValues = prepareVariableValues({
-    definitions: published.version.variables ?? [],
+    definitions,
     values: variableValues,
     logoAssetId,
   });
-  const validation = validateVariableValues(
-    published.version.variables ?? [],
+  const validation = validateVariableValues(definitions, mergedValues);
+  if (validation) return validation;
+
+  const resolvedContent = resolveContentTokens(published.version.content, mergedValues);
+  const resolvedFacilitatorNotes = resolveFacilitatorNotes(
+    published.version.facilitatorNotes,
     mergedValues,
   );
-  if (validation) return validation;
+  const leftover = [
+    ...findUnresolvedTokens(resolvedContent),
+    ...findUnresolvedTokens(resolvedFacilitatorNotes ?? ""),
+  ];
+  if (leftover.length > 0) {
+    const unique = [...new Set(leftover)].sort();
+    return {
+      error: `Unresolved tokens after merge: ${unique.map((k) => `{{${k}}}`).join(", ")}. Fix variable values or content before creating the session.`,
+      status: 400 as const,
+    };
+  }
 
   const copy = await upsertClientCopy({
     orgId: opts.user.orgId,
@@ -707,11 +732,6 @@ async function createWorkshopSession(opts: {
     createdBy: opts.user.id,
   });
 
-  const resolvedContent = resolveContentTokens(published.version.content, mergedValues);
-  const resolvedFacilitatorNotes = resolveFacilitatorNotes(
-    published.version.facilitatorNotes,
-    mergedValues,
-  );
   const code = await allocateUniqueWorkshopCode();
 
   const [workshop] = await db
@@ -884,11 +904,20 @@ router.get("/create/clients/:clientId/copies/:exerciseId", async (req, res) => {
   const published = await latestPublishedVersion(String(req.params.exerciseId), user.orgId);
   if (!published) return res.status(404).json({ error: "not_found" });
 
+  const latestVariables = (published.version.variables ?? []) as ExerciseVariableDef[];
+  const latestKeys = new Set(latestVariables.map((v: ExerciseVariableDef) => v.key));
+
   const rows = await db
     .select({
       copy: clientCopiesTable,
+      copyVersion: exerciseVersionsTable.version,
+      copyVersionId: exerciseVersionsTable.id,
     })
     .from(clientCopiesTable)
+    .innerJoin(
+      exerciseVersionsTable,
+      eq(exerciseVersionsTable.id, clientCopiesTable.exerciseVersionId),
+    )
     .where(
       and(
         eq(clientCopiesTable.clientId, String(req.params.clientId)),
@@ -897,20 +926,57 @@ router.get("/create/clients/:clientId/copies/:exerciseId", async (req, res) => {
       ),
     )
     .limit(1);
+
   if (!rows[0]) {
     return res.json({
       variableValues: {},
-      variables: published.version.variables,
+      variables: latestVariables,
       exerciseVersionId: published.version.id,
+      copyExerciseVersionId: null,
+      copyVersion: null,
+      latestVersion: published.version.version,
+      schemaUpgrade: null,
       logoAssetId: null,
     });
   }
+
+  const saved = (rows[0].copy.variableValues ?? {}) as Record<string, unknown>;
+  const orphanKeys = Object.keys(saved)
+    .filter((k) => {
+      if (latestKeys.has(k)) return false;
+      const v = saved[k];
+      // Ignore nested parent objects written by setByKey alongside dotted keys.
+      if (v && typeof v === "object" && !Array.isArray(v)) return false;
+      return true;
+    })
+    .sort();
+
+  const missingRequired = latestVariables
+    .filter((v) => v.required && v.type === "text")
+    .filter((v) => {
+      const raw = saved[v.key];
+      return raw == null || String(raw).trim() === "";
+    })
+    .map((v) => v.key)
+    .sort();
+
+  const stale = rows[0].copyVersionId !== published.version.id;
+
   return res.json({
-    variableValues: rows[0].copy.variableValues,
-    // Always expose the latest published schema so v2 fields appear after Phase 4 seed
-    // even when an older client_copy still points at v1.
-    variables: published.version.variables,
+    variableValues: saved,
+    variables: latestVariables,
     exerciseVersionId: published.version.id,
+    copyExerciseVersionId: rows[0].copyVersionId,
+    copyVersion: rows[0].copyVersion,
+    latestVersion: published.version.version,
+    schemaUpgrade: stale
+      ? {
+          fromVersion: rows[0].copyVersion,
+          toVersion: published.version.version,
+          orphanKeys,
+          missingRequired,
+        }
+      : null,
     logoAssetId: rows[0].copy.logoAssetId,
   });
 });

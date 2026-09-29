@@ -97,6 +97,13 @@ const MART_VARIABLES: ExerciseVariableDef[] = [
     required: true,
   },
   {
+    key: "chain.namePlural",
+    label: "Plural (if different)",
+    type: "text",
+    maxLength: 40,
+    required: false,
+  },
+  {
     key: "branches.alNahda",
     label: "Branch — Al Nahda",
     type: "text",
