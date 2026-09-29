@@ -45,6 +45,8 @@ export const scenarioSchema = z.object({
     name: z.string(),
     descriptor: z.string(),
     logo: z.string(),
+    /** Present on tokenised (v2) content; used for evidence download slugs. */
+    shortName: z.string().optional(),
     overview: z.string(),
     facts: z.array(z.object({ label: z.string(), value: z.string() })),
   }),
@@ -108,5 +110,14 @@ export function loadScenario(): Scenario {
 }
 
 export function mediaUrl(filename: string): string {
+  if (!filename) return filename;
+  if (
+    filename.startsWith("/") ||
+    filename.startsWith("http://") ||
+    filename.startsWith("https://") ||
+    filename.startsWith("data:")
+  ) {
+    return filename;
+  }
   return `/content/media/${filename}`;
 }

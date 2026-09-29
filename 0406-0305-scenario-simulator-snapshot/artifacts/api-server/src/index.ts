@@ -1,6 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { bootstrapDatabase } from "./lib/bootstrap";
+import { startPreviewSessionSweeper } from "./lib/preview-cleanup";
 
 const rawPort = process.env["PORT"] ?? "3000";
 
@@ -12,6 +13,7 @@ if (Number.isNaN(port) || port <= 0) {
 
 bootstrapDatabase()
   .then(() => {
+    startPreviewSessionSweeper();
     app.listen(port, (err) => {
       if (err) {
         logger.error({ err }, "Error listening on port");

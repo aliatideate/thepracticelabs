@@ -69,6 +69,7 @@ export const TEAM_STORAGE_KEY = "tpl-session";
 export const DEMAND_TRY_STORAGE_KEY = "tpl-demand-try-session";
 export const DEMAND_TRY_WORKSHOP_CODE = "DEMAND-TRY";
 export const MART_STORAGE_KEY = "tpl-mart-session";
+export const MART_WORKSHOP_CODE = "MART";
 export const MART_SESSION_LABEL = "Session 2: Ideation & Decision-Making";
 export const MART_CONFIG_PATH = "/api/mart/session-config";
 export const MART_DURATION_MINUTES = 15;
@@ -93,13 +94,37 @@ export function withMarketFlags(text: string): string {
     .replaceAll("Qatar", "🇶🇦 Qatar");
 }
 
-export function evidenceFilename(id: string): string {
+/** Lowercase ASCII slug for download labels; empty if nothing usable. */
+export function sanitiseFilenameSlug(input: string | null | undefined): string {
+  if (!input) return "";
+  return input
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase()
+    .slice(0, 48);
+}
+
+/**
+ * Evidence download labels: `{shortSlug}-W35-…`.
+ * Prefer company short name; fall back to session/workshop code, then `gbc`.
+ */
+export function evidenceFilename(
+  id: string,
+  shortNameOrSlug?: string | null,
+  fallbackCode?: string | null,
+): string {
+  const slug =
+    sanitiseFilenameSlug(shortNameOrSlug) ||
+    sanitiseFilenameSlug(fallbackCode) ||
+    "gbc";
   switch (id) {
     case "sku_availability":
-      return "GBC-W35-availability.xlsx";
+      return `${slug}-W35-availability.xlsx`;
     case "production_capacity":
-      return "GBC-W35-capacity-memo.pdf";
+      return `${slug}-W35-capacity-memo.pdf`;
     default:
-      return "GBC-W35-retailer-complaints.pdf";
+      return `${slug}-W35-retailer-complaints.pdf`;
   }
 }

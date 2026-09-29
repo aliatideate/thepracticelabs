@@ -16,9 +16,15 @@ import {
 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useScenario } from "../lib/scenario";
+import { useRuntimeWorkshopCode } from "../lib/sessionRoom";
 import { Card, PageShell, PrimaryButton, TeamCallout, WaitStatus } from "./components";
 import { DocumentPanel } from "./documentBlocks";
-import { withMarketFlags, evidenceFilename, MIN_INTERVIEW_QUESTIONS } from "../lib/constants";
+import {
+  WORKSHOP_CODE,
+  withMarketFlags,
+  evidenceFilename,
+  MIN_INTERVIEW_QUESTIONS,
+} from "../lib/constants";
 
 const STAKEHOLDER_ICON = {
   rohini: Calendar,
@@ -450,6 +456,9 @@ export function ScreenEvidence({
   readOnly: boolean;
 }) {
   const scenario = useScenario();
+  const workshopCode = useRuntimeWorkshopCode(WORKSHOP_CODE);
+  const fileLabel = (id: string) =>
+    evidenceFilename(id, scenario.company.shortName, workshopCode);
   const stakeholder = scenario.stakeholders.find((s) => s.id === stakeholderId);
   const [pending, setPending] = useState<string | null>(selectedId);
   const [opening, setOpening] = useState(false);
@@ -513,7 +522,7 @@ export function ScreenEvidence({
                 onClick={readOnly || locked ? undefined : () => setPending(e.id)}
               >
                 <FileText className="h-5 w-5 mb-3 text-[#301CA0]" strokeWidth={2} />
-                <div className="text-[14px] font-mono text-[#6C6975] mb-1">{evidenceFilename(e.id)}</div>
+                <div className="text-[14px] font-mono text-[#6C6975] mb-1">{fileLabel(e.id)}</div>
                 <div className="text-[18px] font-semibold">{e.title}</div>
                 <div className={locked && selectedId === e.id ? "text-white/80 text-[15px]" : "text-[#6C6975] text-[15px]"}>
                   {e.subtitle}
@@ -535,7 +544,7 @@ export function ScreenEvidence({
       {doc && opening && (
         <div className="bg-white border border-[#E7E4DD] rounded-xl p-8 mb-6">
           <div className="text-[14px] uppercase tracking-wide text-[#6C6975] mb-2">Opening file</div>
-          <div className="text-[14px] font-mono text-[#6C6975] mb-1">{evidenceFilename(doc.id)}</div>
+          <div className="text-[14px] font-mono text-[#6C6975] mb-1">{fileLabel(doc.id)}</div>
           <div className="text-[20px] font-semibold mb-4">{doc.title}</div>
           <WaitStatus mode="loading" label="Loading document" />
           <div className="mt-5 h-1.5 rounded-full bg-[#E7E4DD] overflow-hidden">
@@ -549,7 +558,7 @@ export function ScreenEvidence({
           <div className="flex items-center justify-between gap-4 rounded-xl border border-[#E7E4DD] bg-white px-5 py-4 mb-6">
             <div>
               <div className="text-[14px] text-[#6C6975]">Evidence source unlocked</div>
-              <div className="text-[14px] font-mono text-[#6C6975]">{evidenceFilename(doc.id)}</div>
+              <div className="text-[14px] font-mono text-[#6C6975]">{fileLabel(doc.id)}</div>
               <div className="text-[18px] font-semibold">{doc.title}</div>
             </div>
             <div className="text-[14px] font-semibold text-[#2E7D5B]">Open</div>

@@ -7,7 +7,13 @@ import {
   workshopsTable,
 } from "@workspace/db";
 import { loadScenario, mediaUrl, type Scenario } from "./content";
-import { asPublicDecisionGame, loadDecisionGame, publicDecisionGame } from "./decision-game";
+import {
+  asPublicDecisionGame,
+  decisionGameSchema,
+  loadDecisionGame,
+  publicDecisionGame,
+  type DecisionGame,
+} from "./decision-game";
 import {
   DEMAND_TRY_WORKSHOP_CODE,
   MART_TRY_WORKSHOP_CODE,
@@ -108,11 +114,13 @@ export async function decisionGameForCode(code?: string | null) {
   return publicDecisionGame();
 }
 
-export async function decisionGameFacilitatorForCode(code?: string | null) {
+export async function decisionGameFacilitatorForCode(
+  code?: string | null,
+): Promise<DecisionGame> {
   const key = (code ?? MART_WORKSHOP_CODE).trim().toUpperCase() || MART_WORKSHOP_CODE;
   const row = await findWorkshopSessionByCode(key);
   if (row?.format === "branching" && row.session.resolvedContent) {
-    return row.session.resolvedContent;
+    return decisionGameSchema.parse(row.session.resolvedContent);
   }
   return loadDecisionGame();
 }

@@ -49,7 +49,12 @@ function serializeClock(row: typeof sessionConfigTable.$inferSelect) {
   };
 }
 
-function serialize(row: DecisionSessionRow, includeFacilitator: boolean, workshopCode = MART_WORKSHOP_CODE) {
+function serialize(
+  row: DecisionSessionRow,
+  includeFacilitator: boolean,
+  workshopCode = MART_WORKSHOP_CODE,
+  game = loadDecisionGame(),
+) {
   const choices = row.choices ?? [];
   const base = {
     id: row.id,
@@ -71,7 +76,6 @@ function serialize(row: DecisionSessionRow, includeFacilitator: boolean, worksho
     updatedAt: row.updatedAt.toISOString(),
   };
   if (!includeFacilitator) return base;
-  const game = loadDecisionGame();
   const score = scoreOf(game, choices);
   return {
     ...base,
@@ -169,7 +173,8 @@ router.patch("/mart/session-config", async (req, res) => {
 });
 
 router.get("/mart/sessions", async (req, res) => {
-  const workshopId = await workshopIdFor(martCodeFrom(req));
+  const code = martCodeFrom(req);
+  const workshopId = await workshopIdFor(code);
   // Public list for join UI; facilitator fields only when authenticated.
   const fac = !!(await resolveAuth(req));
   const rows = await db
@@ -177,7 +182,8 @@ router.get("/mart/sessions", async (req, res) => {
     .from(decisionSessionsTable)
     .where(eq(decisionSessionsTable.workshopId, workshopId))
     .orderBy(asc(decisionSessionsTable.teamName));
-  return res.json(rows.map((r) => serialize(r, fac)));
+  const game = fac ? await decisionGameFacilitatorForCode(code) : loadDecisionGame();
+  return res.json(rows.map((r) => serialize(r, fac, code, game)));
 });
 
 router.post("/mart/sessions", async (req, res) => {
@@ -242,13 +248,14 @@ router.get("/mart/sessions/:id", async (req, res) => {
 });
 
 router.get("/mart/sessions/:id/reveal", async (req, res) => {
-  const workshopId = await workshopIdFor(martCodeFrom(req));
+  const code = martCodeFrom(req);
+  const workshopId = await workshopIdFor(code);
   const row = await loadDecision(String(req.params.id), workshopId);
   if (!row) return res.status(404).json({ error: "not found" });
   if (row.currentScreen !== "reveal") {
     return res.status(409).json({ error: "not finished" });
   }
-  const game = loadDecisionGame();
+  const game = await decisionGameFacilitatorForCode(code);
   const choices = row.choices ?? [];
   return res.json({
     stories: revealStories(game, choices),
@@ -284,11 +291,12 @@ router.post("/mart/sessions/:id/choice", async (req, res) => {
   const body = req.body as { decisionId?: string; optionId?: string };
   const decisionId = body.decisionId ?? "";
   const optionId = body.optionId ?? "";
-  const game = loadDecisionGame();
+  const code = martCodeFrom(req);
+  const game = await decisionGameFacilitatorForCode(code);
   const { decision, option } = optionFor(game, decisionId, optionId);
   if (!decision || !option) return res.status(400).json({ error: "invalid choice" });
 
-  const workshopId = await workshopIdFor(martCodeFrom(req));
+  const workshopId = await workshopIdFor(code);
   const row = await loadDecision(String(req.params.id), workshopId);
   if (!row) return res.status(404).json({ error: "not found" });
   const existingChoices = row.choices ?? [];
@@ -347,15 +355,16 @@ router.delete("/mart/sessions/:id", async (req, res) => {
 
 router.get("/mart/export", async (req, res) => {
   if (!(await assertFacilitator(req, res))) return;
-  const game = loadDecisionGame();
-  const workshopId = await workshopIdFor(martCodeFrom(req));
+  const code = martCodeFrom(req);
+  const game = await decisionGameFacilitatorForCode(code);
+  const workshopId = await workshopIdFor(code);
   const rows = await db
     .select()
     .from(decisionSessionsTable)
     .where(eq(decisionSessionsTable.workshopId, workshopId))
     .orderBy(asc(decisionSessionsTable.teamName));
   const teams = rows.map((row) => {
-    const packed = serialize(row, true) as ReturnType<typeof serialize> & {
+    const packed = serialize(row, true, code, game) as ReturnType<typeof serialize> & {
       score?: number;
       maxScore?: number;
       slowLost?: number;
@@ -563,9 +572,10 @@ router.get("/mart/archives/:id", async (req, res) => {
 
 router.post("/mart/archives", async (req, res) => {
   if (!(await assertFacilitator(req, res))) return;
-  const workshopId = await workshopIdFor(martCodeFrom(req));
-  const game = loadDecisionGame();
-  const clock = await getOrCreateConfig(martCodeFrom(req));
+  const code = martCodeFrom(req);
+  const workshopId = await workshopIdFor(code);
+  const game = await decisionGameFacilitatorForCode(code);
+  const clock = await getOrCreateConfig(code);
   const teams = await db
     .select()
     .from(decisionSessionsTable)
@@ -574,7 +584,7 @@ router.post("/mart/archives", async (req, res) => {
   if (teams.length === 0) {
     return res.status(400).json({ error: "no teams to save" });
   }
-  const serialized = teams.map((t) => serialize(t, true));
+  const serialized = teams.map((t) => serialize(t, true, code, game));
   const submittedCount = serialized.filter((t) => t.currentScreen === "reveal").length;
   const payload = {
     scenarioId: game.scenario.id,

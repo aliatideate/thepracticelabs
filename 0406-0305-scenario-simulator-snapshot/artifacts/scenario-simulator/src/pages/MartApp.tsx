@@ -5,8 +5,10 @@ import {
   MART_CONFIG_PATH,
   MART_DURATION_MINUTES,
   MART_SESSION_LABEL,
+  MART_WORKSHOP_CODE,
   formatTeamLabel,
 } from "../lib/constants";
+import { useRuntimeWorkshopCode } from "../lib/sessionRoom";
 import { Header, PrimaryButton, TimeBanner, useSessionConfig } from "../simulation/components";
 import {
   gradeTone,
@@ -86,8 +88,12 @@ function OutcomeDot({ outcome }: { outcome?: "good" | "mixed" | "bad" }) {
 export default function MartApp({ mode = "live" }: { mode?: "live" | "try" }) {
   const { sessionId } = useParams<{ sessionId: string }>();
   const game = useDecisionGame();
+  const workshopCode = useRuntimeWorkshopCode(MART_WORKSHOP_CODE);
+  const qs = `workshopCode=${encodeURIComponent(workshopCode)}`;
   const apiBase = mode === "try" ? "/api/try" : "/api/mart";
-  const liveConfig = useSessionConfig(mode === "try" ? undefined : MART_CONFIG_PATH);
+  const configPath =
+    mode === "try" ? undefined : `${MART_CONFIG_PATH}?${qs}`;
+  const liveConfig = useSessionConfig(configPath);
   const [session, setSession] = useState<MartSession | null>(null);
   const [playbookOpen, setPlaybookOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -100,7 +106,11 @@ export default function MartApp({ mode = "live" }: { mode?: "live" | "try" }) {
   const showHotspots = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("hotspot");
 
   const load = async () => {
-    const res = await fetch(`${apiBase}/sessions/${sessionId}`);
+    const url =
+      mode === "try"
+        ? `${apiBase}/sessions/${sessionId}`
+        : `${apiBase}/sessions/${sessionId}?${qs}`;
+    const res = await fetch(url);
     if (!res.ok) return;
     const data = (await res.json()) as MartSession;
     setSession(data);
@@ -110,7 +120,7 @@ export default function MartApp({ mode = "live" }: { mode?: "live" | "try" }) {
     load();
     const id = setInterval(load, 4000);
     return () => clearInterval(id);
-  }, [sessionId, apiBase]);
+  }, [sessionId, apiBase, qs, mode]);
 
   useEffect(() => {
     if (session?.currentScreen === "reveal") setRevealStep(0);
@@ -119,7 +129,11 @@ export default function MartApp({ mode = "live" }: { mode?: "live" | "try" }) {
   const start = async () => {
     setBusy(true);
     try {
-      const res = await fetch(`${apiBase}/sessions/${sessionId}/start`, { method: "POST" });
+      const res = await fetch(`${apiBase}/sessions/${sessionId}/start`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: mode === "try" ? "{}" : JSON.stringify({ workshopCode }),
+      });
       if (res.ok) setSession((await res.json()) as MartSession);
     } finally {
       setBusy(false);
@@ -134,7 +148,11 @@ export default function MartApp({ mode = "live" }: { mode?: "live" | "try" }) {
       const res = await fetch(`${apiBase}/sessions/${sessionId}/choice`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ decisionId, optionId }),
+        body: JSON.stringify({
+          decisionId,
+          optionId,
+          ...(mode === "try" ? {} : { workshopCode }),
+        }),
       });
       if (!res.ok) return;
       const next = (await res.json()) as MartSession;
@@ -153,7 +171,10 @@ export default function MartApp({ mode = "live" }: { mode?: "live" | "try" }) {
     await fetch(`${apiBase}/sessions/${session.id}/flag`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ flagged: true }),
+      body: JSON.stringify({
+        flagged: true,
+        ...(mode === "try" ? {} : { workshopCode }),
+      }),
     });
     setBlink(true);
     setTimeout(() => setBlink(false), 15000);
@@ -217,7 +238,7 @@ export default function MartApp({ mode = "live" }: { mode?: "live" | "try" }) {
       <Header
         teamName={formatTeamLabel(session)}
         teamEmoji={session.emoji}
-        configPath={mode === "try" ? undefined : MART_CONFIG_PATH}
+        configPath={configPath}
         clock={mode === "try" ? tryClock : undefined}
         liveLabel={mode === "try" ? "Try-out" : "Live"}
         sessionLabel={MART_SESSION_LABEL}
@@ -396,6 +417,7 @@ export default function MartApp({ mode = "live" }: { mode?: "live" | "try" }) {
           step={revealStep}
           setStep={setRevealStep}
           apiBase={apiBase}
+          workshopCode={mode === "try" ? undefined : workshopCode}
         />
       )}
 
@@ -421,6 +443,7 @@ function RevealScreen({
   step,
   setStep,
   apiBase,
+  workshopCode,
 }: {
   sessionId: string;
   teamName: string;
@@ -428,6 +451,7 @@ function RevealScreen({
   step: number;
   setStep: (n: number) => void;
   apiBase: string;
+  workshopCode?: string;
 }) {
   const [payload, setPayload] = useState<RevealPayload | null>(null);
   const reduced =
@@ -435,10 +459,13 @@ function RevealScreen({
   const [paperIn, setPaperIn] = useState(reduced);
 
   useEffect(() => {
-    fetch(`${apiBase}/sessions/${sessionId}/reveal`)
+    const q = workshopCode
+      ? `?workshopCode=${encodeURIComponent(workshopCode)}`
+      : "";
+    fetch(`${apiBase}/sessions/${sessionId}/reveal${q}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => data && setPayload(data as RevealPayload));
-  }, [sessionId, apiBase]);
+  }, [sessionId, apiBase, workshopCode]);
 
   useEffect(() => {
     if (reduced) {

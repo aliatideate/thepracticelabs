@@ -35,8 +35,9 @@ app.use(
 );
 app.use(cors({ origin: true, credentials: true }));
 app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Asset uploads POST base64 JSON (≤500 KB binary ≈ ~700 KB encoded). Default 100kb is too small.
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 app.use("/api", router);
 app.use("/content", express.static(contentDir()));

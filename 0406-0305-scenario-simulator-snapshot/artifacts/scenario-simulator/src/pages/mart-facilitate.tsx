@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Bookmark, Download, PencilLine, Phone, RotateCcw, X } from "lucide-react";
-import { MART_DURATION_MINUTES, MART_SESSION_LABEL, formatTeamLabel } from "../lib/constants";
+import {
+  MART_DURATION_MINUTES,
+  MART_SESSION_LABEL,
+  MART_WORKSHOP_CODE,
+  formatTeamLabel,
+} from "../lib/constants";
+import { useRuntimeWorkshopCode } from "../lib/sessionRoom";
 import { Header, SecondaryButton } from "../simulation/components";
 import { formatCountdown, isExpired, remainingMs, type SessionConfig } from "../lib/timer";
 import { playPhoneRing } from "../lib/phoneRing";
@@ -228,6 +234,7 @@ function MartResultsTable({
 }
 
 export default function MartFacilitate() {
+  const workshopCode = useRuntimeWorkshopCode(MART_WORKSHOP_CODE);
   const [game, setGame] = useState<DecisionGame | null>(null);
   const [sessions, setSessions] = useState<FacSession[]>([]);
   const [config, setConfig] = useState<SessionConfig | null>(null);
@@ -241,17 +248,20 @@ export default function MartFacilitate() {
   const [viewingTry, setViewingTry] = useState<FacSession | null>(null);
   const [tryRuns, setTryRuns] = useState<FacSession[]>([]);
   const headers = { "content-type": "application/json" };
+  const qs = `workshopCode=${encodeURIComponent(workshopCode)}`;
 
   const loadArchives = async () => {
-    const res = await fetch("/api/mart/archives", { headers });
+    const res = await fetch(`/api/mart/archives?${qs}`, { headers });
     if (res.ok) setArchives((await res.json()) as ArchiveSummary[]);
   };
 
   const load = async () => {
     const [g, s, c, t] = await Promise.all([
-      fetch("/api/decision-game/facilitator", { headers }),
-      fetch("/api/mart/sessions", { headers }),
-      fetch("/api/mart/session-config"),
+      fetch(`/api/decision-game/facilitator?code=${encodeURIComponent(workshopCode)}`, {
+        headers,
+      }),
+      fetch(`/api/mart/sessions?${qs}`, { headers }),
+      fetch(`/api/mart/session-config?${qs}`),
       fetch("/api/try/sessions", { headers }),
     ]);
     if (g.ok) setGame((await g.json()) as DecisionGame);
@@ -303,7 +313,7 @@ export default function MartFacilitate() {
   }, [sessions]);
 
   const download = async (format: "csv" | "json") => {
-    const res = await call(`/api/mart/export?format=${format}`);
+    const res = await call(`/api/mart/export?format=${format}&${qs}`);
     if (!res) return;
     const blob = await res.blob();
     const a = document.createElement("a");
@@ -336,6 +346,7 @@ export default function MartFacilitate() {
       const res = await fetch("/api/mart/archives", {
         method: "POST",
         headers,
+        body: JSON.stringify({ workshopCode }),
       });
       if (!res.ok) {
         setMsg("Could not save this run.");
@@ -371,7 +382,7 @@ export default function MartFacilitate() {
   return (
     <div className="min-h-screen bg-[#F8F6EF]">
       <Header
-        configPath="/api/mart/session-config"
+        configPath={`/api/mart/session-config?${qs}`}
         sessionLabel={MART_SESSION_LABEL}
         titleOverride={game.scenario.title}
       />
@@ -402,7 +413,7 @@ export default function MartFacilitate() {
             onClick={async () => {
               const res = await call("/api/mart/session-config", {
                 method: "PATCH",
-                body: JSON.stringify({ durationMinutes: Number(duration) }),
+                body: JSON.stringify({ durationMinutes: Number(duration), workshopCode }),
               });
               if (res) setConfig((await res.json()) as SessionConfig);
             }}
@@ -415,7 +426,10 @@ export default function MartFacilitate() {
             aria-label="Restart timer"
             title="Restart timer"
             onClick={async () => {
-              const res = await call("/api/mart/session-config/start", { method: "POST", body: "{}" });
+              const res = await call("/api/mart/session-config/start", {
+                method: "POST",
+                body: JSON.stringify({ workshopCode }),
+              });
               if (res) setConfig((await res.json()) as SessionConfig);
             }}
             className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-r from-[#301CA0] to-[#1A0F58] text-white shadow-[0_8px_24px_rgba(48,28,160,0.28)] transition-all duration-200 ease-out hover:scale-[1.05] hover:from-[#3d28b8] hover:to-[#301CA0] active:scale-[0.96]"
@@ -524,7 +538,10 @@ export default function MartFacilitate() {
               type="button"
               onClick={async () => {
                 if (!window.confirm("Clear every mart team and reset the timer?")) return;
-                const res = await call("/api/mart/sessions/reset-all", { method: "POST", body: "{}" });
+                const res = await call("/api/mart/sessions/reset-all", {
+                  method: "POST",
+                  body: JSON.stringify({ workshopCode }),
+                });
                 if (res) {
                   setMsg("Cleared.");
                   load();
@@ -536,7 +553,12 @@ export default function MartFacilitate() {
             </button>
             <button
               type="button"
-              onClick={() => call("/api/mart/session-config", { method: "PATCH", body: JSON.stringify({ end: true }) }).then((r) => r && r.json().then((c) => setConfig(c)))}
+              onClick={() =>
+                call("/api/mart/session-config", {
+                  method: "PATCH",
+                  body: JSON.stringify({ end: true, workshopCode }),
+                }).then((r) => r && r.json().then((c) => setConfig(c)))
+              }
               className="inline-flex items-center gap-2 rounded-full bg-[#B42318] text-white font-semibold px-5 py-2.5"
             >
               <X className="h-4 w-4" /> End exercise
