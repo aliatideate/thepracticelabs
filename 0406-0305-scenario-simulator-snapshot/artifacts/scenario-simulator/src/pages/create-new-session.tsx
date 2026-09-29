@@ -1,8 +1,12 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { ImagePlus } from "lucide-react";
 import { Header, PrimaryButton, SecondaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
+
+const MAX_LOGO_BYTES = 500 * 1024;
+const LOGO_MIME = new Set(["image/png", "image/jpeg", "image/webp"]);
 
 const CATEGORIES = [
   { key: "problem-framing", label: "Problem framing" },
@@ -87,9 +91,19 @@ function NewSessionWizard() {
   const [variableValues, setVariableValues] = useState<Record<string, string>>({});
   const [logoAssetId, setLogoAssetId] = useState<string | null>(null);
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
+  const [logoFilename, setLogoFilename] = useState<string | null>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [localLogoUrl, setLocalLogoUrl] = useState<string | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const [showLongNames, setShowLongNames] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (localLogoUrl) URL.revokeObjectURL(localLogoUrl);
+    };
+  }, [localLogoUrl]);
 
   const clientQ = useQuery({
     queryKey: ["create-client", clientId],
@@ -153,6 +167,7 @@ function NewSessionWizard() {
     setLogoPreviewUrl(
       copyQ.data.logoAssetId ? `/api/create/assets/${copyQ.data.logoAssetId}` : null,
     );
+    setLogoFilename(copyQ.data.logoAssetId ? "Saved logo" : null);
   }, [copyQ.data]);
 
   const pickExercise = (ex: Exercise) => {
@@ -190,29 +205,58 @@ function NewSessionWizard() {
 
   const uploadLogo = async (file: File) => {
     setError(null);
-    const buf = await file.arrayBuffer();
-    const bytes = new Uint8Array(buf);
-    let binary = "";
-    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]!);
-    const base64 = btoa(binary);
-    const res = await fetch("/api/create/assets", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        filename: file.name,
-        mimeType: file.type || "image/png",
-        base64,
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      setError(body.error || "Logo upload failed.");
+    const mime = file.type || "image/png";
+    if (!LOGO_MIME.has(mime)) {
+      setError("Logo must be a PNG, JPEG, or WebP image.");
       return;
     }
-    const asset = (await res.json()) as { id: string; url: string };
-    setLogoAssetId(asset.id);
-    setLogoPreviewUrl(asset.url);
+    if (file.size === 0 || file.size > MAX_LOGO_BYTES) {
+      setError("Logo must be 500 KB or smaller.");
+      return;
+    }
+
+    if (localLogoUrl) URL.revokeObjectURL(localLogoUrl);
+    const objectUrl = URL.createObjectURL(file);
+    setLocalLogoUrl(objectUrl);
+    setLogoFilename(file.name);
+    setLogoPreviewUrl(objectUrl);
+    setLogoUploading(true);
+
+    try {
+      const buf = await file.arrayBuffer();
+      const bytes = new Uint8Array(buf);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]!);
+      const base64 = btoa(binary);
+      const res = await fetch("/api/create/assets", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          filename: file.name,
+          mimeType: mime,
+          base64,
+        }),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        const message =
+          res.status === 413
+            ? "Logo is too large to upload. Use a file under 500 KB."
+            : body.error || "Logo upload failed.";
+        setError(message);
+        setLogoAssetId(null);
+        return;
+      }
+      const asset = (await res.json()) as { id: string; url: string };
+      setLogoAssetId(asset.id);
+      setLogoPreviewUrl(asset.url);
+    } catch {
+      setError("Could not reach the server to upload the logo.");
+      setLogoAssetId(null);
+    } finally {
+      setLogoUploading(false);
+    }
   };
 
   const createSession = async (preview: boolean) => {
@@ -543,14 +587,42 @@ function NewSessionWizard() {
                   <div className="mb-6">
                     <label className="block text-[14px] font-semibold mb-2">Company logo</label>
                     <input
+                      ref={logoInputRef}
                       type="file"
                       accept="image/png,image/jpeg,image/webp"
+                      className="sr-only"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
+                        e.target.value = "";
                         if (file) void uploadLogo(file);
                       }}
-                      className="mb-3 text-[14px]"
                     />
+                    <div className="rounded-xl border border-[#E7E4DD] bg-[#F8F6EF] px-4 py-4 mb-3">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <SecondaryButton
+                          disabled={logoUploading || busy}
+                          onClick={() => logoInputRef.current?.click()}
+                        >
+                          <span className="inline-flex items-center gap-2">
+                            <ImagePlus className="h-4 w-4" strokeWidth={2.25} />
+                            {logoUploading
+                              ? "Uploading…"
+                              : logoAssetId || logoPreviewUrl
+                                ? "Replace logo"
+                                : "Upload logo"}
+                          </span>
+                        </SecondaryButton>
+                        <p className="text-[14px] text-[#6C6975] m-0 min-w-0 flex-1">
+                          {logoFilename ? (
+                            <span className="text-[#1A0F58] font-medium break-all">
+                              {logoFilename}
+                            </span>
+                          ) : (
+                            "PNG, JPEG, or WebP · max 500 KB"
+                          )}
+                        </p>
+                      </div>
+                    </div>
                     <p className="text-[13px] text-[#6C6975] mt-0 mb-3">
                       Preview on the same dark and light surfaces used in the exercise. Try a wide
                       and a square mark to check odd aspect ratios.
