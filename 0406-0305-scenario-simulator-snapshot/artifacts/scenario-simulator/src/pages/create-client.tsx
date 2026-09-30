@@ -12,12 +12,17 @@ import {
 import AuthGate from "./auth-gate";
 import { Breadcrumbs, StatusTag, formatRanOn } from "./create-shell";
 
+const EMPTY_BOX =
+  "bg-white border border-[#E7E4DD] rounded-xl p-5 text-[15px] text-[#6C6975]";
+
 function Shell({
   title,
+  belowTitle,
   children,
   actions,
 }: {
   title: string;
+  belowTitle?: React.ReactNode;
   children: React.ReactNode;
   actions?: React.ReactNode;
 }) {
@@ -33,6 +38,7 @@ function Shell({
               />
             </div>
             <h1 className="text-[32px] mt-0 mb-0">{title}</h1>
+            {belowTitle}
           </div>
           <div className="flex flex-wrap gap-3 items-center">{actions}</div>
         </div>
@@ -124,24 +130,24 @@ function ClientDetail() {
   return (
     <Shell
       title={data.name}
+      belowTitle={
+        canDelete ? (
+          <button
+            type="button"
+            onClick={() => {
+              setDeleteError(null);
+              setConfirmDelete(true);
+            }}
+            className="mt-2 text-[15px] font-semibold text-[#6C6975] bg-transparent border-0 p-0 cursor-pointer hover:text-[#B42318]"
+          >
+            Delete
+          </button>
+        ) : null
+      }
       actions={
-        <>
-          {canDelete && (
-            <button
-              type="button"
-              onClick={() => {
-                setDeleteError(null);
-                setConfirmDelete(true);
-              }}
-              className="text-[15px] font-semibold text-[#6C6975] bg-transparent border-0 p-0 cursor-pointer hover:text-[#B42318]"
-            >
-              Delete
-            </button>
-          )}
-          <Link href={`/create/clients/${data.id}/new`}>
-            <PrimaryButton type="button">New session</PrimaryButton>
-          </Link>
-        </>
+        <Link href={`/create/clients/${data.id}/new`}>
+          <PrimaryButton type="button">New session</PrimaryButton>
+        </Link>
       }
     >
       <Dialog
@@ -186,10 +192,12 @@ function ClientDetail() {
           <Link
             key={s.id}
             href={`/create/sessions/${s.id}`}
-            className="block bg-white border border-[#E7E4DD] rounded-xl p-4 no-underline text-inherit hover:border-[#301CA0]"
+            className="block bg-white border border-[#E7E4DD] rounded-xl p-5 no-underline text-inherit hover:border-[#301CA0]"
           >
             <div className="flex items-start justify-between gap-3">
-              <div className="font-semibold text-[18px] min-w-0 truncate">{s.title}</div>
+              <div className="font-semibold text-[18px] leading-snug min-w-0 truncate">
+                {s.title}
+              </div>
               <StatusTag status={s.status} />
             </div>
             <div className="text-[14px] text-[#6C6975] mt-1">
@@ -198,7 +206,9 @@ function ClientDetail() {
           </Link>
         ))}
         {upcoming.length === 0 && (
-          <p className="text-[#6C6975]">No upcoming sessions. Start one with New session.</p>
+          <div className={EMPTY_BOX}>
+            No upcoming sessions. Start one with New session.
+          </div>
         )}
       </div>
 
@@ -210,10 +220,12 @@ function ClientDetail() {
             <Link
               key={s.id}
               href={`/create/sessions/${s.id}`}
-              className="block bg-white border border-[#E7E4DD] rounded-xl p-4 no-underline text-inherit hover:border-[#301CA0]"
+              className="block bg-white border border-[#E7E4DD] rounded-xl p-5 no-underline text-inherit hover:border-[#301CA0]"
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="font-semibold text-[18px] min-w-0 truncate">{s.title}</div>
+                <div className="font-semibold text-[18px] leading-snug min-w-0 truncate">
+                  {s.title}
+                </div>
                 <StatusTag status={s.status} />
               </div>
               <div className="text-[14px] text-[#6C6975] mt-1">
@@ -223,7 +235,9 @@ function ClientDetail() {
             </Link>
           );
         })}
-        {past.length === 0 && <p className="text-[#6C6975]">No past sessions yet.</p>}
+        {past.length === 0 && (
+          <div className={EMPTY_BOX}>No past sessions yet.</div>
+        )}
       </div>
     </Shell>
   );
