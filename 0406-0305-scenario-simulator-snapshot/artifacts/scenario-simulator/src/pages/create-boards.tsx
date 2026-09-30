@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from "react";
-import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import AuthGate from "./auth-gate";
 import { CreateShell, StatusTag, formatRanOn } from "./create-shell";
@@ -96,9 +95,11 @@ function BoardsHome() {
               {list.map((s) => {
                 const ranOn = s.status === "ended" ? formatRanOn(s.endedAt) : null;
                 return (
-                  <Link
+                  <a
                     key={s.id}
                     href={s.paths.facilitate}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="block bg-white border border-[#E7E4DD] rounded-xl p-4 no-underline text-inherit hover:border-[#301CA0]"
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -111,7 +112,7 @@ function BoardsHome() {
                       </div>
                       <StatusTag status={s.status} />
                     </div>
-                  </Link>
+                  </a>
                 );
               })}
             </div>
