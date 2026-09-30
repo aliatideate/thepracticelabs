@@ -1,8 +1,13 @@
 import { Router, type IRouter } from "express";
 import { and, eq } from "drizzle-orm";
 import { db, workshopSessionsTable } from "@workspace/db";
-import { issueWorkshopFacilitatorToken, requireAuth } from "../lib/auth";
 import {
+  assertFacilitator,
+  issueWorkshopFacilitatorToken,
+  requireAuth,
+} from "../lib/auth";
+import {
+  facilitatorNotesForCode,
   legacyAliasCodes,
   workshopSessionSummary,
 } from "../lib/workshop-session";
@@ -17,6 +22,24 @@ router.get("/workshop-sessions/by-code/:code", async (req, res) => {
   const summary = await workshopSessionSummary(String(req.params.code ?? ""));
   if (!summary) return res.status(404).json({ error: "not_found" });
   return res.json(summary);
+});
+
+/** Phase 7 — resolved facilitator notes for the live board (auth required). */
+router.get("/workshop-sessions/by-code/:code/facilitator-notes", async (req, res) => {
+  if (!(await assertFacilitator(req, res))) return;
+  const code = String(req.params.code ?? "");
+  const row = await facilitatorNotesForCode(code);
+  if (!row) return res.status(404).json({ error: "not_found" });
+
+  const auth = req.auth;
+  if (
+    auth?.kind === "facilitator_token" &&
+    auth.workshopSessionId !== row.workshopSessionId
+  ) {
+    return res.status(403).json({ error: "forbidden" });
+  }
+
+  return res.json({ notes: row.notes });
 });
 
 /** Issue or regenerate a per-session facilitator token (raw returned once). */

@@ -85,6 +85,20 @@ export async function workshopSessionSummary(
   };
 }
 
+/** Resolved Markdown notes for a session code, or null when none. */
+export async function facilitatorNotesForCode(code: string): Promise<{
+  workshopSessionId: string;
+  notes: string | null;
+} | null> {
+  const row = await findWorkshopSessionByCode(code);
+  if (!row) return null;
+  const raw = row.session.resolvedFacilitatorNotes?.trim() ?? "";
+  return {
+    workshopSessionId: row.session.id,
+    notes: raw.length > 0 ? raw : null,
+  };
+}
+
 export async function legacyAliasCodes() {
   return {
     demand: WORKSHOP_CODE,
