@@ -357,12 +357,6 @@ function BriefEditor() {
             </PrimaryButton>
           </div>
         </form>
-        <div className="mt-4">
-          <Link href="/create/library" className={BACK_LINK}>
-            <ArrowLeft className="h-4 w-4" strokeWidth={2.25} aria-hidden />
-            Back to Activities
-          </Link>
-        </div>
       </div>
     </div>
   );
