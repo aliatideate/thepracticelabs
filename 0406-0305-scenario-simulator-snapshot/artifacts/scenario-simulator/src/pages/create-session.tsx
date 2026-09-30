@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Copy } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Header, PrimaryButton, SecondaryButton } from "../simulation/components";
+import { Header, PrimaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
 import { StatusTag, formatRanOn } from "./create-shell";
 
