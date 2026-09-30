@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { ChevronDown } from "lucide-react";
 import { useLocation, useParams } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Header, PrimaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
+import { CreateSelect } from "./create-select";
 import { BackLink, StatusTag, formatFromCategory } from "./create-shell";
 
 const CATEGORIES = [
@@ -21,26 +21,6 @@ const MODES = [
 
 const FIELD =
   "w-full rounded-xl border border-[#E7E4DD] px-4 py-3 text-[16px] bg-white";
-
-/** Native arrow hidden; chevron drawn separately with inset from the right edge. */
-const SELECT_FIELD =
-  "w-full rounded-xl border border-[#E7E4DD] pl-4 pr-10 py-3 text-[16px] bg-white appearance-none";
-
-function SelectField(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  const { className, children, ...rest } = props;
-  return (
-    <div className="relative">
-      <select className={className ?? SELECT_FIELD} {...rest}>
-        {children}
-      </select>
-      <ChevronDown
-        className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#1A1A1A]"
-        strokeWidth={2}
-        aria-hidden
-      />
-    </div>
-  );
-}
 
 function BriefEditor() {
   const { id } = useParams<{ id: string }>();
@@ -214,34 +194,29 @@ function BriefEditor() {
               <label className="block text-[14px] font-semibold mb-2" htmlFor="brief-category">
                 Category
               </label>
-              <SelectField
+              <CreateSelect
                 id="brief-category"
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
-              >
-                {CATEGORIES.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
-                ))}
-              </SelectField>
+                onValueChange={setCategory}
+                options={CATEGORIES.map((c) => ({ value: c.value, label: c.label }))}
+              />
             </div>
             <div>
               <label className="block text-[14px] font-semibold mb-2" htmlFor="brief-client">
                 Client (optional)
               </label>
-              <SelectField
+              <CreateSelect
                 id="brief-client"
                 value={clientId}
-                onChange={(e) => setClientId(e.target.value)}
-              >
-                <option value="">No client</option>
-                {(clientsQ.data?.clients ?? []).map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </SelectField>
+                onValueChange={setClientId}
+                options={[
+                  { value: "", label: "No client" },
+                  ...(clientsQ.data?.clients ?? []).map((c) => ({
+                    value: c.id,
+                    label: c.name,
+                  })),
+                ]}
+              />
             </div>
           </div>
           <div>
@@ -331,17 +306,12 @@ function BriefEditor() {
               <label className="block text-[14px] font-semibold mb-2" htmlFor="brief-mode">
                 Mode
               </label>
-              <SelectField
+              <CreateSelect
                 id="brief-mode"
                 value={mode}
-                onChange={(e) => setMode(e.target.value)}
-              >
-                {MODES.map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
-              </SelectField>
+                onValueChange={setMode}
+                options={MODES.map((m) => ({ value: m.value, label: m.label }))}
+              />
             </div>
           </div>
           {msg && <p className="text-[14px] text-[#6C6975] m-0">{msg}</p>}
