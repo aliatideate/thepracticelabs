@@ -48,6 +48,7 @@ function ClientsHome() {
   const [deleteTarget, setDeleteTarget] = useState<ClientRow | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["create-clients"],
@@ -218,10 +219,13 @@ function ClientsHome() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {(data?.clients ?? []).map((c) => {
           const canDelete = c.sessions.length === 0;
+          const showDelete = canDelete && hoveredId === c.id;
           return (
             <div
               key={c.id}
-              className="group relative bg-white border border-[#E7E4DD] rounded-xl p-5 hover:border-[#301CA0]"
+              className="relative bg-white border border-[#E7E4DD] rounded-xl p-5 hover:border-[#301CA0]"
+              onMouseEnter={() => setHoveredId(c.id)}
+              onMouseLeave={() => setHoveredId((id) => (id === c.id ? null : id))}
             >
               <div className="flex justify-between gap-4 items-start">
                 <div className="min-w-0">
@@ -238,7 +242,7 @@ function ClientsHome() {
                 </span>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-[#E7E4DD] relative min-h-[28px] pr-10">
+              <div className="mt-4 pt-4 border-t border-[#E7E4DD] relative min-h-[32px] pr-10">
                 {c.sessions.length === 0 ? (
                   <p className="text-[14px] text-[#6C6975] m-0">No sessions yet</p>
                 ) : (
@@ -272,13 +276,16 @@ function ClientsHome() {
                     type="button"
                     aria-label={`Delete ${c.name}`}
                     title="Delete client"
+                    tabIndex={showDelete ? 0 : -1}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       setDeleteError(null);
                       setDeleteTarget(c);
                     }}
-                    className="absolute bottom-0 right-0 inline-flex h-8 w-8 items-center justify-center rounded-lg border-0 bg-transparent text-[#6C6975] opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 group-hover:pointer-events-auto hover:bg-[#F1F0EC] hover:text-[#B42318] focus-visible:opacity-100 focus-visible:pointer-events-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#301CA0] cursor-pointer"
+                    className={`absolute bottom-0 right-0 inline-flex h-8 w-8 items-center justify-center rounded-lg border-0 bg-transparent text-[#6C6975] transition-opacity duration-150 hover:bg-[#F1F0EC] hover:text-[#B42318] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#301CA0] cursor-pointer ${
+                      showDelete ? "opacity-100" : "opacity-0"
+                    }`}
                   >
                     <Trash2 className="h-4 w-4" strokeWidth={2} aria-hidden />
                   </button>
