@@ -140,7 +140,7 @@ export default function MartJoin() {
               { label: "Session", value: "Session 2" },
               { label: "Scenario", value: game.scenario.title },
               { label: "Duration", value: `${MART_DURATION_MINUTES} minutes` },
-              { label: "Open slots", value: `${openSlots} of ${TEAM_NAMES.length}` },
+              { label: "Open slots", value: `${openSlots} of ${teamSlots.length}` },
             ]}
           />
         </div>
