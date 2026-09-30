@@ -1,3 +1,5 @@
+> **Newer handoff (2026-09-30):** see [`creator-studio-status-2026-09-30.md`](./creator-studio-status-2026-09-30.md) for current production tip, UI polish, screenshots, and what’s left.
+
 # Creator Studio — status for review (2026-09-29)
 
 Detailed inventory of what exists today, what landed where, and what is still open. Written so you (or anyone) can suggest changes without re-reading every PR.
