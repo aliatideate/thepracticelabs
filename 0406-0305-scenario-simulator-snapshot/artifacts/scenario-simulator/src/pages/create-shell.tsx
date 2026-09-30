@@ -43,6 +43,9 @@ export function StatusTag({ status }: { status: string }) {
       {status === "published" && (
         <Check className="h-3 w-3" strokeWidth={3} aria-hidden />
       )}
+      {status === "in_design" && (
+        <Pencil className="h-3 w-3" strokeWidth={2.5} aria-hidden />
+      )}
       {label}
     </span>
   );
