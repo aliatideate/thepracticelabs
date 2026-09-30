@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ImagePlus } from "lucide-react";
 import { Header, PrimaryButton, SecondaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
+import { CreateSelect } from "./create-select";
 import { BackButton, BackLink } from "./create-shell";
 
 const MAX_LOGO_BYTES = 500 * 1024;
@@ -423,17 +424,14 @@ function NewSessionWizard() {
               className="w-full rounded-xl border border-[#E7E4DD] px-4 py-3 text-[18px] mb-4"
             />
             <label className="block text-[14px] font-semibold mb-2">Mode</label>
-            <select
-              value={mode}
-              onChange={(e) => setMode(e.target.value as typeof mode)}
-              className="w-full rounded-xl border border-[#E7E4DD] px-4 py-3 text-[18px] mb-6"
-            >
-              {MODES.map((m) => (
-                <option key={m.key} value={m.key}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
+            <div className="mb-6">
+              <CreateSelect
+                value={mode}
+                onValueChange={(v) => setMode(v as typeof mode)}
+                triggerClassName="text-[18px]"
+                options={MODES.map((m) => ({ value: m.key, label: m.label }))}
+              />
+            </div>
 
             {variables.length > 0 && (
               <>

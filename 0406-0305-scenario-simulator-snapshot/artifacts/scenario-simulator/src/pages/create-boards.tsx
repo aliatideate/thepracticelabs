@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import AuthGate from "./auth-gate";
+import { CreateSelect } from "./create-select";
 import { CreateShell, StatusTag, formatRanOn } from "./create-shell";
 
 type BoardSession = {
@@ -66,19 +67,18 @@ function BoardsHome() {
       </p>
       {clients.length > 1 && (
         <label className="block text-[14px] text-[#6C6975] mb-6">
-          Client{" "}
-          <select
-            value={clientFilter}
-            onChange={(e) => setClientFilter(e.target.value)}
-            className="ml-2 rounded-lg border border-[#E7E4DD] bg-white px-3 py-2 text-[16px] text-[#1A1A1A]"
-          >
-            <option value="all">All clients</option>
-            {clients.map(([id, name]) => (
-              <option key={id} value={id}>
-                {name}
-              </option>
-            ))}
-          </select>
+          <span className="mr-2">Client</span>
+          <span className="inline-block align-middle min-w-[220px]">
+            <CreateSelect
+              value={clientFilter}
+              onValueChange={setClientFilter}
+              triggerClassName="rounded-lg px-3 py-2"
+              options={[
+                { value: "all", label: "All clients" },
+                ...clients.map(([id, name]) => ({ value: id, label: name })),
+              ]}
+            />
+          </span>
         </label>
       )}
       {isLoading && <p className="text-[#6C6975]">Loading…</p>}
