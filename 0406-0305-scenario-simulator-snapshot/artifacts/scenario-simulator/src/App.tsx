@@ -154,7 +154,7 @@ function SessionFacilitateInner() {
   const Facilitate = routes.Facilitate;
   if (room.format === "branching") {
     return (
-      <AuthGate>
+      <AuthGate allowFacilitatorToken>
         <DecisionGameProvider code={room.workshopCode}>
           <Facilitate />
         </DecisionGameProvider>
@@ -162,7 +162,7 @@ function SessionFacilitateInner() {
     );
   }
   return (
-    <AuthGate>
+    <AuthGate allowFacilitatorToken>
       <ScenarioProvider code={room.workshopCode}>
         <Facilitate />
       </ScenarioProvider>
