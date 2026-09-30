@@ -1,7 +1,50 @@
 import React from "react";
-import { Check, Pencil } from "lucide-react";
+import { ArrowLeft, Check, Pencil } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Header } from "../simulation/components";
+
+const BACK_LINK_CLASS =
+  "inline-flex items-center gap-1.5 text-[14px] font-medium text-[#301CA0] no-underline";
+
+/** Standard Creator back crumb: ← Back to {destination}. */
+export function BackLink({
+  href,
+  children,
+  className = "",
+}: {
+  href: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <Link href={href} className={`${BACK_LINK_CLASS} ${className}`.trim()}>
+      <ArrowLeft className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+      {children}
+    </Link>
+  );
+}
+
+/** Same look as BackLink, for in-wizard step backs (button, not route). */
+export function BackButton({
+  onClick,
+  children,
+  className = "",
+}: {
+  onClick: () => void;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`${BACK_LINK_CLASS} bg-transparent border-0 p-0 cursor-pointer ${className}`.trim()}
+    >
+      <ArrowLeft className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+      {children}
+    </button>
+  );
+}
 
 const TABS = [
   { key: "clients", label: "Clients", href: "/create" },

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ImagePlus } from "lucide-react";
 import { Header, PrimaryButton, SecondaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
+import { BackButton, BackLink } from "./create-shell";
 
 const MAX_LOGO_BYTES = 500 * 1024;
 const LOGO_MIME = new Set(["image/png", "image/jpeg", "image/webp"]);
@@ -332,12 +333,11 @@ function NewSessionWizard() {
     <div className="min-h-screen bg-[#F8F6EF]">
       <Header brandOnly hideFlowNav />
       <div className="mx-auto max-w-[720px] px-6 py-10">
-        <p className="text-[14px] text-[#6C6975] mb-2">
-          <Link href={`/create/clients/${clientId}`} className="text-[#301CA0] underline">
-            {clientQ.data?.name ?? "Client"}
-          </Link>{" "}
-          · New session
-        </p>
+        <div className="mb-2">
+          <BackLink href={`/create/clients/${clientId}`}>
+            Back to {clientQ.data?.name ?? "Client"}
+          </BackLink>
+        </div>
         <h1 className="text-[32px] mt-0 mb-8">
           {step === "category" && "Choose a category"}
           {step === "exercise" && "Choose an exercise"}
@@ -364,13 +364,9 @@ function NewSessionWizard() {
 
         {step === "exercise" && (
           <div className="space-y-3">
-            <button
-              type="button"
-              className="text-[16px] text-[#301CA0] underline mb-2"
-              onClick={() => setStep("category")}
-            >
+            <BackButton className="mb-2" onClick={() => setStep("category")}>
               Back to categories
-            </button>
+            </BackButton>
             {inCategory
               .filter((e) => e.status === "published")
               .map((ex) => (
@@ -395,13 +391,9 @@ function NewSessionWizard() {
 
         {step === "customise" && selected && (
           <div className="bg-white border border-[#E7E4DD] rounded-xl p-6">
-            <button
-              type="button"
-              className="text-[16px] text-[#301CA0] underline mb-4"
-              onClick={() => setStep("exercise")}
-            >
-              Back
-            </button>
+            <BackButton className="mb-4" onClick={() => setStep("exercise")}>
+              Back to exercises
+            </BackButton>
             <p className="text-[14px] text-[#6C6975] mt-0 mb-4">
               Exercise: <strong>{selected.title}</strong>
             </p>

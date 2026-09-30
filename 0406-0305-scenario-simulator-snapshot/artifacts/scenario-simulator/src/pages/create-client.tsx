@@ -3,7 +3,7 @@ import { Link, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Header, PrimaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
-import { StatusTag, formatRanOn } from "./create-shell";
+import { BackLink, StatusTag, formatRanOn } from "./create-shell";
 
 function Shell({
   title,
@@ -20,11 +20,9 @@ function Shell({
       <div className="mx-auto max-w-[960px] px-6 py-10">
         <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
           <div>
-            <p className="text-[14px] uppercase tracking-wide text-[#6C6975] m-0 mb-1">
-              <Link href="/create" className="text-[#301CA0] underline">
-                Clients
-              </Link>
-            </p>
+            <div className="mb-1">
+              <BackLink href="/create">Back to Clients</BackLink>
+            </div>
             <h1 className="text-[32px] mt-0 mb-0">{title}</h1>
           </div>
           <div className="flex flex-wrap gap-3 items-center">{actions}</div>

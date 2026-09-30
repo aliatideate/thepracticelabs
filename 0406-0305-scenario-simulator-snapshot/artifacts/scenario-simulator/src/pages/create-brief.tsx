@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, ChevronDown } from "lucide-react";
-import { Link, useLocation, useParams } from "wouter";
+import { ChevronDown } from "lucide-react";
+import { useLocation, useParams } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Header, PrimaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
-import { StatusTag, formatFromCategory } from "./create-shell";
+import { BackLink, StatusTag, formatFromCategory } from "./create-shell";
 
 const CATEGORIES = [
   { value: "problem-framing", label: "Problem framing" },
@@ -25,9 +25,6 @@ const FIELD =
 /** Native arrow hidden; chevron drawn separately with inset from the right edge. */
 const SELECT_FIELD =
   "w-full rounded-xl border border-[#E7E4DD] pl-4 pr-10 py-3 text-[16px] bg-white appearance-none";
-
-const BACK_LINK =
-  "inline-flex items-center gap-1.5 text-[14px] font-medium text-[#301CA0] no-underline";
 
 function SelectField(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   const { className, children, ...rest } = props;
@@ -187,10 +184,7 @@ function BriefEditor() {
       <Header brandOnly hideFlowNav />
       <div className="mx-auto max-w-[720px] px-6 py-10">
         <div className="mb-2">
-          <Link href="/create/library" className={BACK_LINK}>
-            <ArrowLeft className="h-4 w-4" strokeWidth={2.25} aria-hidden />
-            Back to Activities
-          </Link>
+          <BackLink href="/create/library">Back to Activities</BackLink>
           <p className="text-[14px] text-[#6C6975] mt-1 mb-0">
             {formatFromCategory(category)}
           </p>
