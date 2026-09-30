@@ -148,7 +148,12 @@ export async function verifyPassword(email: string, password: string): Promise<A
 }
 
 async function resolveFacilitatorToken(req: Request): Promise<AuthContext | null> {
-  const raw = String(req.headers["x-facilitator-token"] ?? req.query.facilitatorToken ?? "").trim();
+  const raw = String(
+    req.headers["x-facilitator-token"] ??
+      req.query.facilitatorToken ??
+      req.query.token ??
+      "",
+  ).trim();
   if (!raw) return null;
   const tokenHash = hashToken(raw);
   const rows = await db

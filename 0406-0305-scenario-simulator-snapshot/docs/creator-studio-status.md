@@ -234,11 +234,12 @@ All under cookie auth (`/api/create/*` + `/api/auth/*`):
 - Wizard step “New exercise” entry on every category (Activities has New activity → brief; import path not wired)
 - Brief → “first draft shared for review” is copy-only today; **no** draft exercise object, generation, or review workflow (correct per brief — just confirm that stays)
 
-### C. Phase 7 — Facilitator notes panel
+### C. Phase 7 — Facilitator notes panel ✅ (in progress / shipping)
 
-- Brief: collapsible Markdown panel on **each session’s facilitator board** from `resolved_facilitator_notes`
+- Collapsible Markdown panel on Demand + Mart facilitator boards from `resolved_facilitator_notes`
+- API: `GET /api/workshop-sessions/by-code/:code/facilitator-notes` (facilitator auth)
 - Mart’s existing per-decision “Show facilitator notes” stays
-- Today: notes resolve into DB and show on the **Creator session page**; they are **not** yet a panel on `/s/:code/facilitate` / legacy facilitate boards
+- Hidden when a session has no resolved notes (e.g. older v1 Unilever rows)
 
 ### D. Gaps vs brief “Done means” (§9) — open product calls
 

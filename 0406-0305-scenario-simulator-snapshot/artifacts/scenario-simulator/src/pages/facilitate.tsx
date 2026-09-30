@@ -10,11 +10,13 @@ import { Header, SecondaryButton } from "../simulation/components";
 import { useScenario, type Scenario } from "../lib/scenario";
 import { playPhoneRing } from "../lib/phoneRing";
 import { formatCountdown, isExpired, remainingMs, type SessionConfig } from "../lib/timer";
+import { facilitatorAuthHeaders } from "../lib/facilitatorAuth";
 import { ActivityTabs } from "./activityTabs";
 import { DownloadMenu } from "./facilitatorDownload";
+import { FacilitatorNotesPanel } from "./FacilitatorNotesPanel";
 
 function authHeaders(extra: Record<string, string> = {}) {
-  return { ...extra };
+  return facilitatorAuthHeaders(extra);
 }
 
 type TeamSnapshot = {
@@ -422,6 +424,7 @@ export default function FacilitatePage() {
             /demand/try
           </button>
         </p>
+        <FacilitatorNotesPanel workshopCode={workshopCode} />
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <label className="inline-flex h-11 items-center gap-2 rounded-full border border-[#E7E4DD] bg-white pl-4 pr-3 text-[14px] font-semibold text-[#6C6975]">
             Duration (minutes)

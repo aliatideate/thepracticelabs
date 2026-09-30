@@ -12,8 +12,10 @@ import { formatCountdown, isExpired, remainingMs, type SessionConfig } from "../
 import { playPhoneRing } from "../lib/phoneRing";
 import type { DecisionGame, GradeKey } from "../lib/decisionGame";
 import { gradeTone } from "../lib/decisionGame";
+import { facilitatorAuthHeaders } from "../lib/facilitatorAuth";
 import { ActivityTabs } from "./activityTabs";
 import { DownloadMenu } from "./facilitatorDownload";
+import { FacilitatorNotesPanel } from "./FacilitatorNotesPanel";
 
 type FacSession = {
   id: string;
@@ -247,7 +249,7 @@ export default function MartFacilitate() {
   const [viewing, setViewing] = useState<ArchiveDetail | null>(null);
   const [viewingTry, setViewingTry] = useState<FacSession | null>(null);
   const [tryRuns, setTryRuns] = useState<FacSession[]>([]);
-  const headers = { "content-type": "application/json" };
+  const headers = facilitatorAuthHeaders({ "content-type": "application/json" });
   const qs = `workshopCode=${encodeURIComponent(workshopCode)}`;
 
   const loadArchives = async () => {
@@ -395,6 +397,7 @@ export default function MartFacilitate() {
             /mart/try
           </button>
         </p>
+        <FacilitatorNotesPanel workshopCode={workshopCode} />
         <div className="flex flex-wrap items-center gap-3 mb-4">
           <label className="inline-flex h-11 items-center gap-2 rounded-full border border-[#E7E4DD] bg-white pl-4 pr-3 text-[14px] font-semibold text-[#6C6975]">
             Duration (minutes)
