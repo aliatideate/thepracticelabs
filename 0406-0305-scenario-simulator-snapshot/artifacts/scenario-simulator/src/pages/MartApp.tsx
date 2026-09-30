@@ -11,6 +11,7 @@ import {
 import { useRuntimeWorkshopCode } from "../lib/sessionRoom";
 import { Header, PrimaryButton, TimeBanner, useSessionConfig } from "../simulation/components";
 import {
+  chromeOf,
   gradeTone,
   optionIconSrc,
   sceneSrc,
@@ -88,6 +89,7 @@ function OutcomeDot({ outcome }: { outcome?: "good" | "mixed" | "bad" }) {
 export default function MartApp({ mode = "live" }: { mode?: "live" | "try" }) {
   const { sessionId } = useParams<{ sessionId: string }>();
   const game = useDecisionGame();
+  const chrome = chromeOf(game);
   const workshopCode = useRuntimeWorkshopCode(MART_WORKSHOP_CODE);
   const qs = `workshopCode=${encodeURIComponent(workshopCode)}`;
   const apiBase = mode === "try" ? "/api/try" : "/api/mart";
@@ -272,7 +274,7 @@ export default function MartApp({ mode = "live" }: { mode?: "live" | "try" }) {
               <PlaybookRules rules={game.playbook.rules} />
               <div className="mt-8">
                 <PrimaryButton onClick={start} disabled={busy}>
-                  Start the week
+                  {chrome.startCta}
                 </PrimaryButton>
               </div>
             </div>
@@ -317,7 +319,10 @@ export default function MartApp({ mode = "live" }: { mode?: "live" | "try" }) {
               }`}
             >
               <p className="mart-pixel text-[28px] md:text-[34px] text-[#1A0F58] px-6 text-center mb-4">
-                On the road to {placeName(traveling.to.location.name)}
+                {chrome.travelOverlay.replaceAll(
+                  "{place}",
+                  placeName(traveling.to.location.name),
+                )}
               </p>
               {travelSrc(game, traveling.to) && (
                 <img
@@ -332,7 +337,9 @@ export default function MartApp({ mode = "live" }: { mode?: "live" | "try" }) {
           <div className="relative z-10 flex flex-col min-h-[calc(100dvh-110px)] pt-4 pb-2">
             <div className="mx-auto w-full max-w-[1280px] flex flex-wrap items-center justify-end gap-3">
               <span className="mart-pixel text-[20px] text-[#1A0F58] rounded-full bg-[#F8F6EF]/90 px-3 py-1">
-                Branch {decision.order} of {game.decisions.length}
+                {chrome.progress
+                  .replaceAll("{n}", String(decision.order))
+                  .replaceAll("{m}", String(game.decisions.length))}
               </span>
               <button
                 type="button"
@@ -340,7 +347,7 @@ export default function MartApp({ mode = "live" }: { mode?: "live" | "try" }) {
                 className="inline-flex items-center gap-2 rounded-full bg-[#F8F6EF] text-[#301CA0] font-semibold px-4 py-2"
               >
                 <BookOpen className="h-4 w-4" />
-                Playbook
+                {chrome.playbookButton}
               </button>
             </div>
             <div className="flex justify-center mt-3">
@@ -362,8 +369,8 @@ export default function MartApp({ mode = "live" }: { mode?: "live" | "try" }) {
                   <PrimaryButton onClick={goNextBranch}>
                     {session.currentScreen === "reveal" ||
                     session.choices.length >= game.decisions.length
-                      ? "See what happened"
-                      : "Next branch"}
+                      ? chrome.revealCta
+                      : chrome.nextStopCta}
                   </PrimaryButton>
                 </div>
               ) : (
@@ -482,6 +489,7 @@ function RevealScreen({
   const lead = stories[0];
   const rest = stories.slice(1);
   const scoring = payload?.scoring;
+  const chrome = chromeOf(game);
 
   return (
     <div className="mx-auto max-w-[960px] px-6 py-8">
@@ -529,10 +537,10 @@ function RevealScreen({
       {step >= 1 && payload && (
         <div className="mart-card p-6 mb-4">
           <p className="mart-pixel text-[22px] text-[#301CA0] m-0 mb-1">
-            Your decisions and your manager's review of them
+            {chrome.managerHeading}
           </p>
           <p className="text-[15px] text-[#6C6975] m-0 mb-4">
-            This is your manager's read, based on the company's field playbook.
+            {chrome.managerSubhead}
           </p>
           <div className="space-y-3">
             {payload.breakdown.map((row) => (
@@ -543,12 +551,14 @@ function RevealScreen({
                 }`}
               >
                 <div className="text-[13px] uppercase tracking-wide text-[#6C6975] mb-1">
-                  Question {row.order} · {row.location}
+                  {chrome.questionLine
+                    .replaceAll("{n}", String(row.order))
+                    .replaceAll("{location}", row.location)}
                 </div>
                 {row.situation ? (
                   <p className="text-[15px] m-0 mb-2 text-[#1D1D24]">{row.situation}</p>
                 ) : null}
-                <div className="text-[13px] uppercase tracking-wide text-[#6C6975] mb-0.5">You chose</div>
+                <div className="text-[13px] uppercase tracking-wide text-[#6C6975] mb-0.5">{chrome.youChose}</div>
                 <div className="text-[16px] font-semibold text-[#1A0F58] mb-1">{row.optionLabel ?? "—"}</div>
                 <div className="flex flex-wrap items-center gap-2 text-[14px] mb-1">
                   {row.gradeKey === "best" ? (
@@ -570,7 +580,9 @@ function RevealScreen({
                     </span>
                   )}
                   <span className="text-[#6C6975]">
-                    {row.rules.length === 0 ? "Discuss" : row.rules.map((n) => `Rule ${n}`).join(" · ")}
+                    {row.rules.length === 0
+                      ? chrome.discussLabel
+                      : row.rules.map((n) => chrome.ruleLabel.replaceAll("{n}", String(n))).join(" · ")}
                   </span>
                 </div>
                 {row.rationale && <p className="text-[15px] m-0">{row.rationale}</p>}
@@ -604,7 +616,7 @@ function RevealScreen({
       {step >= 2 && (
         <div className="flex justify-end">
           <p className="rounded-xl bg-[#301CA0] text-white text-[18px] font-medium m-0 px-6 py-5 w-fit text-right">
-            When you are ready, return to the main workshop room ↗
+            {chrome.closing}
           </p>
         </div>
       )}

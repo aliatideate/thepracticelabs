@@ -59,6 +59,49 @@ export interface Scoring {
   };
 }
 
+export interface DecisionChrome {
+  startCta: string;
+  nextStopCta: string;
+  revealCta: string;
+  progress: string;
+  playbookButton: string;
+  travelOverlay: string;
+  managerHeading: string;
+  managerSubhead: string;
+  closing: string;
+  youChose: string;
+  discussLabel: string;
+  ruleLabel: string;
+  questionLine: string;
+  stopOne: string;
+  stopTwo: string;
+  stopMany: string;
+}
+
+/** Current Mart wording — fallback when chrome is absent on frozen/legacy content. */
+export const DEFAULT_MART_CHROME: DecisionChrome = {
+  startCta: "Start the week",
+  nextStopCta: "Next branch",
+  revealCta: "See what happened",
+  progress: "Branch {n} of {m}",
+  playbookButton: "Playbook",
+  travelOverlay: "On the road to {place}",
+  managerHeading: "Your decisions and your manager's review of them",
+  managerSubhead: "This is your manager's read, based on the company's field playbook.",
+  closing: "When you are ready, return to the main workshop room ↗",
+  youChose: "You chose",
+  discussLabel: "Discuss",
+  ruleLabel: "Rule {n}",
+  questionLine: "Question {n} · {location}",
+  stopOne: "Branch {n}",
+  stopTwo: "Branches {a} and {b}",
+  stopMany: "Branches {list} and {last}",
+};
+
+export function chromeOf(game: { chrome?: DecisionChrome | null }): DecisionChrome {
+  return game.chrome ? { ...DEFAULT_MART_CHROME, ...game.chrome } : DEFAULT_MART_CHROME;
+}
+
 export interface DecisionGame {
   scenario: { id: string; title: string; exerciseType: string };
   assets: { sceneImage: string; sceneImages?: string[]; travelImages?: string[]; doorImage: string; phoneImage: string };
@@ -66,6 +109,7 @@ export interface DecisionGame {
   playbook: { title: string; rules: string[] };
   decisions: DecisionItem[];
   reveal: { title: string; masthead: string; dateline: string };
+  chrome?: DecisionChrome;
   scoring?: Scoring;
 }
 

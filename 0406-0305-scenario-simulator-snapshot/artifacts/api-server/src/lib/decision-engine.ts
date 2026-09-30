@@ -1,5 +1,5 @@
 import type { DecisionChoice } from "@workspace/db";
-import type { DecisionGame } from "./decision-game";
+import { chromeOf, type DecisionChrome, type DecisionGame } from "./decision-game";
 
 export function optionFor(game: DecisionGame, decisionId: string, optionId: string) {
   const decision = game.decisions.find((d) => d.id === decisionId);
@@ -39,12 +39,25 @@ export function scoreOf(game: DecisionGame, choices: DecisionChoice[]) {
   };
 }
 
-export function formatBranchList(orders: number[]) {
+export function formatStopList(orders: number[], chrome: DecisionChrome = chromeOf({})) {
   const unique = [...new Set(orders)].sort((a, b) => a - b);
   if (unique.length === 0) return "";
-  if (unique.length === 1) return `Branch ${unique[0]}`;
-  if (unique.length === 2) return `Branches ${unique[0]} and ${unique[1]}`;
-  return `Branches ${unique.slice(0, -1).join(", ")} and ${unique[unique.length - 1]}`;
+  if (unique.length === 1) return chrome.stopOne.replaceAll("{n}", String(unique[0]));
+  if (unique.length === 2) {
+    return chrome.stopTwo
+      .replaceAll("{a}", String(unique[0]))
+      .replaceAll("{b}", String(unique[1]));
+  }
+  const last = unique[unique.length - 1]!;
+  const list = unique.slice(0, -1).join(", ");
+  return chrome.stopMany
+    .replaceAll("{list}", list)
+    .replaceAll("{last}", String(last));
+}
+
+/** @deprecated Use formatStopList */
+export function formatBranchList(orders: number[], chrome?: DecisionChrome) {
+  return formatStopList(orders, chrome);
 }
 
 export function tagLine(game: DecisionGame, choices: DecisionChoice[], tag: "tooSlow" | "tooFast") {
@@ -61,7 +74,7 @@ export function tagLine(game: DecisionGame, choices: DecisionChoice[], tag: "too
   const spec = game.scoring.tags[tag];
   if (!spec) return "";
   if (orders.length === 0) return spec.zero;
-  return spec.withBranches.replace("{branches}", formatBranchList(orders));
+  return spec.withBranches.replace("{branches}", formatStopList(orders, chromeOf(game)));
 }
 
 function taggedCount(game: DecisionGame, choices: DecisionChoice[], tag: "tooSlow" | "tooFast") {

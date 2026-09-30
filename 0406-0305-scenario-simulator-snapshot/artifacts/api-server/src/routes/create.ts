@@ -653,7 +653,7 @@ router.post("/create/exercises/import", async (req, res) => {
     if (engine === "investigation") {
       parsedContent = scenarioSchema.parse(body.content);
     } else {
-      parsedContent = parseDecisionGameContent(body.content);
+      parsedContent = parseDecisionGameContent(body.content, { requireChrome: true });
     }
   } catch (e) {
     if (e instanceof ZodError) {

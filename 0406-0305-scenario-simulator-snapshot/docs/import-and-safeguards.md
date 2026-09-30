@@ -15,6 +15,8 @@ Validation order (fail closed — no DB write on failure):
 3. Path-level Zod issues returned as `{ path, message }[]`
 4. `validateTokenDeclarations` — every `{{token}}` must be declared; every declared variable must appear in content or notes
 
+For branching imports, `chrome` (player UI strings) is **required**. Stored exercise versions and frozen `resolved_content` may omit it; the runtime falls back to the current Mart wording.
+
 ## Placeholder check (Step 7)
 
 Already enforced on:

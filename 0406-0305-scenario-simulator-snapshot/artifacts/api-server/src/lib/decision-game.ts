@@ -72,6 +72,52 @@ const styleLabelSchema = z.object({
   band: z.enum(["good", "mixed", "poor"]),
 });
 
+/** Player chrome — optional on stored/frozen content; required on import. */
+export const decisionChromeSchema = z.object({
+  startCta: z.string(),
+  nextStopCta: z.string(),
+  revealCta: z.string(),
+  progress: z.string(),
+  playbookButton: z.string(),
+  travelOverlay: z.string(),
+  managerHeading: z.string(),
+  managerSubhead: z.string(),
+  closing: z.string(),
+  youChose: z.string(),
+  discussLabel: z.string(),
+  ruleLabel: z.string(),
+  questionLine: z.string(),
+  stopOne: z.string(),
+  stopTwo: z.string(),
+  stopMany: z.string(),
+});
+
+export type DecisionChrome = z.infer<typeof decisionChromeSchema>;
+
+/** Current Mart wording — used when chrome is absent (legacy / frozen sessions). */
+export const DEFAULT_MART_CHROME: DecisionChrome = {
+  startCta: "Start the week",
+  nextStopCta: "Next branch",
+  revealCta: "See what happened",
+  progress: "Branch {n} of {m}",
+  playbookButton: "Playbook",
+  travelOverlay: "On the road to {place}",
+  managerHeading: "Your decisions and your manager's review of them",
+  managerSubhead: "This is your manager's read, based on the company's field playbook.",
+  closing: "When you are ready, return to the main workshop room ↗",
+  youChose: "You chose",
+  discussLabel: "Discuss",
+  ruleLabel: "Rule {n}",
+  questionLine: "Question {n} · {location}",
+  stopOne: "Branch {n}",
+  stopTwo: "Branches {a} and {b}",
+  stopMany: "Branches {list} and {last}",
+};
+
+export function chromeOf(game: { chrome?: DecisionChrome | null }): DecisionChrome {
+  return game.chrome ? { ...DEFAULT_MART_CHROME, ...game.chrome } : DEFAULT_MART_CHROME;
+}
+
 export const decisionGameSchema = z.object({
   scenario: z.object({
     id: z.string(),
@@ -100,6 +146,8 @@ export const decisionGameSchema = z.object({
     masthead: z.string(),
     dateline: z.string(),
   }),
+  /** Optional for frozen/legacy rows; import path requires it via parse opts. */
+  chrome: decisionChromeSchema.optional(),
   scoring: z.object({
     grades: z.record(gradeKeySchema, z.object({ label: z.string(), points: z.number() })),
     maxPointsPerDecision: z.number(),
@@ -152,9 +200,28 @@ function stripHidden(value: unknown): unknown {
 
 let cached: DecisionGame | null = null;
 
+export type ParseDecisionGameOptions = {
+  /** When true (exercise import), chrome must be present and complete. */
+  requireChrome?: boolean;
+};
+
 /** Parse + enforce branching invariants. Throws Error with path-ish messages. */
-export function parseDecisionGameContent(raw: unknown): DecisionGame {
+export function parseDecisionGameContent(
+  raw: unknown,
+  opts: ParseDecisionGameOptions = {},
+): DecisionGame {
   const parsed = decisionGameSchema.parse(raw);
+  if (opts.requireChrome) {
+    const chromeResult = decisionChromeSchema.safeParse(
+      raw && typeof raw === "object" ? (raw as { chrome?: unknown }).chrome : undefined,
+    );
+    if (!chromeResult.success) {
+      const detail = chromeResult.error.issues
+        .map((i) => `${["chrome", ...i.path].join(".")}: ${i.message}`)
+        .join("; ");
+      throw new Error(detail || "chrome is required on import");
+    }
+  }
   const orders = parsed.decisions.map((d) => d.order);
   if (new Set(orders).size !== orders.length) {
     throw new Error("decisions[].order must be unique");
