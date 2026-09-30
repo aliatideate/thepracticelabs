@@ -20,7 +20,7 @@ Client: **Rehearsal Co** (not Unilever). Sessions created through Creator.
 | Mid-activity player refresh | ok (Mart mid-decision GET; Demand stakeholder GET) |
 | Mid-activity facilitator board refresh | ok (API) |
 | Facilitator login on board | ok (API) |
-| Co-facilitator `?token=` on board | **API ok; UI blocked** — `AuthGate` ignored token (fix in PR) |
+| Co-facilitator `?token=` on board | **fixed + retested** — boards load without Creator login (`9fbed96`) |
 | Attention / nudge | not exercised |
 | Submit / reveal | Mart: 2 teams to reveal |
 | CSV shared prefix | ok for both engines |

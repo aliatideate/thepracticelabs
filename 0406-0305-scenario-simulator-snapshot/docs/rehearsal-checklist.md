@@ -16,7 +16,7 @@ Run after Steps 1–7 on **staging**, then **production**. Use sessions **create
 - [x] Six or more windows join as different teams (mix of both sessions if time)
 - [x] Refresh mid-activity on a player window
 - [x] Refresh mid-activity on the facilitator board
-- [ ] Facilitator (logged in) and co-facilitator (`?token=`) on the board together — **API ok; UI fix pending deploy**
+- [x] Facilitator (logged in) and co-facilitator (`?token=`) on the board together
 - [ ] Attention / nudge if available
 - [x] Submit / reach reveal on enough teams
 
