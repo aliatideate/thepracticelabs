@@ -22,6 +22,10 @@ const MODES = [
 const FIELD =
   "w-full rounded-xl border border-[#E7E4DD] px-4 py-3 text-[16px] bg-white";
 
+/** Extra right inset so the chevron isn’t flush with the border. */
+const SELECT_FIELD =
+  "w-full rounded-xl border border-[#E7E4DD] pl-4 pr-10 py-3 text-[16px] bg-white appearance-none bg-no-repeat bg-[length:12px] bg-[right_1rem_center] bg-[url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%231A1A1A' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")]";
+
 const BACK_LINK =
   "inline-flex items-center gap-1.5 text-[14px] font-medium text-[#301CA0] no-underline";
 
@@ -202,7 +206,7 @@ function BriefEditor() {
               </label>
               <select
                 id="brief-category"
-                className={FIELD}
+                className={SELECT_FIELD}
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
               >
@@ -219,7 +223,7 @@ function BriefEditor() {
               </label>
               <select
                 id="brief-client"
-                className={FIELD}
+                className={SELECT_FIELD}
                 value={clientId}
                 onChange={(e) => setClientId(e.target.value)}
               >
@@ -321,7 +325,7 @@ function BriefEditor() {
               </label>
               <select
                 id="brief-mode"
-                className={FIELD}
+                className={SELECT_FIELD}
                 value={mode}
                 onChange={(e) => setMode(e.target.value)}
               >
