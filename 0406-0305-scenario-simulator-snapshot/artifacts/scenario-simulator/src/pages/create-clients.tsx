@@ -242,39 +242,37 @@ function ClientsHome() {
                 </span>
               </div>
 
-              <div
-                className={`mt-4 pt-4 border-t border-[#E7E4DD] relative min-h-[32px]${
-                  canDelete ? " pr-10" : ""
-                }`}
-              >
-                {c.sessions.length === 0 ? (
-                  <p className="text-[14px] text-[#6C6975] m-0">No sessions yet</p>
-                ) : (
-                  <ul className="m-0 p-0 list-none space-y-2">
-                    {c.sessions.map((s) => {
-                      const ranOn =
-                        s.status === "ended" ? formatRanOn(s.endedAt) : null;
-                      return (
-                        <li key={s.id} className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <Link
-                              href={`/create/sessions/${s.id}`}
-                              className="text-[15px] text-[#301CA0] no-underline hover:underline block truncate"
-                            >
-                              {s.title}
-                            </Link>
-                            {ranOn && (
-                              <div className="text-[13px] text-[#6C6975] mt-0.5">
-                                Ran {ranOn}
-                              </div>
-                            )}
-                          </div>
-                          <StatusTag status={s.status} />
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
+              <div className="mt-4 pt-4 border-t border-[#E7E4DD] flex items-center gap-3 min-h-8">
+                <div className="min-w-0 flex-1">
+                  {c.sessions.length === 0 ? (
+                    <p className="text-[14px] text-[#6C6975] m-0">No sessions yet</p>
+                  ) : (
+                    <ul className="m-0 p-0 list-none space-y-2">
+                      {c.sessions.map((s) => {
+                        const ranOn =
+                          s.status === "ended" ? formatRanOn(s.endedAt) : null;
+                        return (
+                          <li key={s.id} className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <Link
+                                href={`/create/sessions/${s.id}`}
+                                className="text-[15px] text-[#301CA0] no-underline hover:underline block truncate"
+                              >
+                                {s.title}
+                              </Link>
+                              {ranOn && (
+                                <div className="text-[13px] text-[#6C6975] mt-0.5">
+                                  Ran {ranOn}
+                                </div>
+                              )}
+                            </div>
+                            <StatusTag status={s.status} />
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
                 {canDelete && (
                   <button
                     type="button"
@@ -287,7 +285,7 @@ function ClientsHome() {
                       setDeleteError(null);
                       setDeleteTarget(c);
                     }}
-                    className={`absolute top-1/2 right-0 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-lg border-0 bg-transparent text-[#6C6975] transition-opacity duration-150 hover:bg-[#F1F0EC] hover:text-[#B42318] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#301CA0] cursor-pointer ${
+                    className={`shrink-0 inline-flex h-8 w-8 items-center justify-center rounded-lg border-0 bg-transparent text-[#6C6975] transition-opacity duration-150 hover:bg-[#F1F0EC] hover:text-[#B42318] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#301CA0] cursor-pointer ${
                       showDelete ? "opacity-100" : "opacity-0"
                     }`}
                   >
