@@ -21,7 +21,7 @@ function Shell({
         <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
           <div>
             <div className="mb-1">
-              <BackLink href="/create">Back to Clients</BackLink>
+              <BackLink href="/create">Clients</BackLink>
             </div>
             <h1 className="text-[32px] mt-0 mb-0">{title}</h1>
           </div>

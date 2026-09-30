@@ -143,7 +143,7 @@ function SessionDetail() {
       <div className="mx-auto max-w-[720px] px-6 py-10">
         <div className="mb-2">
           <BackLink href={`/create/clients/${data.clientId}`}>
-            Back to {data.clientName}
+            {data.clientName}
           </BackLink>
         </div>
         <div className="flex items-start justify-between gap-3 mb-2">
