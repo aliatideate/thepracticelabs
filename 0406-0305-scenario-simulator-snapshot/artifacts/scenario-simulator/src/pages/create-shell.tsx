@@ -1,4 +1,5 @@
 import React from "react";
+import { Check } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Header } from "../simulation/components";
 
@@ -22,7 +23,7 @@ const STATUS_TAG_CLASS: Record<string, string> = {
   ready: "bg-[#E8F1FB] text-[#1B4F8A] border-[#C5DBF0]",
   live: "bg-[#E7F6ED] text-[#1B6B3A] border-[#B9E0C7]",
   ended: "bg-[#F1F0EC] text-[#5C5A55] border-[#DDDAD2]",
-  published: "bg-[#EAE8F6] text-[#301CA0] border-[#D0CBE8]",
+  published: "bg-[#E7F6ED] text-[#1B6B3A] border-[#B9E0C7]",
   in_design: "bg-[#F4F3F0] text-[#6C6975] border-[#E0DDD4]",
 };
 
@@ -37,8 +38,11 @@ export function StatusTag({ status }: { status: string }) {
   const tone = STATUS_TAG_CLASS[status] ?? STATUS_TAG_CLASS.in_design;
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[12px] font-semibold whitespace-nowrap shrink-0 ${tone}`}
+      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[12px] font-semibold whitespace-nowrap shrink-0 ${tone}`}
     >
+      {status === "published" && (
+        <Check className="h-3 w-3" strokeWidth={3} aria-hidden />
+      )}
       {label}
     </span>
   );
