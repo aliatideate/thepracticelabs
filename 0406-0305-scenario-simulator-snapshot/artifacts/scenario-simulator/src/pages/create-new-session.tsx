@@ -335,7 +335,7 @@ function NewSessionWizard() {
       <div className="mx-auto max-w-[720px] px-6 py-10">
         <div className="mb-2">
           <BackLink href={`/create/clients/${clientId}`}>
-            Back to {clientQ.data?.name ?? "Client"}
+            {clientQ.data?.name ?? "Client"}
           </BackLink>
         </div>
         <h1 className="text-[32px] mt-0 mb-8">
@@ -365,7 +365,7 @@ function NewSessionWizard() {
         {step === "exercise" && (
           <div className="space-y-3">
             <BackButton className="mb-2" onClick={() => setStep("category")}>
-              Back to categories
+              Categories
             </BackButton>
             {inCategory
               .filter((e) => e.status === "published")
@@ -392,7 +392,7 @@ function NewSessionWizard() {
         {step === "customise" && selected && (
           <div className="bg-white border border-[#E7E4DD] rounded-xl p-6">
             <BackButton className="mb-4" onClick={() => setStep("exercise")}>
-              Back to exercises
+              Exercises
             </BackButton>
             <p className="text-[14px] text-[#6C6975] mt-0 mb-4">
               Exercise: <strong>{selected.title}</strong>

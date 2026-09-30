@@ -6,7 +6,7 @@ import { Header } from "../simulation/components";
 const BACK_LINK_CLASS =
   "inline-flex items-center gap-1.5 text-[14px] font-medium text-[#301CA0] no-underline";
 
-/** Standard Creator back crumb: ← Back to {destination}. */
+/** Standard Creator back crumb: ← {destination}. */
 export function BackLink({
   href,
   children,
