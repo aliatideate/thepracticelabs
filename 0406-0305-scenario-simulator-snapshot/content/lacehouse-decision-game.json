@@ -1,0 +1,694 @@
+{
+  "scenario": {
+    "id": "lacehouse-buying-week-v1",
+    "title": "A Week in Buying",
+    "exerciseType": "decision"
+  },
+  "assets": {
+    "sceneImage": "/content/media/mart-scene.png?v=1416",
+    "doorImage": "/content/media/mart-door.svg",
+    "phoneImage": "/content/media/mart-phone.svg",
+    "sceneImages": [
+      "/content/media/mart-scene.png?v=1416",
+      "/content/media/mart-scene-2.png?v=1",
+      "/content/media/mart-scene-3.png?v=1",
+      "/content/media/mart-scene-4.png?v=1",
+      "/content/media/mart-scene-5.png?v=1",
+      "/content/media/mart-scene-6.png?v=1"
+    ],
+    "travelImages": [
+      "/content/media/mart-travel-1.png",
+      "/content/media/mart-travel-2.png",
+      "/content/media/mart-travel-3.png",
+      "/content/media/mart-travel-4.png",
+      "/content/media/mart-travel-5.png"
+    ]
+  },
+  "intro": {
+    "role": "You're a buyer at {{company.name}}, a sneaker chain in the UAE.",
+    "setting": "It's the first week of the new season. Six things need a decision from you, and none of them will wait.",
+    "goal": "Keep the shelves full without putting the company at risk."
+  },
+  "playbook": {
+    "title": "{{company.name}} Buying Playbook",
+    "rules": [
+      "If you can undo it within two weeks, decide it yourself.",
+      "Never commit the company beyond this season without the head of buying.",
+      "The head of buying's time is limited. Every call costs a day."
+    ]
+  },
+  "decisions": [
+    {
+      "id": "d1-warehouse-runners",
+      "order": 1,
+      "location": {
+        "name": "{{company.name}} Warehouse, {{locations.alQuoz}}"
+      },
+      "situation": "1,200 pairs of your best-selling runner have arrived, but the size split is off: too many small sizes, not enough large ones. The brand accepts returns within 14 days.",
+      "hotspot": {
+        "x": 33,
+        "y": 38,
+        "w": 17,
+        "h": 32
+      },
+      "facilitator": {
+        "difficulty": "easy",
+        "note": "Two-way door. Rule 1 — keep and rebalance."
+      },
+      "options": [
+        {
+          "id": "A",
+          "label": "Keep it and rebalance",
+          "immediate": "The stores have stock by Wednesday.",
+          "deferred": {
+            "headline": "Runners back on {{company.name}} shelves within days.",
+            "standfirst": "Small sizes moved to the right stores and large sizes were topped up.",
+            "weight": 1,
+            "outcome": "good"
+          },
+          "facilitator": {
+            "doorType": "two-way"
+          },
+          "grade": {
+            "grade": "best",
+            "tag": null,
+            "rules": [
+              1
+            ],
+            "rationale": "Undoable within two weeks — yours to decide."
+          },
+          "icon": "/content/media/options/Q101.png"
+        },
+        {
+          "id": "B",
+          "label": "Reject the delivery and wait for a corrected one",
+          "immediate": "The brand promises a new shipment in three weeks.",
+          "deferred": {
+            "headline": "Empty shelves as {{company.name}} runner shortage drags on.",
+            "standfirst": "Shoppers went to rivals while the corrected shipment was still weeks away.",
+            "weight": 3,
+            "outcome": "bad"
+          },
+          "facilitator": {
+            "doorType": "two-way"
+          },
+          "grade": {
+            "grade": "worst",
+            "tag": "tooSlow",
+            "rules": [
+              1
+            ],
+            "rationale": "Waiting three weeks when you could rebalance now."
+          },
+          "icon": "/content/media/options/Q102.png"
+        },
+        {
+          "id": "call",
+          "label": "Call the head of buying",
+          "immediate": "The head of buying calls back the next day: \"Why are you asking me? Keep it.\"",
+          "deferred": {
+            "headline": "Runner restock slips a day.",
+            "standfirst": "A call delayed a decision that was yours under the playbook.",
+            "weight": 1,
+            "outcome": "mixed"
+          },
+          "facilitator": {
+            "doorType": "n/a"
+          },
+          "grade": {
+            "grade": "okay",
+            "tag": "tooSlow",
+            "rules": [
+              1,
+              3
+            ],
+            "rationale": "Middle — escalated a reversible call and lost a day."
+          },
+          "icon": "/content/media/options/Q103.png"
+        }
+      ]
+    },
+    {
+      "id": "d2-preorder-showroom",
+      "order": 2,
+      "location": {
+        "name": "Brand showroom, {{locations.d3}}"
+      },
+      "situation": "A brand rep offers 18% off next season's pre-order if you sign today for 4,000 pairs, double last season's order.",
+      "hotspot": {
+        "x": 50,
+        "y": 53,
+        "w": 10,
+        "h": 25
+      },
+      "facilitator": {
+        "difficulty": "hard",
+        "note": "One-way door. Needs head of buying — Rule 2."
+      },
+      "options": [
+        {
+          "id": "A",
+          "label": "Sign today",
+          "immediate": "The rep is delighted and the order is confirmed.",
+          "deferred": {
+            "headline": "{{company.name}} stuck with 1,800 unsold pairs after pre-order bet.",
+            "standfirst": "Doubling last season's order without a check left excess stock.",
+            "weight": 5,
+            "outcome": "bad"
+          },
+          "facilitator": {
+            "doorType": "one-way"
+          },
+          "grade": {
+            "grade": "worst",
+            "tag": "tooFast",
+            "rules": [
+              2
+            ],
+            "rationale": "Committed beyond this season without approval."
+          },
+          "icon": "/content/media/options/Q201.png"
+        },
+        {
+          "id": "B",
+          "label": "Tell the rep you'll come back next week",
+          "immediate": "The discount expires.",
+          "deferred": {
+            "headline": "{{company.name}} pays full price for next season.",
+            "standfirst": "Delaying without escalating meant the deal was gone.",
+            "weight": 1,
+            "outcome": "mixed"
+          },
+          "facilitator": {
+            "doorType": "one-way"
+          },
+          "grade": {
+            "grade": "okay",
+            "tag": "tooSlow",
+            "rules": [
+              2
+            ],
+            "rationale": "Middle — right to pause, wrong to wait without calling."
+          },
+          "icon": "/content/media/options/Q202.png"
+        },
+        {
+          "id": "call",
+          "label": "Call the head of buying",
+          "immediate": "The head of buying joins the call and negotiates 12% off on 2,500 pairs.",
+          "deferred": {
+            "headline": "{{company.name}} lands a smart pre-order deal.",
+            "standfirst": "A smaller order with a real discount beat both extremes.",
+            "weight": 3,
+            "outcome": "good"
+          },
+          "facilitator": {
+            "doorType": "n/a"
+          },
+          "grade": {
+            "grade": "best",
+            "tag": null,
+            "rules": [
+              2,
+              3
+            ],
+            "rationale": "Beyond this season — bring in the head of buying."
+          },
+          "icon": "/content/media/options/Q203.png"
+        }
+      ]
+    },
+    {
+      "id": "d3-limited-colourway",
+      "order": 3,
+      "location": {
+        "name": "{{company.name}} Flagship, {{locations.dubaiMall}}"
+      },
+      "situation": "A limited colourway sold 70% of its stock in four days. The brand has 60 pairs left in the region, and another retailer is asking for them.",
+      "hotspot": {
+        "x": 53,
+        "y": 20,
+        "w": 13,
+        "h": 30
+      },
+      "facilitator": {
+        "difficulty": "easy",
+        "note": "Two-way door. Reorder now — Rule 1."
+      },
+      "options": [
+        {
+          "id": "A",
+          "label": "Reorder all 60 now",
+          "immediate": "They arrive Thursday.",
+          "deferred": {
+            "headline": "{{company.name}} sells out limited drop in a week.",
+            "standfirst": "Acting while stock was still available paid off.",
+            "weight": 3,
+            "outcome": "good"
+          },
+          "facilitator": {
+            "doorType": "two-way"
+          },
+          "grade": {
+            "grade": "best",
+            "tag": null,
+            "rules": [
+              1
+            ],
+            "rationale": "Reversible within two weeks — decide it yourself."
+          },
+          "icon": "/content/media/options/Q301.png"
+        },
+        {
+          "id": "B",
+          "label": "Wait until Friday to see if demand holds",
+          "immediate": "By Friday, all 60 have gone to the other retailer.",
+          "deferred": {
+            "headline": "Limited colourway lands at rival store.",
+            "standfirst": "Waiting cost the remaining pairs.",
+            "weight": 3,
+            "outcome": "bad"
+          },
+          "facilitator": {
+            "doorType": "two-way"
+          },
+          "grade": {
+            "grade": "worst",
+            "tag": "tooSlow",
+            "rules": [
+              1
+            ],
+            "rationale": "Too slow on a call you could undo."
+          },
+          "icon": "/content/media/options/Q302.png"
+        },
+        {
+          "id": "call",
+          "label": "Call the head of buying",
+          "immediate": "The head of buying says yes, but only 20 pairs are left by then.",
+          "deferred": {
+            "headline": "{{company.name}} gets a third of the drop.",
+            "standfirst": "Escalating a reversible reorder cost most of the allocation.",
+            "weight": 1,
+            "outcome": "mixed"
+          },
+          "facilitator": {
+            "doorType": "n/a"
+          },
+          "grade": {
+            "grade": "okay",
+            "tag": "tooSlow",
+            "rules": [
+              1,
+              3
+            ],
+            "rationale": "Middle — right impulse, wrong to spend a day on it."
+          },
+          "icon": "/content/media/options/Q303.png"
+        }
+      ]
+    },
+    {
+      "id": "d4-canvas-markdown",
+      "order": 4,
+      "location": {
+        "name": "{{company.name}} Store, {{locations.sharjah}}"
+      },
+      "situation": "A casual canvas line isn't selling: 400 pairs, with six weeks left in the season.",
+      "hotspot": {
+        "x": 69,
+        "y": 52,
+        "w": 17,
+        "h": 23
+      },
+      "facilitator": {
+        "difficulty": "murky",
+        "note": "Can you really undo a markdown?"
+      },
+      "options": [
+        {
+          "id": "A",
+          "label": "Mark it down 40% across all stores",
+          "immediate": "It clears in two weeks.",
+          "deferred": {
+            "headline": "{{company.name}} shoppers learn to wait for the sale.",
+            "standfirst": "Full-price sales dip next season after a steep markdown.",
+            "weight": 3,
+            "outcome": "mixed"
+          },
+          "facilitator": {
+            "doorType": "murky"
+          },
+          "grade": {
+            "grade": "okay",
+            "tag": "tooFast",
+            "rules": [],
+            "rationale": "Clears stock, but trains shoppers to wait — light score."
+          },
+          "icon": "/content/media/options/Q401.png"
+        },
+        {
+          "id": "B",
+          "label": "Move it to the outlet and keep full price elsewhere",
+          "immediate": "250 pairs sell by the end of the season.",
+          "deferred": {
+            "headline": "Outlet quietly absorbs slow canvas line.",
+            "standfirst": "Most stock cleared without training the whole chain to wait for sales.",
+            "weight": 1,
+            "outcome": "good"
+          },
+          "facilitator": {
+            "doorType": "murky"
+          },
+          "grade": {
+            "grade": "best",
+            "tag": null,
+            "rules": [],
+            "rationale": "Best light option — clear stock without a chain-wide markdown."
+          },
+          "icon": "/content/media/options/Q402.png"
+        },
+        {
+          "id": "call",
+          "label": "Call the head of buying",
+          "immediate": "A day later, the head of buying chooses the outlet with 20% off.",
+          "deferred": {
+            "headline": "{{company.name}} clears canvas stock quietly.",
+            "standfirst": "Similar outcome to the outlet move, a day later.",
+            "weight": 1,
+            "outcome": "mixed"
+          },
+          "facilitator": {
+            "doorType": "n/a"
+          },
+          "grade": {
+            "grade": "okay",
+            "tag": "tooSlow",
+            "rules": [
+              3
+            ],
+            "rationale": "Middle light — same idea, paid a day for the call."
+          },
+          "icon": "/content/media/options/Q403.png"
+        }
+      ]
+    },
+    {
+      "id": "d5-exclusive-brand",
+      "order": 5,
+      "location": {
+        "name": "Supplier meeting, {{locations.difc}}"
+      },
+      "situation": "Sahm Athletics, an up-and-coming regional brand, offers you 12 months of exclusive UAE rights, with a 1,500-pair minimum and a dedicated wall in every store.",
+      "hotspot": {
+        "x": 12,
+        "y": 55,
+        "w": 23,
+        "h": 25
+      },
+      "facilitator": {
+        "difficulty": "hard",
+        "note": "Saying no can be a one-way door too."
+      },
+      "options": [
+        {
+          "id": "A",
+          "label": "Accept",
+          "immediate": "The contract is signed and the walls go up.",
+          "deferred": {
+            "headline": "{{company.name}}'s exclusive brand stalls, 1,100 pairs unsold.",
+            "standfirst": "A season-plus commitment without a check left dead stock on the walls.",
+            "weight": 5,
+            "outcome": "bad"
+          },
+          "facilitator": {
+            "doorType": "one-way"
+          },
+          "grade": {
+            "grade": "worst",
+            "tag": "tooFast",
+            "rules": [
+              2
+            ],
+            "rationale": "Beyond this season without the head of buying."
+          },
+          "icon": "/content/media/options/Q501.png"
+        },
+        {
+          "id": "B",
+          "label": "Decline politely",
+          "immediate": "The brand thanks you for your time.",
+          "deferred": {
+            "headline": "Sahm Athletics launches at rival chain to queues.",
+            "standfirst": "Saying no closed a door — costly but understandable.",
+            "weight": 3,
+            "outcome": "mixed"
+          },
+          "facilitator": {
+            "doorType": "one-way"
+          },
+          "grade": {
+            "grade": "okay",
+            "tag": "tooFast",
+            "rules": [
+              2
+            ],
+            "rationale": "Middle softened — a one-way no without exploring a trial."
+          },
+          "icon": "/content/media/options/Q502.png"
+        },
+        {
+          "id": "call",
+          "label": "Call the head of buying",
+          "immediate": "The head of buying negotiates a six-month trial in five stores, with 600 pairs.",
+          "deferred": {
+            "headline": "{{company.name}} trial of regional brand pays off.",
+            "standfirst": "A smaller, time-boxed exclusive beat both accept and hard decline.",
+            "weight": 3,
+            "outcome": "good"
+          },
+          "facilitator": {
+            "doorType": "n/a"
+          },
+          "grade": {
+            "grade": "best",
+            "tag": null,
+            "rules": [
+              2,
+              3
+            ],
+            "rationale": "Season-plus commitment — escalate."
+          },
+          "icon": "/content/media/options/Q503.png"
+        }
+      ]
+    },
+    {
+      "id": "d6-influencer-drop",
+      "order": 6,
+      "location": {
+        "name": "{{company.name}} Office, {{locations.businessBay}}"
+      },
+      "situation": "{{influencer.name}}, a local sneaker influencer with 1.2M followers, proposes a co-branded drop: 300 pairs, her name on the box, launching in three weeks.",
+      "hotspot": {
+        "x": 73,
+        "y": 52,
+        "w": 10,
+        "h": 11
+      },
+      "facilitator": {
+        "difficulty": "murky",
+        "note": "Can you turn a one-way door into a two-way one?"
+      },
+      "options": [
+        {
+          "id": "A",
+          "label": "Agree. It's only 300 pairs.",
+          "immediate": "Marketing is thrilled and the boxes go to print.",
+          "deferred": {
+            "headline": "{{influencer.name}} x {{company.name}} sells out, then the comments turn.",
+            "standfirst": "Her controversy sticks to your brand after the drop.",
+            "weight": 3,
+            "outcome": "mixed"
+          },
+          "facilitator": {
+            "doorType": "murky"
+          },
+          "grade": {
+            "grade": "okay",
+            "tag": "tooFast",
+            "rules": [],
+            "rationale": "Light — small volume, but the brand risk was hard to undo."
+          },
+          "icon": "/content/media/options/Q601.png"
+        },
+        {
+          "id": "B",
+          "label": "Counter with a two-week trial promoting an existing shoe",
+          "immediate": "She agrees.",
+          "deferred": {
+            "headline": "Influencer push lifts {{company.name}} runner sales.",
+            "standfirst": "A trial on an existing shoe kept the upside without a co-branded box.",
+            "weight": 1,
+            "outcome": "good"
+          },
+          "facilitator": {
+            "doorType": "murky"
+          },
+          "grade": {
+            "grade": "best",
+            "tag": null,
+            "rules": [],
+            "rationale": "Best light — turn a one-way into a two-way."
+          },
+          "icon": "/content/media/options/Q602.png"
+        },
+        {
+          "id": "call",
+          "label": "Call the head of buying",
+          "immediate": "A day later, the head of buying suggests the same trial.",
+          "deferred": {
+            "headline": "{{company.name}} tests the influencer waters.",
+            "standfirst": "Same trial idea, a day later.",
+            "weight": 1,
+            "outcome": "mixed"
+          },
+          "facilitator": {
+            "doorType": "n/a"
+          },
+          "grade": {
+            "grade": "okay",
+            "tag": "tooSlow",
+            "rules": [
+              3
+            ],
+            "rationale": "Middle light — right outcome, paid a day."
+          },
+          "icon": "/content/media/options/Q603.png"
+        }
+      ]
+    }
+  ],
+  "reveal": {
+    "title": "One month later",
+    "masthead": "Gulf Retail Review",
+    "dateline": "Dubai"
+  },
+  "chrome": {
+    "startCta": "Start the week",
+    "nextStopCta": "Next stop",
+    "revealCta": "See what happened",
+    "progress": "Stop {n} of {m}",
+    "playbookButton": "Playbook",
+    "travelOverlay": "On the road to {place}",
+    "managerHeading": "Your decisions and your manager's review of them",
+    "managerSubhead": "This is your manager's read, based on the company's buying playbook.",
+    "closing": "When you are ready, return to the main workshop room ↗",
+    "youChose": "You chose",
+    "discussLabel": "Discuss",
+    "ruleLabel": "Rule {n}",
+    "questionLine": "Question {n} · {location}",
+    "stopOne": "Stop {n}",
+    "stopTwo": "Stops {a} and {b}",
+    "stopMany": "Stops {list} and {last}"
+  },
+  "scoring": {
+    "grades": {
+      "best": {
+        "label": "Best",
+        "points": 2
+      },
+      "judgment": {
+        "label": "Judgment call",
+        "points": 2
+      },
+      "okay": {
+        "label": "Okay",
+        "points": 1
+      },
+      "poor": {
+        "label": "Poor",
+        "points": 0
+      },
+      "worst": {
+        "label": "Worst",
+        "points": -1
+      }
+    },
+    "maxPointsPerDecision": 2,
+    "tags": {
+      "tooSlow": {
+        "name": "Too slow",
+        "zero": "Nothing waited that was yours to decide.",
+        "withBranches": "Waited on decisions that were yours: {branches}."
+      },
+      "tooFast": {
+        "name": "Too fast",
+        "zero": "Nothing went ahead that needed a check.",
+        "withBranches": "Went ahead without a check: {branches}."
+      }
+    },
+    "styles": {
+      "operatorMaxLost": 2,
+      "bottleneckMinLostEach": 2,
+      "axes": {
+        "columns": [
+          "Quick on reversible calls",
+          "Slow on reversible calls"
+        ],
+        "rows": [
+          "Careful on season commitments",
+          "Rushed on season commitments"
+        ]
+      },
+      "labels": {
+        "operator": {
+          "name": "The Buyer",
+          "grid": "top-left",
+          "ideal": true,
+          "band": "good",
+          "description": "You moved fast on what you could undo, and slowed down on season-level bets.",
+          "hover": "Buyers move fast on reversible stock calls, and bring in the head of buying on season commitments.",
+          "tip": "Keep doing what you're doing."
+        },
+        "escalator": {
+          "name": "The Checker",
+          "grid": "top-right",
+          "band": "mixed",
+          "description": "You kept things safe by calling up, even when the playbook said the call was yours.",
+          "hover": "Checkers keep things safe by escalating, even when they could decide it themselves.",
+          "tip": "If you can undo it within two weeks, decide it yourself."
+        },
+        "cowboy": {
+          "name": "The Closer",
+          "grid": "bottom-left",
+          "band": "mixed",
+          "description": "You kept deals moving, including commitments that weren't yours to make.",
+          "hover": "Closers keep deals moving, including season bets that needed the head of buying.",
+          "tip": "If you couldn't undo it this season, pause and call the head of buying."
+        },
+        "bottleneck": {
+          "name": "The Hold-up",
+          "grid": "bottom-right",
+          "band": "poor",
+          "description": "You held back on the reversible calls and rushed the season commitments.",
+          "hover": "Hold-ups wait on easy stock moves and rush the big buying bets.",
+          "tip": "Take the easy reversals on the spot. Slow down only when you couldn't undo it this season."
+        }
+      }
+    },
+    "ui": {
+      "styleHeading": "Your decision-making style",
+      "thisWeek": "What you did:",
+      "weekBoth": "You waited on decisions that were yours to make. But went ahead with some that needed a check.",
+      "weekSlow": "You waited on decisions that were yours to make.",
+      "weekFast": "You went ahead with some that needed a check.",
+      "weekClear": "Nothing waited that was yours to decide, and nothing went ahead that needed a check.",
+      "suggestion": "Suggestion:",
+      "yourStyle": "Your style",
+      "idealMarker": "Aim",
+      "resultMarker": "UR",
+      "rightPlace": "You're in the right place"
+    }
+  }
+}

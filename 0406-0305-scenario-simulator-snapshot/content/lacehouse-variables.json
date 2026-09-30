@@ -1,0 +1,66 @@
+[
+  {
+    "key": "company.name",
+    "label": "Company name",
+    "type": "text",
+    "default": "Lacehouse",
+    "maxLength": 40,
+    "required": true
+  },
+  {
+    "key": "influencer.name",
+    "label": "Influencer name",
+    "type": "text",
+    "default": "Noor",
+    "maxLength": 32,
+    "required": true
+  },
+  {
+    "key": "locations.alQuoz",
+    "label": "Location — Al Quoz",
+    "type": "text",
+    "default": "Al Quoz",
+    "maxLength": 28,
+    "required": true
+  },
+  {
+    "key": "locations.d3",
+    "label": "Location — d3",
+    "type": "text",
+    "default": "d3",
+    "maxLength": 28,
+    "required": true
+  },
+  {
+    "key": "locations.dubaiMall",
+    "label": "Location — Dubai Mall",
+    "type": "text",
+    "default": "Dubai Mall",
+    "maxLength": 32,
+    "required": true
+  },
+  {
+    "key": "locations.sharjah",
+    "label": "Location — Sharjah",
+    "type": "text",
+    "default": "Sharjah",
+    "maxLength": 28,
+    "required": true
+  },
+  {
+    "key": "locations.difc",
+    "label": "Location — DIFC",
+    "type": "text",
+    "default": "DIFC",
+    "maxLength": 28,
+    "required": true
+  },
+  {
+    "key": "locations.businessBay",
+    "label": "Location — Business Bay",
+    "type": "text",
+    "default": "Business Bay",
+    "maxLength": 32,
+    "required": true
+  }
+]
