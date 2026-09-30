@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Header, PrimaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
 import { CreateSelect } from "./create-select";
-import { BackLink, StatusTag, formatFromCategory } from "./create-shell";
+import { Breadcrumbs, StatusTag, formatFromCategory } from "./create-shell";
 
 const CATEGORIES = [
   { value: "problem-framing", label: "Problem framing" },
@@ -164,7 +164,12 @@ function BriefEditor() {
       <Header brandOnly hideFlowNav />
       <div className="mx-auto max-w-[720px] px-6 py-10">
         <div className="mb-2">
-          <BackLink href="/create/library">Activities</BackLink>
+          <Breadcrumbs
+            items={[
+              { label: "Activities", href: "/create/library" },
+              { label: isNew ? "New activity" : data!.title },
+            ]}
+          />
           <p className="text-[14px] text-[#6C6975] mt-1 mb-0">
             {formatFromCategory(category)}
           </p>

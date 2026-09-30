@@ -4,7 +4,7 @@ import { Link, useParams } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Header, PrimaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
-import { BackLink, StatusTag, formatRanOn } from "./create-shell";
+import { Breadcrumbs, StatusTag, formatRanOn } from "./create-shell";
 
 function CopyIconButton({
   label,
@@ -142,9 +142,13 @@ function SessionDetail() {
       <Header brandOnly hideFlowNav />
       <div className="mx-auto max-w-[720px] px-6 py-10">
         <div className="mb-2">
-          <BackLink href={`/create/clients/${data.clientId}`}>
-            {data.clientName}
-          </BackLink>
+          <Breadcrumbs
+            items={[
+              { label: "Clients", href: "/create" },
+              { label: data.clientName, href: `/create/clients/${data.clientId}` },
+              { label: data.title },
+            ]}
+          />
         </div>
         <div className="flex items-start justify-between gap-3 mb-2">
           <h1 className="text-[32px] mt-0 mb-0">{data.title}</h1>

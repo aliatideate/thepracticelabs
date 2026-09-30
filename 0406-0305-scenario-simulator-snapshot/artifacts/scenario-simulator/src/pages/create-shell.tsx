@@ -1,48 +1,84 @@
 import React from "react";
-import { ArrowLeft, Check, Pencil } from "lucide-react";
+import { Check, Pencil } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Header } from "../simulation/components";
 
-const BACK_LINK_CLASS =
-  "inline-flex items-center gap-1.5 text-[14px] font-medium text-[#301CA0] no-underline";
+export type BreadcrumbItem = {
+  label: string;
+  /** Route for ancestors; omit on the current (last) crumb. */
+  href?: string;
+  /** In-wizard step back when there is no route. */
+  onClick?: () => void;
+};
 
-/** Standard Creator back crumb: ← {destination}. */
-export function BackLink({
-  href,
-  children,
+/**
+ * Amazon-style trail: gray ancestors (clickable) › blue current page.
+ */
+export function Breadcrumbs({
+  items,
   className = "",
 }: {
-  href: string;
-  children: React.ReactNode;
+  items: BreadcrumbItem[];
   className?: string;
 }) {
+  if (items.length === 0) return null;
   return (
-    <Link href={href} className={`${BACK_LINK_CLASS} ${className}`.trim()}>
-      <ArrowLeft className="h-4 w-4" strokeWidth={2.25} aria-hidden />
-      {children}
-    </Link>
-  );
-}
-
-/** Same look as BackLink, for in-wizard step backs (button, not route). */
-export function BackButton({
-  onClick,
-  children,
-  className = "",
-}: {
-  onClick: () => void;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`${BACK_LINK_CLASS} bg-transparent border-0 p-0 cursor-pointer ${className}`.trim()}
+    <nav
+      className={`flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[14px] ${className}`.trim()}
+      aria-label="Breadcrumb"
     >
-      <ArrowLeft className="h-4 w-4" strokeWidth={2.25} aria-hidden />
-      {children}
-    </button>
+      {items.map((item, i) => {
+        const isLast = i === items.length - 1;
+        const sep = i > 0 ? (
+          <span key={`sep-${i}`} className="text-[#6C6975]" aria-hidden>
+            ›
+          </span>
+        ) : null;
+        if (isLast) {
+          return (
+            <React.Fragment key={`crumb-${i}`}>
+              {sep}
+              <span className="font-medium text-[#301CA0]" aria-current="page">
+                {item.label}
+              </span>
+            </React.Fragment>
+          );
+        }
+        if (item.href) {
+          return (
+            <React.Fragment key={`crumb-${i}`}>
+              {sep}
+              <Link
+                href={item.href}
+                className="font-medium text-[#6C6975] no-underline hover:text-[#301CA0]"
+              >
+                {item.label}
+              </Link>
+            </React.Fragment>
+          );
+        }
+        if (item.onClick) {
+          return (
+            <React.Fragment key={`crumb-${i}`}>
+              {sep}
+              <button
+                type="button"
+                onClick={item.onClick}
+                className="font-medium text-[#6C6975] bg-transparent border-0 p-0 cursor-pointer hover:text-[#301CA0]"
+              >
+                {item.label}
+              </button>
+            </React.Fragment>
+          );
+        }
+        return (
+          <React.Fragment key={`crumb-${i}`}>
+            {sep}
+            <span className="font-medium text-[#6C6975]">{item.label}</span>
+          </React.Fragment>
+        );
+      })}
+    </nav>
   );
 }
 

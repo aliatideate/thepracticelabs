@@ -5,7 +5,7 @@ import { ImagePlus } from "lucide-react";
 import { Header, PrimaryButton, SecondaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
 import { CreateSelect } from "./create-select";
-import { BackButton, BackLink } from "./create-shell";
+import { Breadcrumbs } from "./create-shell";
 
 const MAX_LOGO_BYTES = 500 * 1024;
 const LOGO_MIME = new Set(["image/png", "image/jpeg", "image/webp"]);
@@ -329,21 +329,45 @@ function NewSessionWizard() {
     "Company";
   const orphanSet = new Set(schemaUpgrade?.orphanKeys ?? []);
   const missingRequiredSet = new Set(schemaUpgrade?.missingRequired ?? []);
+  const clientName = clientQ.data?.name ?? "Client";
+  const categoryLabel =
+    CATEGORIES.find((c) => c.key === category)?.label ?? "Categories";
+  const stepTitle =
+    step === "category"
+      ? "Choose a category"
+      : step === "exercise"
+        ? "Choose an exercise"
+        : "Customise session";
+  const crumbItems =
+    step === "category"
+      ? [
+          { label: "Clients", href: "/create" },
+          { label: clientName, href: `/create/clients/${clientId}` },
+          { label: stepTitle },
+        ]
+      : step === "exercise"
+        ? [
+            { label: "Clients", href: "/create" },
+            { label: clientName, href: `/create/clients/${clientId}` },
+            { label: "Categories", onClick: () => setStep("category") },
+            { label: categoryLabel },
+          ]
+        : [
+            { label: "Clients", href: "/create" },
+            { label: clientName, href: `/create/clients/${clientId}` },
+            { label: "Categories", onClick: () => setStep("category") },
+            { label: categoryLabel, onClick: () => setStep("exercise") },
+            { label: stepTitle },
+          ];
 
   return (
     <div className="min-h-screen bg-[#F8F6EF]">
       <Header brandOnly hideFlowNav />
       <div className="mx-auto max-w-[720px] px-6 py-10">
         <div className="mb-2">
-          <BackLink href={`/create/clients/${clientId}`}>
-            {clientQ.data?.name ?? "Client"}
-          </BackLink>
+          <Breadcrumbs items={crumbItems} />
         </div>
-        <h1 className="text-[32px] mt-0 mb-8">
-          {step === "category" && "Choose a category"}
-          {step === "exercise" && "Choose an exercise"}
-          {step === "customise" && "Customise session"}
-        </h1>
+        <h1 className="text-[32px] mt-0 mb-8">{stepTitle}</h1>
 
         {step === "category" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -365,9 +389,6 @@ function NewSessionWizard() {
 
         {step === "exercise" && (
           <div className="space-y-3">
-            <BackButton className="mb-2" onClick={() => setStep("category")}>
-              Categories
-            </BackButton>
             {inCategory
               .filter((e) => e.status === "published")
               .map((ex) => (
@@ -392,9 +413,6 @@ function NewSessionWizard() {
 
         {step === "customise" && selected && (
           <div className="bg-white border border-[#E7E4DD] rounded-xl p-6">
-            <BackButton className="mb-4" onClick={() => setStep("exercise")}>
-              Exercises
-            </BackButton>
             <p className="text-[14px] text-[#6C6975] mt-0 mb-4">
               Exercise: <strong>{selected.title}</strong>
             </p>
