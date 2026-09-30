@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Trash2 } from "lucide-react";
 import { PrimaryButton, SecondaryButton } from "../simulation/components";
 import {
   Dialog,
@@ -44,6 +45,9 @@ function ClientsHome() {
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ClientRow | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["create-clients"],
@@ -90,6 +94,35 @@ function ClientsHome() {
     } catch {
       setError("Could not reach the server.");
       setBusy(false);
+    }
+  };
+
+  const deleteClient = async () => {
+    if (!deleteTarget) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch(`/api/create/clients/${deleteTarget.id}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      if (res.status === 409) {
+        const body = (await res.json().catch(() => null)) as { message?: string } | null;
+        setDeleteError(body?.message ?? "Clients with sessions can’t be deleted.");
+        setDeleteBusy(false);
+        return;
+      }
+      if (!res.ok) {
+        setDeleteError("Could not delete client.");
+        setDeleteBusy(false);
+        return;
+      }
+      await queryClient.invalidateQueries({ queryKey: ["create-clients"] });
+      setDeleteTarget(null);
+      setDeleteBusy(false);
+    } catch {
+      setDeleteError("Could not reach the server.");
+      setDeleteBusy(false);
     }
   };
 
@@ -147,60 +180,113 @@ function ClientsHome() {
         </DialogContent>
       </Dialog>
 
+      <Dialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteTarget(null);
+            setDeleteError(null);
+            setDeleteBusy(false);
+          }
+        }}
+      >
+        <DialogContent className="max-w-[440px] gap-0 border-[#E7E4DD] bg-white p-6 shadow-[0_24px_64px_rgba(29,29,36,0.18)] sm:rounded-xl">
+          <DialogHeader className="mb-4 text-left">
+            <DialogTitle className="text-[22px] font-semibold text-[#1D1D24]">
+              Delete {deleteTarget?.name}?
+            </DialogTitle>
+            <DialogDescription className="text-[15px] text-[#6C6975]">
+              This removes the client from your list. This can’t be undone.
+            </DialogDescription>
+          </DialogHeader>
+          {deleteError && <p className="text-[#B42318] mb-3">{deleteError}</p>}
+          <div className="flex gap-3">
+            <PrimaryButton type="button" onClick={deleteClient} disabled={deleteBusy}>
+              {deleteBusy ? "Deleting…" : "Delete client"}
+            </PrimaryButton>
+            <SecondaryButton
+              onClick={() => setDeleteTarget(null)}
+              disabled={deleteBusy}
+            >
+              Cancel
+            </SecondaryButton>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {isLoading && <p className="text-[#6C6975]">Loading…</p>}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {(data?.clients ?? []).map((c) => (
-          <div
-            key={c.id}
-            className="bg-white border border-[#E7E4DD] rounded-xl p-5 hover:border-[#301CA0]"
-          >
-            <div className="flex justify-between gap-4 items-start">
-              <div className="min-w-0">
-                <Link
-                  href={`/create/clients/${c.id}`}
-                  className="text-[22px] font-semibold text-[#1D1D24] no-underline hover:text-[#301CA0]"
-                >
-                  {c.name}
-                </Link>
-                {c.notes && <p className="text-[15px] text-[#6C6975] m-0 mt-1">{c.notes}</p>}
+        {(data?.clients ?? []).map((c) => {
+          const canDelete = c.sessions.length === 0;
+          return (
+            <div
+              key={c.id}
+              className="group relative bg-white border border-[#E7E4DD] rounded-xl p-5 hover:border-[#301CA0]"
+            >
+              <div className="flex justify-between gap-4 items-start">
+                <div className="min-w-0">
+                  <Link
+                    href={`/create/clients/${c.id}`}
+                    className="text-[22px] font-semibold text-[#1D1D24] no-underline hover:text-[#301CA0]"
+                  >
+                    {c.name}
+                  </Link>
+                  {c.notes && <p className="text-[15px] text-[#6C6975] m-0 mt-1">{c.notes}</p>}
+                </div>
+                <span className="text-[14px] text-[#6C6975] whitespace-nowrap shrink-0">
+                  {formatModifiedAgo(c.lastModifiedAt ?? c.createdAt)}
+                </span>
               </div>
-              <span className="text-[14px] text-[#6C6975] whitespace-nowrap shrink-0">
-                {formatModifiedAgo(c.lastModifiedAt ?? c.createdAt)}
-              </span>
-            </div>
 
-            <div className="mt-4 pt-4 border-t border-[#E7E4DD]">
-              {c.sessions.length === 0 ? (
-                <p className="text-[14px] text-[#6C6975] m-0">No sessions yet</p>
-              ) : (
-                <ul className="m-0 p-0 list-none space-y-2">
-                  {c.sessions.map((s) => {
-                    const ranOn =
-                      s.status === "ended" ? formatRanOn(s.endedAt) : null;
-                    return (
-                      <li key={s.id} className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <Link
-                            href={`/create/sessions/${s.id}`}
-                            className="text-[15px] text-[#301CA0] no-underline hover:underline block truncate"
-                          >
-                            {s.title}
-                          </Link>
-                          {ranOn && (
-                            <div className="text-[13px] text-[#6C6975] mt-0.5">
-                              Ran {ranOn}
-                            </div>
-                          )}
-                        </div>
-                        <StatusTag status={s.status} />
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
+              <div className="mt-4 pt-4 border-t border-[#E7E4DD] relative min-h-[28px] pr-10">
+                {c.sessions.length === 0 ? (
+                  <p className="text-[14px] text-[#6C6975] m-0">No sessions yet</p>
+                ) : (
+                  <ul className="m-0 p-0 list-none space-y-2">
+                    {c.sessions.map((s) => {
+                      const ranOn =
+                        s.status === "ended" ? formatRanOn(s.endedAt) : null;
+                      return (
+                        <li key={s.id} className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <Link
+                              href={`/create/sessions/${s.id}`}
+                              className="text-[15px] text-[#301CA0] no-underline hover:underline block truncate"
+                            >
+                              {s.title}
+                            </Link>
+                            {ranOn && (
+                              <div className="text-[13px] text-[#6C6975] mt-0.5">
+                                Ran {ranOn}
+                              </div>
+                            )}
+                          </div>
+                          <StatusTag status={s.status} />
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+                {canDelete && (
+                  <button
+                    type="button"
+                    aria-label={`Delete ${c.name}`}
+                    title="Delete client"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setDeleteError(null);
+                      setDeleteTarget(c);
+                    }}
+                    className="absolute bottom-0 right-0 inline-flex h-8 w-8 items-center justify-center rounded-lg border-0 bg-transparent text-[#6C6975] opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 group-hover:pointer-events-auto hover:bg-[#F1F0EC] hover:text-[#B42318] focus-visible:opacity-100 focus-visible:pointer-events-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#301CA0] cursor-pointer"
+                  >
+                    <Trash2 className="h-4 w-4" strokeWidth={2} aria-hidden />
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       {!isLoading && (data?.clients.length ?? 0) === 0 && (
         <p className="text-[#6C6975]">No clients yet. Create one to start a session.</p>
