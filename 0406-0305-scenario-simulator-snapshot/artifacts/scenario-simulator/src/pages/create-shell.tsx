@@ -1,5 +1,5 @@
 import React from "react";
-import { Check } from "lucide-react";
+import { Check, Pencil } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Header } from "../simulation/components";
 
