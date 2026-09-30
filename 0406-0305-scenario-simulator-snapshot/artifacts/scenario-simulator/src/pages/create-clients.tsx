@@ -242,7 +242,11 @@ function ClientsHome() {
                 </span>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-[#E7E4DD] relative min-h-[32px] pr-10">
+              <div
+                className={`mt-4 pt-4 border-t border-[#E7E4DD] relative min-h-[32px]${
+                  canDelete ? " pr-10" : ""
+                }`}
+              >
                 {c.sessions.length === 0 ? (
                   <p className="text-[14px] text-[#6C6975] m-0">No sessions yet</p>
                 ) : (
