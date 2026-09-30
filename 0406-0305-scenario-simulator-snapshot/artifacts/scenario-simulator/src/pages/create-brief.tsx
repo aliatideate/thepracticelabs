@@ -169,7 +169,7 @@ function BriefEditor() {
         <div className="mb-2">
           <Link href="/create/library" className={BACK_LINK}>
             <ArrowLeft className="h-4 w-4" strokeWidth={2.25} aria-hidden />
-            Back
+            Back to Activities
           </Link>
           <p className="text-[14px] text-[#6C6975] mt-1 mb-0">
             {formatFromCategory(category)}
@@ -343,7 +343,7 @@ function BriefEditor() {
         <div className="mt-4">
           <Link href="/create/library" className={BACK_LINK}>
             <ArrowLeft className="h-4 w-4" strokeWidth={2.25} aria-hidden />
-            Back
+            Back to Activities
           </Link>
         </div>
       </div>
