@@ -149,17 +149,19 @@ function SessionDetail() {
             <div className="text-[14px] font-semibold mb-1">Facilitator board</div>
             <div className="flex gap-2 items-center justify-between">
               <code className="text-[15px] break-all min-w-0">{facilitateUrl}</code>
-              <div className="flex items-center gap-1 shrink-0">
-                <CopyIconButton
-                  label="facilitator link"
-                  copied={copied === "fac"}
-                  onClick={() => copy("fac", facilitateUrl)}
-                />
-                <SecondaryButton onClick={regenToken}>
-                  Regenerate token
-                </SecondaryButton>
-              </div>
+              <CopyIconButton
+                label="facilitator link"
+                copied={copied === "fac"}
+                onClick={() => copy("fac", facilitateUrl)}
+              />
             </div>
+            <button
+              type="button"
+              onClick={regenToken}
+              className="mt-2 text-[14px] font-medium text-[#301CA0] bg-transparent border-0 p-0 cursor-pointer"
+            >
+              Regenerate token
+            </button>
             <p className="text-[14px] text-[#6C6975] mt-1 mb-0">
               Signed-in users can open the board without a token. Regenerate issues a co-facilitator
               link.
