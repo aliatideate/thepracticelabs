@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronDown } from "lucide-react";
 import { Link, useLocation, useParams } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Header, PrimaryButton } from "../simulation/components";
@@ -22,12 +22,28 @@ const MODES = [
 const FIELD =
   "w-full rounded-xl border border-[#E7E4DD] px-4 py-3 text-[16px] bg-white";
 
-/** Extra right inset so the chevron isn’t flush with the border. */
+/** Native arrow hidden; chevron drawn separately with inset from the right edge. */
 const SELECT_FIELD =
-  "w-full rounded-xl border border-[#E7E4DD] pl-4 pr-10 py-3 text-[16px] bg-white appearance-none bg-no-repeat bg-[length:12px] bg-[right_1rem_center] bg-[url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%231A1A1A' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")]";
+  "w-full rounded-xl border border-[#E7E4DD] pl-4 pr-10 py-3 text-[16px] bg-white appearance-none";
 
 const BACK_LINK =
   "inline-flex items-center gap-1.5 text-[14px] font-medium text-[#301CA0] no-underline";
+
+function SelectField(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  const { className, children, ...rest } = props;
+  return (
+    <div className="relative">
+      <select className={className ?? SELECT_FIELD} {...rest}>
+        {children}
+      </select>
+      <ChevronDown
+        className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#1A1A1A]"
+        strokeWidth={2}
+        aria-hidden
+      />
+    </div>
+  );
+}
 
 function BriefEditor() {
   const { id } = useParams<{ id: string }>();
@@ -204,9 +220,8 @@ function BriefEditor() {
               <label className="block text-[14px] font-semibold mb-2" htmlFor="brief-category">
                 Category
               </label>
-              <select
+              <SelectField
                 id="brief-category"
-                className={SELECT_FIELD}
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
               >
@@ -215,15 +230,14 @@ function BriefEditor() {
                     {c.label}
                   </option>
                 ))}
-              </select>
+              </SelectField>
             </div>
             <div>
               <label className="block text-[14px] font-semibold mb-2" htmlFor="brief-client">
                 Client (optional)
               </label>
-              <select
+              <SelectField
                 id="brief-client"
-                className={SELECT_FIELD}
                 value={clientId}
                 onChange={(e) => setClientId(e.target.value)}
               >
@@ -233,7 +247,7 @@ function BriefEditor() {
                     {c.name}
                   </option>
                 ))}
-              </select>
+              </SelectField>
             </div>
           </div>
           <div>
@@ -323,9 +337,8 @@ function BriefEditor() {
               <label className="block text-[14px] font-semibold mb-2" htmlFor="brief-mode">
                 Mode
               </label>
-              <select
+              <SelectField
                 id="brief-mode"
-                className={SELECT_FIELD}
                 value={mode}
                 onChange={(e) => setMode(e.target.value)}
               >
@@ -334,7 +347,7 @@ function BriefEditor() {
                     {m.label}
                   </option>
                 ))}
-              </select>
+              </SelectField>
             </div>
           </div>
           {msg && <p className="text-[14px] text-[#6C6975] m-0">{msg}</p>}
