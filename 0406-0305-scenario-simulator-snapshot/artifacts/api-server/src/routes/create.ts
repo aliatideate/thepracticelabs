@@ -243,6 +243,45 @@ router.patch("/create/clients/:id", async (req, res) => {
   });
 });
 
+/** Delete only when the client has no workshop sessions (preview or real). */
+router.delete("/create/clients/:id", async (req, res) => {
+  const user = orgUser(req);
+  if (!user) return res.status(401).json({ error: "unauthorized" });
+  const id = String(req.params.id);
+
+  const clients = await db
+    .select({ id: clientsTable.id })
+    .from(clientsTable)
+    .where(and(eq(clientsTable.id, id), eq(clientsTable.orgId, user.orgId)))
+    .limit(1);
+  if (!clients[0]) return res.status(404).json({ error: "not_found" });
+
+  const sessions = await db
+    .select({ id: workshopSessionsTable.id })
+    .from(workshopSessionsTable)
+    .where(eq(workshopSessionsTable.clientId, id))
+    .limit(1);
+  if (sessions[0]) {
+    return res.status(409).json({
+      error: "has_sessions",
+      message: "Clients with sessions can’t be deleted.",
+    });
+  }
+
+  // Optional brief link — clear so delete isn’t blocked by FK.
+  await db
+    .update(briefsTable)
+    .set({ clientId: null, updatedAt: new Date() })
+    .where(and(eq(briefsTable.clientId, id), eq(briefsTable.orgId, user.orgId)));
+
+  const deleted = await db
+    .delete(clientsTable)
+    .where(and(eq(clientsTable.id, id), eq(clientsTable.orgId, user.orgId)))
+    .returning({ id: clientsTable.id });
+  if (!deleted[0]) return res.status(404).json({ error: "not_found" });
+  return res.status(204).send();
+});
+
 router.get("/create/exercises", async (req, res) => {
   const user = orgUser(req);
   if (!user) return res.status(401).json({ error: "unauthorized" });

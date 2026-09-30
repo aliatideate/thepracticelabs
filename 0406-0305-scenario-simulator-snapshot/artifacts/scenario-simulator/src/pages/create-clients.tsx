@@ -2,6 +2,13 @@ import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PrimaryButton, SecondaryButton } from "../simulation/components";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../components/ui/dialog";
 import AuthGate from "./auth-gate";
 import { CreateShell, StatusTag, formatRanOn } from "./create-shell";
 
@@ -47,6 +54,18 @@ function ClientsHome() {
     },
   });
 
+  const resetForm = () => {
+    setName("");
+    setNotes("");
+    setError(null);
+    setBusy(false);
+  };
+
+  const openChange = (open: boolean) => {
+    setShowNew(open);
+    if (!open) resetForm();
+  };
+
   const createClient = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
@@ -65,6 +84,8 @@ function ClientsHome() {
       }
       const row = (await res.json()) as { id: string };
       await queryClient.invalidateQueries({ queryKey: ["create-clients"] });
+      setShowNew(false);
+      resetForm();
       setLocation(`/create/clients/${row.id}`);
     } catch {
       setError("Could not reach the server.");
@@ -81,42 +102,52 @@ function ClientsHome() {
         </PrimaryButton>
       }
     >
+      <Dialog open={showNew} onOpenChange={openChange}>
+        <DialogContent className="max-w-[520px] gap-0 border-[#E7E4DD] bg-white p-6 shadow-[0_24px_64px_rgba(29,29,36,0.18)] sm:rounded-xl">
+          <DialogHeader className="mb-4 text-left">
+            <DialogTitle className="text-[22px] font-semibold text-[#1D1D24]">
+              New client
+            </DialogTitle>
+            <DialogDescription className="text-[15px] text-[#6C6975]">
+              Add a name to open their client page. You can start a session from there.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={createClient}>
+            <label className="block text-[14px] font-semibold mb-2" htmlFor="client-name">
+              Name
+            </label>
+            <input
+              id="client-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full rounded-xl border border-[#E7E4DD] px-4 py-3 text-[18px] mb-4"
+              required
+              autoFocus
+            />
+            <label className="block text-[14px] font-semibold mb-2" htmlFor="client-notes">
+              Notes (optional)
+            </label>
+            <textarea
+              id="client-notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              className="w-full rounded-xl border border-[#E7E4DD] px-4 py-3 text-[16px] mb-4"
+            />
+            {error && <p className="text-[#B42318] mb-3">{error}</p>}
+            <div className="flex gap-3">
+              <PrimaryButton type="submit" disabled={busy || !name.trim()}>
+                {busy ? "Saving…" : "Create"}
+              </PrimaryButton>
+              <SecondaryButton onClick={() => openChange(false)} disabled={busy}>
+                Cancel
+              </SecondaryButton>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {isLoading && <p className="text-[#6C6975]">Loading…</p>}
-      {showNew && (
-        <form
-          onSubmit={createClient}
-          className="bg-white border border-[#E7E4DD] rounded-xl p-6 mb-8 max-w-[520px]"
-        >
-          <h2 className="text-[22px] mt-0 mb-4">New client</h2>
-          <label className="block text-[14px] font-semibold mb-2" htmlFor="client-name">
-            Name
-          </label>
-          <input
-            id="client-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-xl border border-[#E7E4DD] px-4 py-3 text-[18px] mb-4"
-            required
-          />
-          <label className="block text-[14px] font-semibold mb-2" htmlFor="client-notes">
-            Notes (optional)
-          </label>
-          <textarea
-            id="client-notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={3}
-            className="w-full rounded-xl border border-[#E7E4DD] px-4 py-3 text-[16px] mb-4"
-          />
-          {error && <p className="text-[#B42318] mb-3">{error}</p>}
-          <div className="flex gap-3">
-            <PrimaryButton type="submit" disabled={busy || !name.trim()}>
-              {busy ? "Saving…" : "Create"}
-            </PrimaryButton>
-            <SecondaryButton onClick={() => setShowNew(false)}>Cancel</SecondaryButton>
-          </div>
-        </form>
-      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {(data?.clients ?? []).map((c) => (
           <div
