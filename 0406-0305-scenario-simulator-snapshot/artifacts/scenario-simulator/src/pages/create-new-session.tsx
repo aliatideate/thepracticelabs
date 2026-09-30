@@ -5,7 +5,8 @@ import { ImagePlus } from "lucide-react";
 import { Header, PrimaryButton, SecondaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
 import { CreateSelect } from "./create-select";
-import { Breadcrumbs } from "./create-shell";
+import { Breadcrumbs, formatExerciseFormat } from "./create-shell";
+import { engineOf } from "../lib/engineContract";
 
 const MAX_LOGO_BYTES = 500 * 1024;
 const LOGO_MIME = new Set(["image/png", "image/jpeg", "image/webp"]);
@@ -176,7 +177,7 @@ function NewSessionWizard() {
     if (ex.status !== "published") return;
     setExerciseId(ex.id);
     setTitle(`${clientQ.data?.name ?? "Client"} — ${ex.title}`);
-    setDurationMinutes(ex.format === "branching" ? 15 : 30);
+    setDurationMinutes(engineOf(ex.format).defaultDurationMinutes);
     setStep("customise");
   };
 
@@ -399,14 +400,20 @@ function NewSessionWizard() {
                   className="w-full text-left rounded-xl border border-[#E7E4DD] bg-white px-5 py-5 hover:border-[#301CA0]"
                 >
                   <div className="text-[20px] font-semibold">{ex.title}</div>
-                  <div className="text-[14px] text-[#6C6975] mt-1">{ex.format}</div>
+                  <div className="text-[14px] text-[#6C6975] mt-1">
+                    Engine: {formatExerciseFormat(ex.format)}
+                  </div>
                 </button>
               ))}
             {inCategory.filter((e) => e.status === "published").length === 0 && (
-              <p className="text-[#6C6975]">No exercises in this category yet.</p>
+              <p className="text-[#6C6975]">
+                {category === "ideation" || category === "prototyping"
+                  ? "Coming soon — no exercises in this category yet."
+                  : "No exercises in this category yet."}
+              </p>
             )}
             <p className="text-[14px] text-[#6C6975] pt-4">
-              New exercise (brief / import) arrives in the next phase.
+              Need a new exercise? Import JSON from Activities, or capture a brief.
             </p>
           </div>
         )}

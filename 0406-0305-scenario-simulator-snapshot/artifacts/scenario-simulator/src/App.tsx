@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ScenarioProvider } from "@/lib/scenario";
 import { DecisionGameProvider } from "@/lib/decisionGame";
 import { SessionRoomFromRoute, useSessionRoomRequired } from "@/lib/sessionRoom";
+import { engineRoutes } from "@/lib/engineRegistry";
 import JoinScreen from "./pages/join";
 import SimulationApp from "./simulation/SimulationApp";
 import FacilitatePage from "./pages/facilitate";
@@ -113,43 +114,49 @@ function DemandTryPlay() {
 
 function SessionJoinInner() {
   const room = useSessionRoomRequired();
+  const routes = engineRoutes(room.format);
+  const Join = routes.Join;
   if (room.format === "branching") {
     return (
       <DecisionGameProvider code={room.workshopCode}>
-        <MartJoin />
+        <Join />
       </DecisionGameProvider>
     );
   }
   return (
     <ScenarioProvider code={room.workshopCode}>
-      <JoinScreen />
+      <Join />
     </ScenarioProvider>
   );
 }
 
 function SessionPlayInner() {
   const room = useSessionRoomRequired();
+  const routes = engineRoutes(room.format);
+  const Play = routes.Play;
   if (room.format === "branching") {
     return (
       <DecisionGameProvider code={room.workshopCode}>
-        <MartApp />
+        <Play />
       </DecisionGameProvider>
     );
   }
   return (
     <ScenarioProvider code={room.workshopCode}>
-      <SimulationApp />
+      <Play />
     </ScenarioProvider>
   );
 }
 
 function SessionFacilitateInner() {
   const room = useSessionRoomRequired();
+  const routes = engineRoutes(room.format);
+  const Facilitate = routes.Facilitate;
   if (room.format === "branching") {
     return (
       <AuthGate>
         <DecisionGameProvider code={room.workshopCode}>
-          <MartFacilitate />
+          <Facilitate />
         </DecisionGameProvider>
       </AuthGate>
     );
@@ -157,7 +164,7 @@ function SessionFacilitateInner() {
   return (
     <AuthGate>
       <ScenarioProvider code={room.workshopCode}>
-        <FacilitatePage />
+        <Facilitate />
       </ScenarioProvider>
     </AuthGate>
   );
@@ -165,10 +172,12 @@ function SessionFacilitateInner() {
 
 function SessionPrintInner() {
   const room = useSessionRoomRequired();
-  if (room.format !== "investigation") return <NotFound />;
+  const routes = engineRoutes(room.format);
+  if (!routes.Print) return <NotFound />;
+  const Print = routes.Print;
   return (
     <ScenarioProvider code={room.workshopCode}>
-      <PrintPack />
+      <Print />
     </ScenarioProvider>
   );
 }
@@ -176,16 +185,18 @@ function SessionPrintInner() {
 function SessionTryInner() {
   const room = useSessionRoomRequired();
   // Preview sessions are themselves try-outs; live sessions link to a separate preview create.
+  const routes = engineRoutes(room.format);
+  const Join = routes.Join;
   if (room.format === "branching") {
     return (
       <DecisionGameProvider code={room.workshopCode}>
-        <MartJoin />
+        <Join />
       </DecisionGameProvider>
     );
   }
   return (
     <ScenarioProvider code={room.workshopCode}>
-      <JoinScreen />
+      <Join />
     </ScenarioProvider>
   );
 }

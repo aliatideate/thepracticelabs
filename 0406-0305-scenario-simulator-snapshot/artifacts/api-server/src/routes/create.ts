@@ -28,6 +28,10 @@ import {
   validateTokenDeclarations,
   validateVariableValues,
 } from "../lib/resolve-content";
+import { engineOf, isExerciseEngine } from "../lib/engine-contract";
+import { scenarioSchema } from "../lib/content";
+import { parseDecisionGameContent } from "../lib/decision-game";
+import { ZodError } from "zod";
 
 const router: IRouter = Router();
 
@@ -576,6 +580,197 @@ router.get("/create/exercises/:id", async (req, res) => {
   });
 });
 
+type ImportExerciseBody = {
+  title?: string;
+  category?: string;
+  /** Engine id: investigation | branching. Alias: format. */
+  engine?: string;
+  format?: string;
+  /** When set, creates a new version of this exercise instead of a new exercise. */
+  exerciseId?: string;
+  content?: unknown;
+  facilitatorNotes?: string | null;
+  variables?: ExerciseVariableDef[];
+  defaultAssets?: Record<string, unknown>;
+};
+
+function zodPathErrors(err: ZodError): { path: string; message: string }[] {
+  return err.issues.map((i) => ({
+    path: i.path.length ? i.path.join(".") : "(root)",
+    message: i.message,
+  }));
+}
+
+/**
+ * Import content for an existing engine. Validates fully before any DB write.
+ * New engines are out of scope — only investigation / branching.
+ */
+router.post("/create/exercises/import", async (req, res) => {
+  const user = orgUser(req);
+  if (!user) return res.status(401).json({ error: "unauthorized" });
+  const body = req.body as ImportExerciseBody;
+  const category = String(body.category ?? "");
+  const engine = String(body.engine ?? body.format ?? "");
+  const title = String(body.title ?? "").trim();
+  const exerciseId =
+    typeof body.exerciseId === "string" && body.exerciseId.trim()
+      ? body.exerciseId.trim()
+      : null;
+  const facilitatorNotes =
+    typeof body.facilitatorNotes === "string" ? body.facilitatorNotes : null;
+  const variables = Array.isArray(body.variables)
+    ? (body.variables as ExerciseVariableDef[])
+    : [];
+  const defaultAssets =
+    body.defaultAssets && typeof body.defaultAssets === "object"
+      ? (body.defaultAssets as Record<string, unknown>)
+      : {};
+
+  if (!(EXERCISE_CATEGORIES as readonly string[]).includes(category)) {
+    return res.status(400).json({ error: "invalid category", errors: [{ path: "category", message: "invalid" }] });
+  }
+  if (!isExerciseEngine(engine)) {
+    return res.status(400).json({
+      error: "invalid engine",
+      errors: [{ path: "engine", message: "must be investigation or branching" }],
+    });
+  }
+  if (!exerciseId && !title) {
+    return res.status(400).json({
+      error: "title required for new exercise",
+      errors: [{ path: "title", message: "required" }],
+    });
+  }
+  if (body.content === undefined || body.content === null) {
+    return res.status(400).json({
+      error: "content required",
+      errors: [{ path: "content", message: "required" }],
+    });
+  }
+
+  let parsedContent: unknown;
+  try {
+    if (engine === "investigation") {
+      parsedContent = scenarioSchema.parse(body.content);
+    } else {
+      parsedContent = parseDecisionGameContent(body.content);
+    }
+  } catch (e) {
+    if (e instanceof ZodError) {
+      return res.status(400).json({ error: "validation_failed", errors: zodPathErrors(e) });
+    }
+    return res.status(400).json({
+      error: "validation_failed",
+      errors: [{ path: "content", message: e instanceof Error ? e.message : "invalid content" }],
+    });
+  }
+
+  const tokenDecl = validateTokenDeclarations(variables, parsedContent, facilitatorNotes);
+  if (tokenDecl) {
+    return res.status(400).json({
+      error: "validation_failed",
+      errors: [{ path: "variables", message: tokenDecl.error }],
+    });
+  }
+
+  let exercise =
+    exerciseId
+      ? (
+          await db
+            .select()
+            .from(exercisesTable)
+            .where(
+              and(eq(exercisesTable.id, exerciseId), eq(exercisesTable.orgId, user.orgId)),
+            )
+            .limit(1)
+        )[0]
+      : null;
+
+  if (exerciseId && !exercise) {
+    return res.status(404).json({ error: "exercise_not_found" });
+  }
+  if (exercise && exercise.format !== engine) {
+    return res.status(400).json({
+      error: "engine_mismatch",
+      errors: [
+        {
+          path: "engine",
+          message: `exercise is ${exercise.format}; cannot import as ${engine}`,
+        },
+      ],
+    });
+  }
+
+  if (!exercise) {
+    const clash = await db
+      .select({ id: exercisesTable.id })
+      .from(exercisesTable)
+      .where(and(eq(exercisesTable.orgId, user.orgId), eq(exercisesTable.title, title)))
+      .limit(1);
+    if (clash[0]) {
+      return res.status(409).json({
+        error: "title_taken",
+        errors: [{ path: "title", message: "an exercise with this title already exists" }],
+      });
+    }
+    const [created] = await db
+      .insert(exercisesTable)
+      .values({
+        orgId: user.orgId,
+        title,
+        category: category as ExerciseCategory,
+        format: engine,
+        status: "published",
+        createdBy: user.id,
+      })
+      .returning();
+    if (!created) {
+      return res.status(500).json({ error: "create_failed" });
+    }
+    exercise = created;
+  } else if (exercise.category !== category) {
+    await db
+      .update(exercisesTable)
+      .set({ category: category as ExerciseCategory, updatedAt: new Date() })
+      .where(eq(exercisesTable.id, exercise.id));
+  }
+
+  const versionRows = await db
+    .select({ version: exerciseVersionsTable.version })
+    .from(exerciseVersionsTable)
+    .where(eq(exerciseVersionsTable.exerciseId, exercise.id))
+    .orderBy(desc(exerciseVersionsTable.version))
+    .limit(1);
+  const nextVersion = (versionRows[0]?.version ?? 0) + 1;
+
+  const [version] = await db
+    .insert(exerciseVersionsTable)
+    .values({
+      orgId: user.orgId,
+      exerciseId: exercise.id,
+      version: nextVersion,
+      content: parsedContent,
+      facilitatorNotes,
+      variables,
+      defaultAssets,
+      createdBy: user.id,
+    })
+    .returning();
+
+  return res.status(201).json({
+    id: exercise.id,
+    title: exercise.title,
+    category,
+    format: engine,
+    engine,
+    status: "published",
+    version: {
+      id: version.id,
+      version: version.version,
+    },
+  });
+});
+
 router.post("/create/assets", async (req, res) => {
   const user = orgUser(req);
   if (!user) return res.status(401).json({ error: "unauthorized" });
@@ -848,10 +1043,7 @@ async function createWorkshopSession(opts: {
         join: `/s/${session.workshopCode}`,
         facilitate: `/s/${session.workshopCode}/facilitate`,
         tryOut: `/s/${session.workshopCode}/try`,
-        print:
-          published.exercise.format === "investigation"
-            ? `/s/${session.workshopCode}/print`
-            : null,
+        print: engineOf(published.exercise.format).printPath(session.workshopCode),
       },
       facilitatorToken: token,
     },
@@ -950,7 +1142,7 @@ router.get("/create/sessions/:id", async (req, res) => {
       join: `/s/${row.session.workshopCode}`,
       facilitate: `/s/${row.session.workshopCode}/facilitate`,
       tryOut: `/s/${row.session.workshopCode}/try`,
-      print: row.format === "investigation" ? `/s/${row.session.workshopCode}/print` : null,
+      print: engineOf(row.format).printPath(row.session.workshopCode),
     },
   });
 });

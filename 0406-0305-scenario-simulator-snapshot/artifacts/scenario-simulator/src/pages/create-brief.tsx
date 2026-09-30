@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Header, PrimaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
 import { CreateSelect } from "./create-select";
-import { Breadcrumbs, StatusTag, formatFromCategory } from "./create-shell";
+import { Breadcrumbs, StatusTag, formatCategoryLabel } from "./create-shell";
 
 const CATEGORIES = [
   { value: "problem-framing", label: "Problem framing" },
@@ -171,7 +171,7 @@ function BriefEditor() {
             ]}
           />
           <p className="text-[14px] text-[#6C6975] mt-1 mb-0">
-            {formatFromCategory(category)}
+            {formatCategoryLabel(category)}
           </p>
         </div>
         <div className="flex items-start justify-between gap-3 mb-6">

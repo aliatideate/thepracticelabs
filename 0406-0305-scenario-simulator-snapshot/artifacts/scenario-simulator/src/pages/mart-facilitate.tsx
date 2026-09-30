@@ -6,13 +6,14 @@ import {
   MART_WORKSHOP_CODE,
   formatTeamLabel,
 } from "../lib/constants";
-import { useRuntimeWorkshopCode } from "../lib/sessionRoom";
+import { useRuntimeWorkshopCode, useSessionRoom } from "../lib/sessionRoom";
 import { Header, SecondaryButton } from "../simulation/components";
 import { formatCountdown, isExpired, remainingMs, type SessionConfig } from "../lib/timer";
 import { playPhoneRing } from "../lib/phoneRing";
 import type { DecisionGame, GradeKey } from "../lib/decisionGame";
 import { gradeTone } from "../lib/decisionGame";
 import { facilitatorAuthHeaders } from "../lib/facilitatorAuth";
+import { engineOf } from "../lib/engineContract";
 import { ActivityTabs } from "./activityTabs";
 import { DownloadMenu } from "./facilitatorDownload";
 import { FacilitatorNotesPanel } from "./FacilitatorNotesPanel";
@@ -236,7 +237,10 @@ function MartResultsTable({
 }
 
 export default function MartFacilitate() {
+  const room = useSessionRoom();
   const workshopCode = useRuntimeWorkshopCode(MART_WORKSHOP_CODE);
+  const boardTitle = room?.title ?? "Mart";
+  const tryPath = room ? `/s/${room.workshopCode}/try` : "/mart/try";
   const [game, setGame] = useState<DecisionGame | null>(null);
   const [sessions, setSessions] = useState<FacSession[]>([]);
   const [config, setConfig] = useState<SessionConfig | null>(null);
@@ -325,7 +329,7 @@ export default function MartFacilitate() {
   };
 
   const copyTryLink = async () => {
-    const url = `${window.location.origin}/mart/try`;
+    const url = `${window.location.origin}${tryPath}`;
     try {
       await navigator.clipboard.writeText(url);
       setMsg("Try-out link copied.");
@@ -390,11 +394,11 @@ export default function MartFacilitate() {
       />
       <ActivityTabs active="mart" />
       <div className="mx-auto max-w-[1280px] px-6 py-8">
-        <h1 className="text-[32px] mt-0 mb-2">Mart</h1>
+        <h1 className="text-[32px] mt-0 mb-2">{boardTitle}</h1>
         <p className="text-[16px] text-[#6C6975] mb-6">
           Private try-out link:{" "}
           <button type="button" className="text-[#301CA0] underline font-semibold" onClick={copyTryLink}>
-            /mart/try
+            {tryPath}
           </button>
         </p>
         <FacilitatorNotesPanel workshopCode={workshopCode} />
@@ -467,7 +471,13 @@ export default function MartFacilitate() {
                 {sessions.map((s) => (
                   <tr key={s.id} className="border-b border-[#E7E4DD]">
                     <td className="p-3 font-semibold">{formatTeamLabel(s)}</td>
-                    <td className="p-3 capitalize">{s.currentScreen}</td>
+                    <td className="p-3">
+                      {
+                        engineOf("branching").progressOf({
+                          currentScreen: s.currentScreen,
+                        }).progress
+                      }
+                    </td>
                     <td className="p-3">
                       {s.currentScreen === "intro"
                         ? "—"

@@ -130,18 +130,29 @@ export function StatusTag({ status }: { status: string }) {
   );
 }
 
+/** Engine label (`investigation` → `Investigation`). Prefer formatEngineLabel from engineContract. */
 export function formatExerciseFormat(format: string): string {
   if (!format) return format;
+  if (format === "investigation") return "Investigation";
+  if (format === "branching") return "Branching";
   return format.charAt(0).toUpperCase() + format.slice(1);
 }
 
-/** Briefs don't store format; map category → display format label. */
-export function formatFromCategory(category: string): string {
-  if (category === "problem-framing") return "Investigation";
-  if (category === "decision-making") return "Branching";
+/**
+ * Category label only — never maps pedagogy → engine.
+ * Briefs don't store an engine; show the teaching category.
+ */
+export function formatCategoryLabel(category: string): string {
+  if (category === "problem-framing") return "Problem framing";
+  if (category === "decision-making") return "Decision-making";
   if (category === "ideation") return "Ideation";
   if (category === "prototyping") return "Prototyping";
   return formatStatus(category);
+}
+
+/** @deprecated Use formatCategoryLabel — kept for older imports. */
+export function formatFromCategory(category: string): string {
+  return formatCategoryLabel(category);
 }
 
 export function formatRanOn(iso: string | null | undefined): string | null {
