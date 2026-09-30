@@ -164,7 +164,7 @@ function BriefEditor() {
       <div className="mx-auto max-w-[720px] px-6 py-10">
         <p className="text-[14px] text-[#6C6975] mb-2">
           <Link href="/create/library" className="text-[#301CA0] underline">
-            Library
+            Activities
           </Link>
           {" · "}
           {formatFromCategory(category)}
@@ -333,7 +333,7 @@ function BriefEditor() {
               {busy ? (isNew ? "Creating…" : "Saving…") : isNew ? "Create" : "Save"}
             </PrimaryButton>
             <Link href="/create/library">
-              <SecondaryButton>Back to Library</SecondaryButton>
+              <SecondaryButton>Back to Activities</SecondaryButton>
             </Link>
           </div>
         </form>

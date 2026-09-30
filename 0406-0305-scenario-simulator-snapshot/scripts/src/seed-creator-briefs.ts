@@ -1,5 +1,5 @@
 /**
- * Idempotent seed for in-design brief rows (Library intake placeholders).
+ * Idempotent seed for in-design brief rows (Activities intake placeholders).
  *
  *   DATABASE_URL=… pnpm --filter @workspace/scripts run seed:creator:briefs
  */

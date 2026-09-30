@@ -102,7 +102,7 @@ router.get("/create/clients", async (req, res) => {
   });
 });
 
-/** All creator sessions (for Boards tab). Preview try-outs excluded. */
+/** All creator sessions (for Sessions tab). Preview try-outs excluded. */
 router.get("/create/sessions", async (req, res) => {
   const user = orgUser(req);
   if (!user) return res.status(401).json({ error: "unauthorized" });

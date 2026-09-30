@@ -63,7 +63,7 @@ function BoardsHome() {
   return (
     <CreateShell activeTab="boards">
       <p className="text-[16px] text-[#6C6975] mt-0 mb-4">
-        Open the facilitator board for a session. Boards are tied to sessions, not exercises.
+        Open the facilitator board for a session. Sessions are listed across clients, not by exercise.
       </p>
       {clients.length > 1 && (
         <label className="block text-[14px] text-[#6C6975] mb-6">
