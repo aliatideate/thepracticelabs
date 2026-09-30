@@ -122,7 +122,7 @@ function Library() {
       {isLoading && <p className="text-[#6C6975]">Loading…</p>}
       {[...grouped.entries()].map(([cat, list]) => (
         <section key={cat} className="mb-10">
-          <h2 className="text-[20px] mt-0 mb-3">{LABELS[cat] ?? cat}</h2>
+          <h2 className="text-[20px] mt-0 mb-3 ml-2">{LABELS[cat] ?? cat}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
             {list.map((item) => {
               const isBrief = item.kind === "brief";

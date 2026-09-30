@@ -90,7 +90,7 @@ function ClientDetail() {
     >
       {data.notes && <p className="text-[16px] text-[#6C6975] mb-8">{data.notes}</p>}
 
-      <h2 className="text-[20px] mt-0 mb-3">Upcoming & live</h2>
+      <h2 className="text-[20px] mt-0 mb-3 ml-2">Upcoming & live</h2>
       <div className="space-y-3 mb-10">
         {upcoming.map((s) => (
           <Link
@@ -112,7 +112,7 @@ function ClientDetail() {
         )}
       </div>
 
-      <h2 className="text-[20px] mt-0 mb-3">Past</h2>
+      <h2 className="text-[20px] mt-0 mb-3 ml-2">Past</h2>
       <div className="space-y-3">
         {past.map((s) => {
           const ranOn = formatRanOn(s.endedAt);
