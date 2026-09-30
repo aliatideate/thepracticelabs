@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { ArrowLeft } from "lucide-react";
 import { Link, useLocation, useParams } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Header, PrimaryButton, SecondaryButton } from "../simulation/components";
