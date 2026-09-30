@@ -17,13 +17,7 @@ Merges to `main` must not update production. Production is promoted deliberately
 
 1. **Staging service** — Settings → Source: watch branch `main`. Root directory: `0406-0305-scenario-simulator-snapshot`. Auto-deploy on.
 2. **Production service** — Settings → Source: change watch branch from `main` to `production`. Disconnect `main` before the next merge so a push cannot hit live clients.
-3. Create the long-lived `production` branch from the SHA currently live on production (or from `main` once staging matches prod):
-
-   ```bash
-   git fetch origin
-   git branch production origin/main   # or the production tip SHA
-   git push -u origin production
-   ```
+3. Long-lived `production` branch — **created on GitHub** (tip = `main` as of rest-of-build PR). Point the Railway **production** service at branch `production`, and point **staging** at `main`.
 
 ### Daily flow
 
