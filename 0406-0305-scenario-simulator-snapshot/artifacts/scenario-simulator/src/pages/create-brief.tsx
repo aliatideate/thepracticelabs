@@ -163,13 +163,18 @@ function BriefEditor() {
     <div className="min-h-screen bg-[#F8F6EF]">
       <Header brandOnly hideFlowNav />
       <div className="mx-auto max-w-[720px] px-6 py-10">
-        <p className="text-[14px] text-[#6C6975] mb-2">
-          <Link href="/create/library" className="text-[#301CA0] underline">
-            Library
+        <div className="mb-2">
+          <Link
+            href="/create/library"
+            className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#301CA0] no-underline"
+          >
+            <ArrowLeft className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+            Back
           </Link>
-          {" · "}
-          {formatFromCategory(category)}
-        </p>
+          <p className="text-[14px] text-[#6C6975] mt-1 mb-0">
+            {formatFromCategory(category)}
+          </p>
+        </div>
         <div className="flex items-start justify-between gap-3 mb-6">
           <h1 className="text-[32px] mt-0 mb-0 text-[#6C6975]">
             {isNew ? "New activity" : data!.title}
