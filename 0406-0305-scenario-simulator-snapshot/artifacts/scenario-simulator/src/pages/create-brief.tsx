@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Link, useLocation, useParams } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Header, PrimaryButton, SecondaryButton } from "../simulation/components";
+import { Header, PrimaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
 import { StatusTag, formatFromCategory } from "./create-shell";
 
@@ -21,6 +21,9 @@ const MODES = [
 
 const FIELD =
   "w-full rounded-xl border border-[#E7E4DD] px-4 py-3 text-[16px] bg-white";
+
+const BACK_LINK =
+  "inline-flex items-center gap-1.5 text-[14px] font-medium text-[#301CA0] no-underline";
 
 function BriefEditor() {
   const { id } = useParams<{ id: string }>();
@@ -164,10 +167,7 @@ function BriefEditor() {
       <Header brandOnly hideFlowNav />
       <div className="mx-auto max-w-[720px] px-6 py-10">
         <div className="mb-2">
-          <Link
-            href="/create/library"
-            className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#301CA0] no-underline"
-          >
+          <Link href="/create/library" className={BACK_LINK}>
             <ArrowLeft className="h-4 w-4" strokeWidth={2.25} aria-hidden />
             Back
           </Link>
@@ -334,15 +334,18 @@ function BriefEditor() {
             </div>
           </div>
           {msg && <p className="text-[14px] text-[#6C6975] m-0">{msg}</p>}
-          <div className="flex gap-3 pt-2">
+          <div className="flex justify-end pt-2">
             <PrimaryButton type="submit" disabled={busy}>
               {busy ? (isNew ? "Creating…" : "Saving…") : isNew ? "Create" : "Save"}
             </PrimaryButton>
-            <Link href="/create/library">
-              <SecondaryButton>Back to Library</SecondaryButton>
-            </Link>
           </div>
         </form>
+        <div className="mt-4">
+          <Link href="/create/library" className={BACK_LINK}>
+            <ArrowLeft className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+            Back
+          </Link>
+        </div>
       </div>
     </div>
   );
