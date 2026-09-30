@@ -16,10 +16,9 @@ Visual design pass so the join-to-submit flow feels nicer. Wait for examples and
 
 ## After visual work
 
-1. Push GitHub if `main` is ahead of origin (`aliatideate/thepracticelabs`). Railway deploys are still `railway up` unless GitHub is connected.
-2. Six-window dress rehearsal on production (30 min, mid-flow refresh).
+1. Ship through **staging** first (`main` → staging). Do **not** `railway up` production. Do **not** push/merge `production` without Ali’s explicit OK. Promote only by fast-forward `production` ← `main` when Ali says so. See `0406-0305-scenario-simulator-snapshot/docs/deploy-staging-first.md`.
+2. Six-window dress rehearsal on staging, then production (30 min, mid-flow refresh).
 3. Save `/print` as PDF fallback for breakouts.
-4. Optional: GitHub → Railway auto-deploy.
 
 ## Content already decided (do not reopen)
 

@@ -23,7 +23,7 @@ Written for the next agent (or human) picking up the build. Prefer this over the
 **Phases on production:** 1 (data) · 2 (auth) · 3 (session instances) · 4 (tokenisation v2 seeded) · 5 (Creator screens) · 7 (facilitator notes panel).  
 **Not built:** Phase 6 exercise **import** (briefs exist; JSON upload does not).
 
-**Deploy today:** Pushing `main` auto-deploys production via GitHub → Railway. Root directory must be `0406-0305-scenario-simulator-snapshot`. Fallback: `railway up ./0406-0305-scenario-simulator-snapshot --path-as-root` with prod token.
+**Deploy today:** See [`deploy-staging-first.md`](./deploy-staging-first.md). Target: `main` → staging, `production` → production. Root directory must be `0406-0305-scenario-simulator-snapshot`. **No** `railway up` to production.
 
 ---
 
@@ -270,12 +270,17 @@ Working plan docs:
 
 ## 9. Agent operating notes
 
-- Branch naming: `cursor/<descriptive-name>-c558`
-- Prefer `main` + GitHub auto-deploy for production
-- Local API needs `CONTENT_DIR` pointing at `…/content` and DB (Railway TCP proxy if using prod Postgres)
-- Do not reopen locked content decisions (see §7.D)
-- For Creator UI polish, match existing cream/purple system; avoid generic AI purple-gradient landing patterns on player redesign when that work starts
-- Store internals from this run: `internal/client-delete-lightbox.md`, `client-card-hover-delete.md`, `trail-breadcrumbs-pr30.md`, `phase7-facilitator-notes.md`, `phase4-prod-deploy.md`
+- Branch naming: `cursor/<descriptive-name>-4330` (or the suffix for that agent run)
+- **Deploy / production rules (mandatory):**
+  - Staging tracks `main`; production tracks the `production` branch. Details: [`deploy-staging-first.md`](./deploy-staging-first.md).
+  - Agents must **never** deploy to production with `railway up` or any Railway CLI command.
+  - Agents must **never** push or merge to the `production` branch without Ali’s **explicit** approval.
+  - Promotion is **only** fast-forwarding `production` from `main`, when Ali says so.
+  - There is no production CLI fallback. If auto-deploy is broken, stop and ask.
+- Local API needs `CONTENT_DIR` pointing at `…/content` and a DB (Railway TCP proxy if needed). Prefer staging DB, not production.
+- Do not reopen locked content decisions (see §7 out of scope).
+- For Creator UI polish, match existing cream/purple system; avoid generic AI purple-gradient landing patterns on player redesign when that work starts.
+- Join-flow visual pass: wait for Ali’s examples; do not invent a redesign.
 
 ---
 
