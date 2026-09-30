@@ -287,7 +287,7 @@ function ClientsHome() {
                       setDeleteError(null);
                       setDeleteTarget(c);
                     }}
-                    className={`absolute bottom-0 right-0 inline-flex h-8 w-8 items-center justify-center rounded-lg border-0 bg-transparent text-[#6C6975] transition-opacity duration-150 hover:bg-[#F1F0EC] hover:text-[#B42318] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#301CA0] cursor-pointer ${
+                    className={`absolute top-1/2 right-0 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-lg border-0 bg-transparent text-[#6C6975] transition-opacity duration-150 hover:bg-[#F1F0EC] hover:text-[#B42318] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#301CA0] cursor-pointer ${
                       showDelete ? "opacity-100" : "opacity-0"
                     }`}
                   >
