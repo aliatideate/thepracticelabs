@@ -179,8 +179,8 @@ function Library() {
                   {openId === item.id && detailQ.data && (
                     <div className="mt-4 pt-4 border-t border-[#E7E4DD] text-[14px] text-[#1D1D24] w-full">
                       <p className="m-0 mb-2">
-                        Clients with copies:{" "}
-                        {detailQ.data.clientCopies.map((c) => c.clientName).join(", ") || "none"}
+                        Used with:{" "}
+                        {detailQ.data.clientCopies.map((c) => c.clientName).join(", ") || "none yet"}
                       </p>
                       {detailQ.data.versions.map((v) => {
                         const vars = (Array.isArray(v.variables) ? v.variables : []).filter(
@@ -195,15 +195,12 @@ function Library() {
                             {vars.length > 0 && (
                               <div className="mt-2">
                                 <div className="text-[13px] text-[#6C6975] mb-1">
-                                  Customise fields
+                                  Customisable fields
                                 </div>
                                 <ul className="m-0 pl-5 text-[14px] text-[#1D1D24]">
                                   {vars.map((field) => (
                                     <li key={field.key ?? variableLabel(field)} className="mb-0.5">
                                       {variableLabel(field)}
-                                      {field.type === "image" ? (
-                                        <span className="text-[#6C6975]"> (logo)</span>
-                                      ) : null}
                                     </li>
                                   ))}
                                 </ul>
@@ -216,7 +213,7 @@ function Library() {
                             )}
                             {vars.length === 0 && !hasNotes && (
                               <p className="m-0 mt-1 text-[13px] text-[#6C6975]">
-                                No customise fields
+                                No customisable fields
                               </p>
                             )}
                           </div>
