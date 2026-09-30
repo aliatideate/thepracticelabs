@@ -28,6 +28,29 @@ function CopyIconButton({
   );
 }
 
+const LINK_CLASS = "text-[15px] text-[#301CA0] underline break-all min-w-0";
+
+function LinkRow({
+  url,
+  label,
+  copied,
+  onCopy,
+}: {
+  url: string;
+  label: string;
+  copied: boolean;
+  onCopy: () => void;
+}) {
+  return (
+    <div className="flex gap-2 items-center justify-between">
+      <a href={url} className={LINK_CLASS}>
+        {url}
+      </a>
+      <CopyIconButton label={label} copied={copied} onClick={onCopy} />
+    </div>
+  );
+}
+
 function SessionDetail() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
@@ -87,7 +110,7 @@ function SessionDetail() {
     }
     const body = (await res.json()) as { token: string; facilitatePath: string };
     setFacToken(body.token);
-    setMsg("New facilitator token issued. Copy the link below — the old one no longer works.");
+    setMsg("New co-facilitator link issued. Copy it below — any previous token link no longer works.");
     await queryClient.invalidateQueries({ queryKey: ["create-session", id] });
   };
 
@@ -107,9 +130,12 @@ function SessionDetail() {
   }
 
   const joinUrl = `${origin}${data.paths.join}`;
-  const facilitateUrl = facToken
+  const boardUrl = `${origin}${data.paths.facilitate}`;
+  const coFacUrl = facToken
     ? `${origin}${data.paths.facilitate}?token=${encodeURIComponent(facToken)}`
-    : `${origin}${data.paths.facilitate}`;
+    : null;
+  const tryUrl = `${origin}${data.paths.tryOut}`;
+  const printUrl = data.paths.print ? `${origin}${data.paths.print}` : null;
 
   return (
     <div className="min-h-screen bg-[#F8F6EF]">
@@ -135,52 +161,68 @@ function SessionDetail() {
         <div className="bg-white border border-[#E7E4DD] rounded-xl p-6 space-y-5 mb-8">
           <div>
             <div className="text-[14px] font-semibold mb-1">Join link</div>
-            <div className="flex gap-2 items-center justify-between">
-              <code className="text-[15px] break-all min-w-0">{joinUrl}</code>
-              <CopyIconButton
-                label="join link"
-                copied={copied === "join"}
-                onClick={() => copy("join", joinUrl)}
-              />
-            </div>
+            <LinkRow
+              url={joinUrl}
+              label="join link"
+              copied={copied === "join"}
+              onCopy={() => copy("join", joinUrl)}
+            />
             <p className="text-[14px] text-[#6C6975] mt-1 mb-0">Code: {data.workshopCode}</p>
           </div>
-          <div>
-            <div className="text-[14px] font-semibold mb-1">Facilitator board</div>
-            <div className="flex gap-2 items-center justify-between">
-              <code className="text-[15px] break-all min-w-0">{facilitateUrl}</code>
-              <CopyIconButton
-                label="facilitator link"
+
+          <div className="border-t border-[#E7E4DD] pt-5 space-y-5">
+            <div>
+              <div className="text-[14px] font-semibold mb-1">Facilitator board</div>
+              <LinkRow
+                url={boardUrl}
+                label="facilitator board link"
                 copied={copied === "fac"}
-                onClick={() => copy("fac", facilitateUrl)}
+                onCopy={() => copy("fac", boardUrl)}
               />
             </div>
-            <button
-              type="button"
-              onClick={regenToken}
-              className="mt-2 text-[14px] font-medium text-[#301CA0] bg-transparent border-0 p-0 cursor-pointer"
-            >
-              Regenerate token
-            </button>
-            <p className="text-[14px] text-[#6C6975] mt-1 mb-0">
-              Signed-in users can open the board without a token. Regenerate issues a co-facilitator
-              link.
-            </p>
+
+            <div>
+              <div className="text-[14px] font-semibold mb-1">Co-facilitator link</div>
+              {coFacUrl ? (
+                <LinkRow
+                  url={coFacUrl}
+                  label="co-facilitator link"
+                  copied={copied === "cofac"}
+                  onCopy={() => copy("cofac", coFacUrl)}
+                />
+              ) : (
+                <p className="text-[14px] text-[#6C6975] m-0">
+                  Generate a link for someone who isn’t signed in.
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={regenToken}
+                className="mt-2 text-[14px] font-medium text-[#301CA0] bg-transparent border-0 p-0 cursor-pointer"
+              >
+                {coFacUrl ? "Regenerate token" : "Generate link"}
+              </button>
+            </div>
           </div>
+
           <div>
             <div className="text-[14px] font-semibold mb-1">Try-out</div>
-            <Link href={data.paths.tryOut} className="text-[#301CA0] underline">
-              {origin}
-              {data.paths.tryOut}
-            </Link>
+            <LinkRow
+              url={tryUrl}
+              label="try-out link"
+              copied={copied === "try"}
+              onCopy={() => copy("try", tryUrl)}
+            />
           </div>
-          {data.paths.print && (
+          {printUrl && (
             <div>
               <div className="text-[14px] font-semibold mb-1">Print pack</div>
-              <Link href={data.paths.print} className="text-[#301CA0] underline">
-                {origin}
-                {data.paths.print}
-              </Link>
+              <LinkRow
+                url={printUrl}
+                label="print pack link"
+                copied={copied === "print"}
+                onCopy={() => copy("print", printUrl)}
+              />
             </div>
           )}
           {msg && <p className="text-[15px] text-[#496C61] m-0">{msg}</p>}
