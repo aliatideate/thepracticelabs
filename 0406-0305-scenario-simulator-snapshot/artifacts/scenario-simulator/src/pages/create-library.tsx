@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { ArrowRight } from "lucide-react";
 import { PrimaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
 import {
@@ -25,6 +26,7 @@ type LibraryExercise = {
   format: string;
   status: string;
   latestVersion: number | null;
+  clientNames: string[];
 };
 
 type LibraryBrief = {
@@ -38,22 +40,35 @@ type LibraryBrief = {
 
 type LibraryItem = LibraryExercise | LibraryBrief;
 
-type VariableDef = {
-  key?: string;
-  label?: string;
-  type?: string;
-  default?: unknown;
-};
+function clientsLine(names: string[]): string {
+  return names.length > 0 ? names.join(", ") : "none yet";
+}
 
-function variableLabel(v: VariableDef): string {
-  if (typeof v.label === "string" && v.label.trim()) return v.label.trim();
-  if (typeof v.key === "string" && v.key.trim()) return v.key.trim();
-  return "Field";
+function ClientsFooter({
+  names,
+  showArrow,
+}: {
+  names: string[];
+  showArrow?: boolean;
+}) {
+  return (
+    <div className="mt-4 pt-4 border-t border-[#E7E4DD] flex items-center justify-between gap-3 w-full">
+      <p className="m-0 text-[14px] text-[#1D1D24] min-w-0">
+        Clients: <span className="text-[#6C6975]">{clientsLine(names)}</span>
+      </p>
+      {showArrow ? (
+        <ArrowRight
+          className="h-4 w-4 shrink-0 text-[#301CA0]"
+          strokeWidth={2.25}
+          aria-hidden
+        />
+      ) : null}
+    </div>
+  );
 }
 
 function Library() {
   const [, setLocation] = useLocation();
-  const [openId, setOpenId] = useState<string | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ["create-exercises"],
     queryFn: async () => {
@@ -63,26 +78,6 @@ function Library() {
         categories: string[];
         exercises: LibraryExercise[];
         briefs: LibraryBrief[];
-      }>;
-    },
-  });
-
-  const detailQ = useQuery({
-    queryKey: ["create-exercise", openId],
-    enabled: !!openId,
-    queryFn: async () => {
-      const res = await fetch(`/api/create/exercises/${openId}`, { credentials: "same-origin" });
-      if (!res.ok) throw new Error("failed");
-      return res.json() as Promise<{
-        title: string;
-        versions: {
-          id: string;
-          version: number;
-          variables: unknown;
-          facilitatorNotes: string | null;
-          createdAt: string;
-        }[];
-        clientCopies: { clientName: string }[];
       }>;
     },
   });
@@ -138,6 +133,12 @@ function Library() {
                     ? formatExerciseFormat(item.format)
                     : `${formatExerciseFormat(item.format)} · v${item.latestVersion ?? 1}`
                   : formatFromCategory(item.category);
+              const clientNames =
+                item.kind === "exercise"
+                  ? item.clientNames ?? []
+                  : item.clientName
+                    ? [item.clientName]
+                    : [];
 
               if (isBrief) {
                 return (
@@ -154,20 +155,16 @@ function Library() {
                         <StatusTag status={item.status} />
                       </div>
                       <div className="text-[14px] text-[#6C6975] mt-1">{meta}</div>
-                      {item.clientName && (
-                        <div className="text-[13px] text-[#6C6975] mt-1">{item.clientName}</div>
-                      )}
+                      <ClientsFooter names={clientNames} showArrow />
                     </div>
                   </Link>
                 );
               }
 
               return (
-                <button
+                <div
                   key={item.id}
-                  type="button"
-                  onClick={() => setOpenId(openId === item.id ? null : item.id)}
-                  className="flex w-full flex-col justify-start text-left bg-white border border-[#E7E4DD] rounded-xl p-5 hover:border-[#301CA0]"
+                  className="w-full text-left bg-white border border-[#E7E4DD] rounded-xl p-5"
                 >
                   <div className="flex items-start justify-between gap-3 w-full">
                     <div className="font-semibold text-[18px] leading-snug min-w-0 text-[#1D1D24]">
@@ -176,52 +173,8 @@ function Library() {
                     <StatusTag status={item.status} />
                   </div>
                   <div className="text-[14px] text-[#6C6975] mt-1">{meta}</div>
-                  {openId === item.id && detailQ.data && (
-                    <div className="mt-4 pt-4 border-t border-[#E7E4DD] text-[14px] text-[#1D1D24] w-full">
-                      <p className="m-0 mb-2">
-                        Used with:{" "}
-                        {detailQ.data.clientCopies.map((c) => c.clientName).join(", ") || "none yet"}
-                      </p>
-                      {detailQ.data.versions.map((v) => {
-                        const vars = (Array.isArray(v.variables) ? v.variables : []).filter(
-                          (x): x is VariableDef => !!x && typeof x === "object",
-                        );
-                        const hasNotes =
-                          typeof v.facilitatorNotes === "string" &&
-                          v.facilitatorNotes.trim().length > 0;
-                        return (
-                          <div key={v.id} className="mb-4 last:mb-0">
-                            <div className="font-semibold">Version {v.version}</div>
-                            {vars.length > 0 && (
-                              <div className="mt-2">
-                                <div className="text-[13px] text-[#6C6975] mb-1">
-                                  Customisable fields
-                                </div>
-                                <ul className="m-0 pl-5 text-[14px] text-[#1D1D24]">
-                                  {vars.map((field) => (
-                                    <li key={field.key ?? variableLabel(field)} className="mb-0.5">
-                                      {variableLabel(field)}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                            {hasNotes && (
-                              <p className="m-0 mt-2 text-[13px] text-[#6C6975]">
-                                Facilitator notes included
-                              </p>
-                            )}
-                            {vars.length === 0 && !hasNotes && (
-                              <p className="m-0 mt-1 text-[13px] text-[#6C6975]">
-                                No customisable fields
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </button>
+                  <ClientsFooter names={clientNames} />
+                </div>
               );
             })}
           </div>

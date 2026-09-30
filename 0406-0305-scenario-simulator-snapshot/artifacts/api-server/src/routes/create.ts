@@ -287,6 +287,24 @@ router.get("/create/exercises", async (req, res) => {
     )
     .orderBy(asc(briefsTable.category), asc(briefsTable.title));
 
+  const copyRows = await db
+    .select({
+      exerciseId: clientCopiesTable.exerciseId,
+      clientName: clientsTable.name,
+    })
+    .from(clientCopiesTable)
+    .innerJoin(clientsTable, eq(clientsTable.id, clientCopiesTable.clientId))
+    .innerJoin(exercisesTable, eq(exercisesTable.id, clientCopiesTable.exerciseId))
+    .where(eq(exercisesTable.orgId, user.orgId))
+    .orderBy(asc(clientsTable.name));
+
+  const clientsByExercise = new Map<string, string[]>();
+  for (const row of copyRows) {
+    const list = clientsByExercise.get(row.exerciseId) ?? [];
+    if (!list.includes(row.clientName)) list.push(row.clientName);
+    clientsByExercise.set(row.exerciseId, list);
+  }
+
   return res.json({
     categories: EXERCISE_CATEGORIES,
     exercises: rows.map((r) => ({
@@ -297,6 +315,7 @@ router.get("/create/exercises", async (req, res) => {
       format: r.exercise.format,
       status: r.exercise.status,
       latestVersion: r.latestVersion == null ? null : Number(r.latestVersion),
+      clientNames: clientsByExercise.get(r.exercise.id) ?? [],
     })),
     briefs: briefs.map((r) => ({
       id: r.brief.id,
