@@ -11,7 +11,7 @@ Detailed inventory of what exists today, what landed where, and what is still op
 Internal tool for **one Ideate user** (you) to:
 
 1. Manage **clients**
-2. Pick a **published exercise** from the **Library**
+2. Pick a **published exercise** from **Activities**
 3. **Customise** light fields (company / chain / branches / logo — Phase 4)
 4. Create an **isolated workshop session** with its own join / facilitate / try / print links
 5. Capture **briefs** for exercises that are still “in design” (intake only; no generation)
@@ -19,7 +19,7 @@ Internal tool for **one Ideate user** (you) to:
 It is **not** an exercise generator. Exercises are still authored outside the tool and imported as JSON. Player and facilitator pedagogy for Demand / Mart stay as in `practice-labs-llm-brief.md`.
 
 **UI home:** `/create` (after `/login`).  
-**Working names in UI:** Clients · Library · Boards · Sessions · Briefs. Header shows **Creator Studio** + signed-in profile chip.
+**Working names in UI:** Clients · Activities · Sessions · Briefs. Header shows **Creator Studio** + signed-in profile chip.
 
 ---
 
@@ -104,10 +104,10 @@ Shipped **before** Phase 4 in practice (brief order was 4 then 5; rename fields 
 **Chrome / polish already shipped:**
 
 - Header: brand-only Creator Studio (two-line), profile chip when signed in
-- Nav tabs: Clients · Library · Boards
+- Nav tabs: Clients · Activities · Sessions
 - Status tags capitalised (Ready / Live / Ended / Published / In design)
-- Empty variables list hidden in Library detail
-- Boards copy is session-centric (not client-specific marketing)
+- Empty variables list hidden in Activities detail
+- Sessions tab copy is session-centric (not client-specific marketing)
 
 ### Phase 4 — Tokenisation 🟡 (staging only; PR #6 open)
 
@@ -224,14 +224,14 @@ All under cookie auth (`/api/create/*` + `/api/auth/*`):
 
 **Already built (ahead of brief numbering):**
 
-- Brief intake UI + API + Library “In design” cards
+- Brief intake UI + API + Activities “In design” cards
 - Seeded placeholder briefs (e.g. Quiet Exit, Stalled Rollout, Seven Days to Launch, Empty Aisle)
 
 **Still missing vs brief §7 “New exercise”:**
 
 - **Import exercise files** — upload content JSON + optional notes Markdown; pick format/category/title (or add version to existing exercise); zod-validate against engine schema; clear path errors; no row on failure
 - Format picker with disabled “Coming soon” for ideation / prototyping engines
-- Wizard step “New exercise” entry on every category (Library has New activity → brief; import path not wired)
+- Wizard step “New exercise” entry on every category (Activities has New activity → brief; import path not wired)
 - Brief → “first draft shared for review” is copy-only today; **no** draft exercise object, generation, or review workflow (correct per brief — just confirm that stays)
 
 ### C. Phase 7 — Facilitator notes panel
@@ -281,8 +281,8 @@ All under cookie auth (`/api/create/*` + `/api/auth/*`):
 2. **Chain plural:** is `name + "s"` enough, or do you want an optional override field later?
 3. **Logo on Mart:** v2 Mart has no logo variable (Demand does). Should Mart show a logo anywhere, or stay scene-only?
 4. **Facilitator notes panel (Phase 7) vs import (Phase 6):** which next after Phase 4 lands?
-5. **Boards tab:** is “all sessions across clients” the right mental model, or should it be filtered / client-scoped?
-6. **Library “New activity”:** brief-only is correct for now — confirm import should be the next Library action.
+5. **Sessions tab:** is “all sessions across clients” the right mental model, or should it be filtered / client-scoped?
+6. **Activities “New activity”:** brief-only is correct for now — confirm import should be the next Activities action.
 7. **Rename policy copy** on customise (UAE + beverage/FMCG): wording OK, or sharper?
 8. Anything in the Creator chrome (tabs, status tags, profile chip, two-line Creator Studio) to reverse or tighten?
 
@@ -296,9 +296,9 @@ All under cookie auth (`/api/create/*` + `/api/auth/*`):
        → /create/clients/:id   Client sessions
             → …/new            New session wizard (+ rename on staging)
             → /create/sessions/:id   Links + archives
-  → /create/library            Published exercises + In design briefs
+  → /create/library            Activities — published exercises + In design briefs
        → /create/briefs/new    Brief intake
-  → /create/boards             Facilitator boards by status
+  → /create/boards             Sessions — facilitator boards by status
 /s/:CODE                       Player join for that session
 /s/:CODE/facilitate            Facilitator board for that session
 /demand · /mart                Legacy Unilever rooms (still live)
