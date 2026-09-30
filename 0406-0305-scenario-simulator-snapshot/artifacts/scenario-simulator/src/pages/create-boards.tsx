@@ -91,7 +91,7 @@ function BoardsHome() {
         if (list.length === 0) return null;
         return (
           <section key={group.key} className="mb-10">
-            <h2 className="text-[20px] mt-0 mb-3">{group.label}</h2>
+            <h2 className="text-[20px] mt-0 mb-3 ml-2">{group.label}</h2>
             <div className="space-y-3">
               {list.map((s) => {
                 const ranOn = s.status === "ended" ? formatRanOn(s.endedAt) : null;
