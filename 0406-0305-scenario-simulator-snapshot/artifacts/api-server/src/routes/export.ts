@@ -4,13 +4,14 @@ import { asc, eq } from "drizzle-orm";
 import { db, sessionsTable, workshopsTable } from "@workspace/db";
 import { WORKSHOP_CODE } from "../lib/workshop";
 import { scenarioForCode } from "../lib/workshop-session";
+import {
+  SHARED_CSV_COLUMNS,
+  csvEscape,
+  sharedCsvPrefix,
+} from "../lib/engine-contract";
+import { sharedCsvContextForCode, teamCsvFields } from "../lib/export-context";
 
 const router: IRouter = Router();
-
-function csvEscape(value: string): string {
-  if (/[",\n]/.test(value)) return `"${value.replace(/"/g, '""')}"`;
-  return value;
-}
 
 router.get("/export", async (req, res) => {
   if (!(await assertFacilitator(req, res))) return;
@@ -20,6 +21,7 @@ router.get("/export", async (req, res) => {
       ? req.query.workshopCode.trim().toUpperCase()
       : WORKSHOP_CODE;
   const scenario = await scenarioForCode(workshopCode);
+  const csvCtx = await sharedCsvContextForCode(workshopCode);
 
   const ws = await db
     .select()
@@ -56,13 +58,17 @@ router.get("/export", async (req, res) => {
       define: toSec(timings.define),
       submit: toSec(timings.submit),
     };
+    const shared = teamCsvFields({
+      format: "investigation",
+      displayName: row.displayName,
+      teamName: row.teamName,
+      emoji: row.emoji,
+      currentScreen: row.currentScreen,
+      submittedAt: row.submittedAt,
+      createdAt: row.createdAt,
+    });
     return {
-      team: row.displayName?.trim()
-        ? `${row.emoji ? `${row.emoji} ` : ""}${row.displayName.trim()}`
-        : row.teamName,
-      slot: row.teamName,
-      emoji: row.emoji || "",
-      displayName: row.displayName || "",
+      ...shared,
       stakeholderId: row.selectedStakeholder,
       stakeholderName: stakeholder?.name ?? null,
       evidenceId: row.selectedEvidenceSource,
@@ -78,9 +84,7 @@ router.get("/export", async (req, res) => {
   });
 
   if (format === "csv") {
-    const header = [
-      "team",
-      "slot",
+    const engineCols = [
       "stakeholder",
       "evidence",
       "question_1",
@@ -95,12 +99,12 @@ router.get("/export", async (req, res) => {
       "s_define",
       "s_submit",
     ];
+    const header = [...SHARED_CSV_COLUMNS, ...engineCols];
     const lines = [header.join(",")];
     for (const r of records) {
       lines.push(
         [
-          csvEscape(r.team),
-          csvEscape(r.slot),
+          ...sharedCsvPrefix(csvCtx, r).map(csvEscape),
           csvEscape(r.stakeholderName ?? ""),
           csvEscape(r.evidenceTitle ?? ""),
           csvEscape(r.questionsAsked[0] ?? ""),
@@ -125,7 +129,7 @@ router.get("/export", async (req, res) => {
     return res.send(lines.join("\n"));
   }
 
-  return res.json({ scenarioId: scenario.id, teams: records });
+  return res.json({ scenarioId: scenario.id, context: csvCtx, teams: records });
 });
 
 export default router;

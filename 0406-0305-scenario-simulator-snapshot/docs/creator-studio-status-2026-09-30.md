@@ -23,7 +23,7 @@ Written for the next agent (or human) picking up the build. Prefer this over the
 **Phases on production:** 1 (data) · 2 (auth) · 3 (session instances) · 4 (tokenisation v2 seeded) · 5 (Creator screens) · 7 (facilitator notes panel).  
 **Not built:** Phase 6 exercise **import** (briefs exist; JSON upload does not).
 
-**Deploy today:** Pushing `main` auto-deploys production via GitHub → Railway. Root directory must be `0406-0305-scenario-simulator-snapshot`. Fallback: `railway up ./0406-0305-scenario-simulator-snapshot --path-as-root` with prod token.
+**Deploy today:** See [`deploy-staging-first.md`](./deploy-staging-first.md). Target: `main` → staging, `production` → production. Root directory must be `0406-0305-scenario-simulator-snapshot`. **No** `railway up` to production.
 
 ---
 
@@ -213,34 +213,33 @@ Follow-up commits on `main` after #32 (no separate PR): tag flush (`b0e0f77`), i
 
 ---
 
-## 7. What’s left (ordered for next agent)
+## 7. What’s left / rest-of-build progress
 
-### A. Phase 6 — Exercise import (main Creator gap)
+Working plan docs:
 
-Still missing vs brief:
+- [`deploy-staging-first.md`](./deploy-staging-first.md) — Railway: `main` → staging, `production` → prod (**apply in Railway dashboard**)
+- [`shell-engine-audit.md`](./shell-engine-audit.md) — Step 2 coupling report
+- [`import-and-safeguards.md`](./import-and-safeguards.md) — Phase 6 import + token checks
+- [`rehearsal-checklist.md`](./rehearsal-checklist.md) — Step 8 dress rehearsal
 
-- Upload content JSON (+ optional notes Markdown)
-- Format/category/title (or add version to existing exercise)
-- Zod-validate against engine schema; path-level errors; no DB row on failure
-- Format picker: disable ideation / prototyping as “Coming soon”
-- Optional: “New exercise” entry from wizard categories (Activities already has New activity → brief)
+### Built in rest-of-build PR
 
-Briefs / In design cards **already exist** — do not rebuild intake.
+- Engine contract (`engine-contract.ts` / `engineContract.ts`) — steps, done, progress
+- Category vs engine labels in Activities + wizard (no more category→engine map)
+- Shared CSV prefix on Demand + Mart exports
+- Import API + CLI + Activities upload UI
+- Token declaration checks on import; wizard copy upgrade path kept (no new button)
+- Facilitator boards: hide legacy ActivityTabs on `/s/:code`; use session title + try path
 
-### B. Production ops / rehearsal (workshop, not feature work)
+### Still for Ali / ops
 
-From handoff + status:
+1. Apply Railway branch wiring from `deploy-staging-first.md`
+2. Supply a draft new exercise to stress-test import (not only v2 fixtures)
+3. Six-window dress rehearsal on staging then production ([checklist](./rehearsal-checklist.md))
+4. Join-flow visual examples (Step 9 — **do not invent**)
+5. Optional later: retire `/demand` `/mart`, preview cleanup, remove `FACILITATOR_SECRET`
 
-1. **Six-window dress rehearsal** on production (~30 min, mid-flow refresh)
-2. Save **`/print` as PDF** fallback for breakouts
-3. Confirm Phase 4 renames on a non-Unilever client still look right on prod (already seeded; re-smoke if unsure)
-4. Optional: remove unused `FACILITATOR_SECRET` env on Railway (code no longer needs it for Creator)
-
-### C. Player / join visual design — **wait for Ali**
-
-Workspace rule: visual pass on join-to-submit so it feels nicer. **Do not invent a redesign.** Wait for examples/instructions. Do **not** restore removed demo screens.
-
-### D. Explicitly out of scope (still)
+### Explicitly out of scope (still)
 
 - AI content generation
 - Editing questions / options / stakeholders / evidence / scoring in-product
@@ -249,13 +248,6 @@ Workspace rule: visual pass on join-to-submit so it feels nicer. **Do not invent
 - Mobile creator/player
 - Cross-country / currency packs
 - Reopening locked Unilever Session 1 content (Rohini Q3 events-only, SKU W34 no synthesis callout, Rakesh Q4, Fatima/James, retailer + capacity memos, `askLimit` 3)
-
-### E. Hardening (nice-to-have)
-
-- Preview session cleanup sweeper (24h expiry on row)
-- Stricter token declaration ↔ usage checks at create
-- Client_copy upgrade UX when exercise jumps versions
-- Staging preview session cleanup
 
 ---
 
@@ -278,12 +270,17 @@ Workspace rule: visual pass on join-to-submit so it feels nicer. **Do not invent
 
 ## 9. Agent operating notes
 
-- Branch naming: `cursor/<descriptive-name>-c558`
-- Prefer `main` + GitHub auto-deploy for production
-- Local API needs `CONTENT_DIR` pointing at `…/content` and DB (Railway TCP proxy if using prod Postgres)
-- Do not reopen locked content decisions (see §7.D)
-- For Creator UI polish, match existing cream/purple system; avoid generic AI purple-gradient landing patterns on player redesign when that work starts
-- Store internals from this run: `internal/client-delete-lightbox.md`, `client-card-hover-delete.md`, `trail-breadcrumbs-pr30.md`, `phase7-facilitator-notes.md`, `phase4-prod-deploy.md`
+- Branch naming: `cursor/<descriptive-name>-4330` (or the suffix for that agent run)
+- **Deploy / production rules (mandatory):**
+  - Staging tracks `main`; production tracks the `production` branch. Details: [`deploy-staging-first.md`](./deploy-staging-first.md).
+  - Agents must **never** deploy to production with `railway up` or any Railway CLI command.
+  - Agents must **never** push or merge to the `production` branch without Ali’s **explicit** approval.
+  - Promotion is **only** fast-forwarding `production` from `main`, when Ali says so.
+  - There is no production CLI fallback. If auto-deploy is broken, stop and ask.
+- Local API needs `CONTENT_DIR` pointing at `…/content` and a DB (Railway TCP proxy if needed). Prefer staging DB, not production.
+- Do not reopen locked content decisions (see §7 out of scope).
+- For Creator UI polish, match existing cream/purple system; avoid generic AI purple-gradient landing patterns on player redesign when that work starts.
+- Join-flow visual pass: wait for Ali’s examples; do not invent a redesign.
 
 ---
 

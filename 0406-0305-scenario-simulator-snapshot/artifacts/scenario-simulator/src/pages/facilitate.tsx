@@ -4,13 +4,14 @@ import {
   useListSessions,
 } from "@workspace/api-client-react";
 import { DEMAND_TRY_WORKSHOP_CODE, WORKSHOP_CODE, formatTeamLabel } from "../lib/constants";
-import { useRuntimeWorkshopCode } from "../lib/sessionRoom";
+import { useRuntimeWorkshopCode, useSessionRoom } from "../lib/sessionRoom";
 import { Bookmark, PencilLine, Phone, RotateCcw, X } from "lucide-react";
 import { Header, SecondaryButton } from "../simulation/components";
 import { useScenario, type Scenario } from "../lib/scenario";
 import { playPhoneRing } from "../lib/phoneRing";
 import { formatCountdown, isExpired, remainingMs, type SessionConfig } from "../lib/timer";
 import { facilitatorAuthHeaders } from "../lib/facilitatorAuth";
+import { engineOf } from "../lib/engineContract";
 import { ActivityTabs } from "./activityTabs";
 import { DownloadMenu } from "./facilitatorDownload";
 import { FacilitatorNotesPanel } from "./FacilitatorNotesPanel";
@@ -150,9 +151,12 @@ function TeamProgressCard({
           </tr>
           <tr className="border-b border-[#E7E4DD] align-top">
             <td className="p-3">
-              {s.currentScreen
-                ? s.currentScreen.charAt(0).toUpperCase() + s.currentScreen.slice(1)
-                : "—"}
+              {
+                engineOf("investigation").progressOf({
+                  currentScreen: s.currentScreen,
+                  submittedAt: s.submittedAt ?? null,
+                }).progress
+              }
             </td>
             <td className="p-3">{sh?.name ?? "—"}</td>
             <td className="p-3 text-[14px]">{questions}</td>
@@ -183,8 +187,11 @@ function TeamProgressCard({
 
 export default function FacilitatePage() {
   const scenario = useScenario();
+  const room = useSessionRoom();
   const workshopCode = useRuntimeWorkshopCode(WORKSHOP_CODE);
   const listParams = { workshopCode };
+  const boardTitle = room?.title ?? "Demand Spike";
+  const tryPath = room ? `/s/${room.workshopCode}/try` : "/demand/try";
   const { data: sessions = [], refetch } = useListSessions(listParams, {
     query: { refetchInterval: 5000, queryKey: getListSessionsQueryKey(listParams) },
   });
@@ -370,7 +377,7 @@ export default function FacilitatePage() {
   };
 
   const copyTryLink = async () => {
-    const url = `${window.location.origin}/demand/try`;
+    const url = `${window.location.origin}${tryPath}`;
     try {
       await navigator.clipboard.writeText(url);
       setMsg("Try-out link copied.");
@@ -417,11 +424,11 @@ export default function FacilitatePage() {
       <Header />
       <ActivityTabs active="demand" />
       <div className="mx-auto max-w-[1280px] px-6 py-8">
-        <h1 className="text-[32px] mt-0 mb-2">Demand Spike</h1>
+        <h1 className="text-[32px] mt-0 mb-2">{boardTitle}</h1>
         <p className="text-[16px] text-[#6C6975] mb-6">
           Private try-out link:{" "}
           <button type="button" className="text-[#301CA0] underline font-semibold" onClick={copyTryLink}>
-            /demand/try
+            {tryPath}
           </button>
         </p>
         <FacilitatorNotesPanel workshopCode={workshopCode} />

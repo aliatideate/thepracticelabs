@@ -26,7 +26,6 @@ import {
   type StepTimings,
 } from "@workspace/db";
 import { submissionsBus } from "../lib/events";
-import { loadScenario } from "../lib/content";
 import {
   WORKSHOP_CODE,
   DEMAND_TRY_WORKSHOP_CODE,
@@ -35,6 +34,7 @@ import {
   normalizeDisplayName,
 } from "../lib/workshop";
 import { clearClock, defaultWorkshopId, startTimerIfIdle, workshopIdFor } from "../lib/session-clock";
+import { scenarioForCode } from "../lib/workshop-session";
 
 const router: IRouter = Router();
 
@@ -365,7 +365,8 @@ router.patch("/sessions/:id", async (req, res) => {
     if (INTERVIEW_LOCKED_SCREENS.has(screen) && next.length > prev.length) {
       return res.status(409).json({ error: "interview locked" });
     }
-    const scenario = loadScenario();
+    const workshopCode = await workshopCodeFor(existing.workshopId);
+    const scenario = await scenarioForCode(workshopCode);
     const stakeholderId =
       body.data.selectedStakeholder ?? existing.selectedStakeholder;
     const stakeholder = scenario.stakeholders.find((s) => s.id === stakeholderId);

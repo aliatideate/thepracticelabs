@@ -1,13 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { ChevronDown } from "lucide-react";
+import { useSessionRoom } from "../lib/sessionRoom";
 
 const OPTIONS = [
   { id: "demand" as const, label: "Problem Framing: Demand Spike" },
   { id: "mart" as const, label: "Decision-making: Mart" },
 ];
 
+/**
+ * Legacy Unilever hub switcher between /facilitate?tab=demand|mart.
+ * Hidden on Creator `/s/:code/facilitate` rooms (session title is shown instead).
+ */
 export function ActivityTabs({ active }: { active: "demand" | "mart" }) {
+  const room = useSessionRoom();
   const [, setLocation] = useLocation();
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -28,6 +34,8 @@ export function ActivityTabs({ active }: { active: "demand" | "mart" }) {
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
+
+  if (room) return null;
 
   return (
     <div className="mx-auto max-w-[1280px] px-6 pt-6">

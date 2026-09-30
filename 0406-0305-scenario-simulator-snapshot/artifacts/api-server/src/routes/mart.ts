@@ -27,6 +27,12 @@ import {
   decisionGameForCode,
   setWorkshopSessionStatusByRuntimeCode,
 } from "../lib/workshop-session";
+import {
+  SHARED_CSV_COLUMNS,
+  csvEscape,
+  sharedCsvPrefix,
+} from "../lib/engine-contract";
+import { sharedCsvContextForCode, teamCsvFields } from "../lib/export-context";
 
 const router: IRouter = Router();
 
@@ -358,6 +364,7 @@ router.get("/mart/export", async (req, res) => {
   const code = martCodeFrom(req);
   const game = await decisionGameFacilitatorForCode(code);
   const workshopId = await workshopIdFor(code);
+  const csvCtx = await sharedCsvContextForCode(code);
   const rows = await db
     .select()
     .from(decisionSessionsTable)
@@ -371,9 +378,18 @@ router.get("/mart/export", async (req, res) => {
       fastLost?: number;
       style?: string;
     };
+    const shared = teamCsvFields({
+      format: "branching",
+      displayName: row.displayName,
+      teamName: row.teamName,
+      emoji: row.emoji,
+      currentScreen: row.currentScreen,
+      submittedAt: row.currentScreen === "reveal" ? row.updatedAt : null,
+      createdAt: row.createdAt,
+      endedAt: row.currentScreen === "reveal" ? row.updatedAt : null,
+    });
     return {
-      team: row.displayName,
-      slot: row.teamName,
+      ...shared,
       emoji: row.emoji,
       choices: (row.choices ?? []).map((c) => {
         const { option } = optionFor(game, c.decisionId, c.optionId);
@@ -393,19 +409,25 @@ router.get("/mart/export", async (req, res) => {
   });
   const format = String(req.query.format ?? "json");
   if (format === "csv") {
-    const headers = ["team", "slot", ...game.decisions.map((d) => d.id), "score", "slowLost", "fastLost", "style"];
+    const headers = [
+      ...SHARED_CSV_COLUMNS,
+      ...game.decisions.map((d) => d.id),
+      "score",
+      "slowLost",
+      "fastLost",
+      "style",
+    ];
     const lines = [headers.join(",")];
     for (const t of teams) {
       const map = new Map(t.choices.map((c) => [c.decisionId, c.optionId]));
       lines.push(
         [
-          JSON.stringify(t.team),
-          t.slot,
+          ...sharedCsvPrefix(csvCtx, t).map(csvEscape),
           ...game.decisions.map((d) => map.get(d.id) ?? ""),
           String(t.score),
           String(t.slowLost),
           String(t.fastLost),
-          t.style,
+          csvEscape(t.style),
         ].join(","),
       );
     }
@@ -413,7 +435,7 @@ router.get("/mart/export", async (req, res) => {
     res.setHeader("content-disposition", "attachment; filename=mart-results.csv");
     return res.send(lines.join("\n"));
   }
-  return res.json({ scenarioId: game.scenario.id, teams });
+  return res.json({ scenarioId: game.scenario.id, context: csvCtx, teams });
 });
 
 router.get("/try/sessions", async (req, res) => {

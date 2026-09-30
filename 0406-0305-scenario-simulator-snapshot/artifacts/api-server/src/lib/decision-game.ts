@@ -152,57 +152,63 @@ function stripHidden(value: unknown): unknown {
 
 let cached: DecisionGame | null = null;
 
-export function loadDecisionGame(): DecisionGame {
-  if (cached) return cached;
-  const file = path.join(contentDir(), "decision-game.json");
-  const raw = readFileSync(file, "utf8");
-  cached = decisionGameSchema.parse(JSON.parse(raw));
-  const orders = cached.decisions.map((d) => d.order);
+/** Parse + enforce branching invariants. Throws Error with path-ish messages. */
+export function parseDecisionGameContent(raw: unknown): DecisionGame {
+  const parsed = decisionGameSchema.parse(raw);
+  const orders = parsed.decisions.map((d) => d.order);
   if (new Set(orders).size !== orders.length) {
-    throw new Error("decision-game.json: decisions[].order must be unique");
+    throw new Error("decisions[].order must be unique");
   }
-  cached.decisions = [...cached.decisions].sort((a, b) => a.order - b.order);
-  const ruleCount = cached.playbook.rules.length;
-  const gradeKeys = new Set(Object.keys(cached.scoring.grades));
+  parsed.decisions = [...parsed.decisions].sort((a, b) => a.order - b.order);
+  const ruleCount = parsed.playbook.rules.length;
+  const gradeKeys = new Set(Object.keys(parsed.scoring.grades));
   for (const key of ["best", "judgment", "okay", "poor", "worst"] as const) {
-    if (!gradeKeys.has(key)) throw new Error(`decision-game.json: scoring.grades missing ${key}`);
+    if (!gradeKeys.has(key)) throw new Error(`scoring.grades missing ${key}`);
   }
-  for (const [tagKey, tag] of Object.entries(cached.scoring.tags)) {
+  for (const [tagKey, tag] of Object.entries(parsed.scoring.tags)) {
     if (!tag.withBranches.includes("{branches}")) {
-      throw new Error(`decision-game.json: scoring.tags.${tagKey}.withBranches must contain {branches}`);
+      throw new Error(`scoring.tags.${tagKey}.withBranches must contain {branches}`);
     }
   }
-  const grids = Object.entries(cached.scoring.styles.labels).map(([key, label]) => {
+  const grids = Object.entries(parsed.scoring.styles.labels).map(([key, label]) => {
     if (!label.name || !label.grid || !label.description || !label.hover || !label.tip) {
-      throw new Error(`decision-game.json: scoring.styles.labels.${key} needs name, grid, description, hover and tip`);
+      throw new Error(`scoring.styles.labels.${key} needs name, grid, description, hover and tip`);
     }
     return label.grid;
   });
   if (new Set(grids).size !== 4) {
-    throw new Error("decision-game.json: each style grid position must be used exactly once");
+    throw new Error("each style grid position must be used exactly once");
   }
-  const ideals = Object.values(cached.scoring.styles.labels).filter((label) => label.ideal === true);
+  const ideals = Object.values(parsed.scoring.styles.labels).filter((label) => label.ideal === true);
   if (ideals.length > 1) {
-    throw new Error("decision-game.json: at most one style can have ideal: true");
+    throw new Error("at most one style can have ideal: true");
   }
-  for (const decision of cached.decisions) {
+  for (const decision of parsed.decisions) {
     for (const option of decision.options) {
-      const points = cached.scoring.grades[option.grade.grade]?.points;
+      const points = parsed.scoring.grades[option.grade.grade]?.points;
       if (points === undefined) {
-        throw new Error(`decision-game.json: unknown grade ${option.grade.grade} on ${decision.id}/${option.id}`);
+        throw new Error(`unknown grade ${option.grade.grade} on ${decision.id}/${option.id}`);
       }
-      if (points < cached.scoring.maxPointsPerDecision && option.grade.tag == null) {
+      if (points < parsed.scoring.maxPointsPerDecision && option.grade.tag == null) {
         throw new Error(
-          `decision-game.json: ${decision.id}/${option.id} scores below maxPointsPerDecision and needs a tag`,
+          `${decision.id}/${option.id} scores below maxPointsPerDecision and needs a tag`,
         );
       }
       for (const rule of option.grade.rules) {
         if (rule < 1 || rule > ruleCount) {
-          throw new Error(`decision-game.json: ${decision.id}/${option.id} has invalid playbook rule ${rule}`);
+          throw new Error(`${decision.id}/${option.id} has invalid playbook rule ${rule}`);
         }
       }
     }
   }
+  return parsed;
+}
+
+export function loadDecisionGame(): DecisionGame {
+  if (cached) return cached;
+  const file = path.join(contentDir(), "decision-game.json");
+  const raw = readFileSync(file, "utf8");
+  cached = parseDecisionGameContent(JSON.parse(raw));
   return cached;
 }
 
