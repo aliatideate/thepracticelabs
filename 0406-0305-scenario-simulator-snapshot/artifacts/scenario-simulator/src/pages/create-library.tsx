@@ -38,6 +38,19 @@ type LibraryBrief = {
 
 type LibraryItem = LibraryExercise | LibraryBrief;
 
+type VariableDef = {
+  key?: string;
+  label?: string;
+  type?: string;
+  default?: unknown;
+};
+
+function variableLabel(v: VariableDef): string {
+  if (typeof v.label === "string" && v.label.trim()) return v.label.trim();
+  if (typeof v.key === "string" && v.key.trim()) return v.key.trim();
+  return "Field";
+}
+
 function Library() {
   const [, setLocation] = useLocation();
   const [openId, setOpenId] = useState<string | null>(null);
@@ -170,19 +183,41 @@ function Library() {
                         {detailQ.data.clientCopies.map((c) => c.clientName).join(", ") || "none"}
                       </p>
                       {detailQ.data.versions.map((v) => {
-                        const vars = Array.isArray(v.variables) ? v.variables : [];
+                        const vars = (Array.isArray(v.variables) ? v.variables : []).filter(
+                          (x): x is VariableDef => !!x && typeof x === "object",
+                        );
+                        const hasNotes =
+                          typeof v.facilitatorNotes === "string" &&
+                          v.facilitatorNotes.trim().length > 0;
                         return (
-                          <div key={v.id} className="mb-3">
+                          <div key={v.id} className="mb-4 last:mb-0">
                             <div className="font-semibold">Version {v.version}</div>
                             {vars.length > 0 && (
-                              <div className="text-[#6C6975]">
-                                Variables: {JSON.stringify(vars)}
+                              <div className="mt-2">
+                                <div className="text-[13px] text-[#6C6975] mb-1">
+                                  Customise fields
+                                </div>
+                                <ul className="m-0 pl-5 text-[14px] text-[#1D1D24]">
+                                  {vars.map((field) => (
+                                    <li key={field.key ?? variableLabel(field)} className="mb-0.5">
+                                      {variableLabel(field)}
+                                      {field.type === "image" ? (
+                                        <span className="text-[#6C6975]"> (logo)</span>
+                                      ) : null}
+                                    </li>
+                                  ))}
+                                </ul>
                               </div>
                             )}
-                            {v.facilitatorNotes && (
-                              <pre className="whitespace-pre-wrap text-[13px] mt-2 bg-[#F8F6EF] p-3 rounded-lg">
-                                {v.facilitatorNotes}
-                              </pre>
+                            {hasNotes && (
+                              <p className="m-0 mt-2 text-[13px] text-[#6C6975]">
+                                Facilitator notes included
+                              </p>
+                            )}
+                            {vars.length === 0 && !hasNotes && (
+                              <p className="m-0 mt-1 text-[13px] text-[#6C6975]">
+                                No customise fields
+                              </p>
                             )}
                           </div>
                         );
