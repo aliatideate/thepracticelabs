@@ -1,9 +1,32 @@
 import React, { useState } from "react";
+import { Copy } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Header, PrimaryButton, SecondaryButton } from "../simulation/components";
 import AuthGate from "./auth-gate";
 import { StatusTag, formatRanOn } from "./create-shell";
+
+function CopyIconButton({
+  label,
+  copied,
+  onClick,
+}: {
+  label: string;
+  copied: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={copied ? "Copied" : `Copy ${label}`}
+      title={copied ? "Copied" : "Copy"}
+      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#301CA0] hover:bg-[#E6F3EF] transition-colors"
+    >
+      <Copy className="h-4 w-4" strokeWidth={2} aria-hidden />
+    </button>
+  );
+}
 
 function SessionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -112,24 +135,30 @@ function SessionDetail() {
         <div className="bg-white border border-[#E7E4DD] rounded-xl p-6 space-y-5 mb-8">
           <div>
             <div className="text-[14px] font-semibold mb-1">Join link</div>
-            <div className="flex flex-wrap gap-2 items-center">
-              <code className="text-[15px] break-all">{joinUrl}</code>
-              <SecondaryButton onClick={() => copy("join", joinUrl)}>
-                {copied === "join" ? "Copied" : "Copy"}
-              </SecondaryButton>
+            <div className="flex gap-2 items-center justify-between">
+              <code className="text-[15px] break-all min-w-0">{joinUrl}</code>
+              <CopyIconButton
+                label="join link"
+                copied={copied === "join"}
+                onClick={() => copy("join", joinUrl)}
+              />
             </div>
             <p className="text-[14px] text-[#6C6975] mt-1 mb-0">Code: {data.workshopCode}</p>
           </div>
           <div>
             <div className="text-[14px] font-semibold mb-1">Facilitator board</div>
-            <div className="flex flex-wrap gap-2 items-center">
-              <code className="text-[15px] break-all">{facilitateUrl}</code>
-              <SecondaryButton onClick={() => copy("fac", facilitateUrl)}>
-                {copied === "fac" ? "Copied" : "Copy"}
-              </SecondaryButton>
-              <SecondaryButton onClick={regenToken}>
-                Regenerate token
-              </SecondaryButton>
+            <div className="flex gap-2 items-center justify-between">
+              <code className="text-[15px] break-all min-w-0">{facilitateUrl}</code>
+              <div className="flex items-center gap-1 shrink-0">
+                <CopyIconButton
+                  label="facilitator link"
+                  copied={copied === "fac"}
+                  onClick={() => copy("fac", facilitateUrl)}
+                />
+                <SecondaryButton onClick={regenToken}>
+                  Regenerate token
+                </SecondaryButton>
+              </div>
             </div>
             <p className="text-[14px] text-[#6C6975] mt-1 mb-0">
               Signed-in users can open the board without a token. Regenerate issues a co-facilitator
