@@ -90,6 +90,9 @@ export const decisionChromeSchema = z.object({
   stopOne: z.string(),
   stopTwo: z.string(),
   stopMany: z.string(),
+  /** Join-screen coaching; omit or "" to hide the callout. */
+  joinTeamKicker: z.string().optional(),
+  joinTeamCallout: z.string().optional(),
 });
 
 export type DecisionChrome = z.infer<typeof decisionChromeSchema>;
@@ -112,6 +115,9 @@ export const DEFAULT_MART_CHROME: DecisionChrome = {
   stopOne: "Branch {n}",
   stopTwo: "Branches {a} and {b}",
   stopMany: "Branches {list} and {last}",
+  joinTeamKicker: "Work as a team",
+  joinTeamCallout:
+    "Discuss each choice before you confirm. Once you pick a door, you cannot undo it.",
 };
 
 export function chromeOf(game: { chrome?: DecisionChrome | null }): DecisionChrome {
@@ -233,8 +239,13 @@ export function parseDecisionGameContent(
     if (!gradeKeys.has(key)) throw new Error(`scoring.grades missing ${key}`);
   }
   for (const [tagKey, tag] of Object.entries(parsed.scoring.tags)) {
-    if (!tag.withBranches.includes("{branches}")) {
-      throw new Error(`scoring.tags.${tagKey}.withBranches must contain {branches}`);
+    const template = tag.withBranches;
+    const hasStops = template.includes("{stops}");
+    const hasBranches = template.includes("{branches}");
+    if (!hasStops && !hasBranches) {
+      throw new Error(
+        `scoring.tags.${tagKey}.withBranches must contain {stops} (or legacy {branches})`,
+      );
     }
   }
   const grids = Object.entries(parsed.scoring.styles.labels).map(([key, label]) => {

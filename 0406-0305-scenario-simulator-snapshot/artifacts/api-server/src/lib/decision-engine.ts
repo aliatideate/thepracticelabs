@@ -60,6 +60,11 @@ export function formatBranchList(orders: number[], chrome?: DecisionChrome) {
   return formatStopList(orders, chrome);
 }
 
+export function fillStopListToken(template: string, list: string): string {
+  // Prefer engine-neutral {stops}; keep {branches} working for older content.
+  return template.replaceAll("{stops}", list).replaceAll("{branches}", list);
+}
+
 export function tagLine(game: DecisionGame, choices: DecisionChoice[], tag: "tooSlow" | "tooFast") {
   const orders: number[] = [];
   for (const choice of choices) {
@@ -74,7 +79,7 @@ export function tagLine(game: DecisionGame, choices: DecisionChoice[], tag: "too
   const spec = game.scoring.tags[tag];
   if (!spec) return "";
   if (orders.length === 0) return spec.zero;
-  return spec.withBranches.replace("{branches}", formatStopList(orders, chromeOf(game)));
+  return fillStopListToken(spec.withBranches, formatStopList(orders, chromeOf(game)));
 }
 
 function taggedCount(game: DecisionGame, choices: DecisionChoice[], tag: "tooSlow" | "tooFast") {

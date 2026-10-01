@@ -492,7 +492,7 @@ export default function MartFacilitate() {
                           s.flaggedForDebrief &&
                           call(`/api/mart/sessions/${s.id}/flag`, {
                             method: "POST",
-                            body: JSON.stringify({ flagged: false }),
+                            body: JSON.stringify({ flagged: false, workshopCode }),
                           }).then(() => load())
                         }
                         className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[13px] ${
