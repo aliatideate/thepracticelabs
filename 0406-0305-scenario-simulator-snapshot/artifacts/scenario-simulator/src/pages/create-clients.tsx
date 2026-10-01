@@ -17,6 +17,7 @@ type ClientRow = {
   id: string;
   name: string;
   notes: string | null;
+  archivedAt: string | null;
   createdAt: string;
   lastModifiedAt: string;
   sessions: {
@@ -49,13 +50,16 @@ function ClientsHome() {
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
+  const [archiveBusyId, setArchiveBusyId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["create-clients"],
+    queryKey: ["create-clients", showArchived ? "archived" : "active"],
     queryFn: async () => {
-      const res = await fetch("/api/create/clients", { credentials: "same-origin" });
+      const qs = showArchived ? "?archived=1" : "";
+      const res = await fetch(`/api/create/clients${qs}`, { credentials: "same-origin" });
       if (!res.ok) throw new Error("failed");
-      return (await res.json()) as { clients: ClientRow[] };
+      return (await res.json()) as { clients: ClientRow[]; view: string };
     },
   });
 
@@ -127,13 +131,38 @@ function ClientsHome() {
     }
   };
 
+  const toggleArchive = async (client: ClientRow) => {
+    setArchiveBusyId(client.id);
+    try {
+      const path = showArchived
+        ? `/api/create/clients/${client.id}/restore`
+        : `/api/create/clients/${client.id}/archive`;
+      const res = await fetch(path, { method: "POST", credentials: "same-origin" });
+      if (!res.ok) return;
+      await queryClient.invalidateQueries({ queryKey: ["create-clients"] });
+    } finally {
+      setArchiveBusyId(null);
+    }
+  };
+
   return (
     <CreateShell
       activeTab="clients"
       actions={
-        <PrimaryButton type="button" icon="plus" onClick={() => setShowNew(true)}>
-          New client
-        </PrimaryButton>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowArchived((v) => !v)}
+            className="text-[15px] font-semibold text-[#301CA0] bg-transparent border-0 p-0 cursor-pointer hover:underline"
+          >
+            {showArchived ? "Show active" : "Show archived"}
+          </button>
+          {!showArchived && (
+            <PrimaryButton type="button" icon="plus" onClick={() => setShowNew(true)}>
+              New client
+            </PrimaryButton>
+          )}
+        </div>
       }
     >
       <Dialog open={showNew} onOpenChange={openChange}>
@@ -215,11 +244,18 @@ function ClientsHome() {
         </DialogContent>
       </Dialog>
 
+      {showArchived && (
+        <p className="text-[15px] text-[#6C6975] mt-0 mb-4">
+          Archived clients are hidden from the default list. Session links still work. Restore to
+          bring a client back.
+        </p>
+      )}
       {isLoading && <p className="text-[#6C6975]">Loading…</p>}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {(data?.clients ?? []).map((c) => {
-          const canDelete = c.sessions.length === 0;
+          const canDelete = !showArchived && c.sessions.length === 0;
           const showDelete = canDelete && hoveredId === c.id;
+          const archiveBusy = archiveBusyId === c.id;
           return (
             <div
               key={c.id}
@@ -273,32 +309,54 @@ function ClientsHome() {
                     </ul>
                   )}
                 </div>
-                {canDelete && (
+                <div className="shrink-0 flex items-center gap-1">
                   <button
                     type="button"
-                    aria-label={`Delete ${c.name}`}
-                    title="Delete client"
-                    tabIndex={showDelete ? 0 : -1}
+                    disabled={archiveBusy}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      setDeleteError(null);
-                      setDeleteTarget(c);
+                      void toggleArchive(c);
                     }}
-                    className={`shrink-0 inline-flex h-8 w-8 items-center justify-center rounded-lg border-0 bg-transparent text-[#6C6975] transition-opacity duration-150 hover:bg-[#F1F0EC] hover:text-[#B42318] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#301CA0] cursor-pointer ${
-                      showDelete ? "opacity-100" : "opacity-0"
-                    }`}
+                    className="text-[13px] font-semibold text-[#301CA0] bg-transparent border-0 px-2 py-1 cursor-pointer hover:underline disabled:opacity-50"
                   >
-                    <Trash2 className="h-4 w-4" strokeWidth={2} aria-hidden />
+                    {archiveBusy
+                      ? "…"
+                      : showArchived
+                        ? "Restore"
+                        : "Archive"}
                   </button>
-                )}
+                  {canDelete && (
+                    <button
+                      type="button"
+                      aria-label={`Delete ${c.name}`}
+                      title="Delete client"
+                      tabIndex={showDelete ? 0 : -1}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setDeleteError(null);
+                        setDeleteTarget(c);
+                      }}
+                      className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border-0 bg-transparent text-[#6C6975] transition-opacity duration-150 hover:bg-[#F1F0EC] hover:text-[#B42318] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#301CA0] cursor-pointer ${
+                        showDelete ? "opacity-100" : "opacity-0"
+                      }`}
+                    >
+                      <Trash2 className="h-4 w-4" strokeWidth={2} aria-hidden />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           );
         })}
       </div>
       {!isLoading && (data?.clients.length ?? 0) === 0 && (
-        <p className="text-[#6C6975]">No clients yet. Create one to start a session.</p>
+        <p className="text-[#6C6975]">
+          {showArchived
+            ? "No archived clients."
+            : "No clients yet. Create one to start a session."}
+        </p>
       )}
     </CreateShell>
   );

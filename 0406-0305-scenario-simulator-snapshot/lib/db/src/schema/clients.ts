@@ -20,6 +20,8 @@ export const clientsTable = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
       .notNull()
       .defaultNow(),
+    /** Soft-hide from Creator home; session links stay live. */
+    archivedAt: timestamp("archived_at", { withTimezone: true, mode: "date" }),
   },
   (t) => ({
     orgNameIdx: index("clients_org_name_idx").on(t.orgId, t.name),

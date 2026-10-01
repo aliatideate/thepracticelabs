@@ -1,52 +1,29 @@
-# Proposal — archive / hide clients (revised)
+# Archive / hide clients
 
-**Status:** revised proposal — **do not build** until Ali says go.  
-**Why:** Clients with any sessions cannot be deleted. Rehearsals (esp. production) leave permanent clutter on Creator home.
+**Status:** implemented on staging (PR pending) — soft-archive via `archivedAt`.  
+**Promote to production:** only via `main` → `production` PR + Ali “yes” in chat.
 
-## Recommendation (single path)
+## Behavior
 
-**Soft-archive on the client row** — add nullable `archivedAt` (timestamp) on `clients`.
-
-| Behavior | Detail |
+| | |
 | --- | --- |
-| Creator home (default) | Show only clients where `archivedAt` is null |
-| Archive | Client card or detail → “Archive” sets `archivedAt = now()` |
-| Restore | “Show archived” filter → “Restore” clears `archivedAt` |
-| Sessions | Unchanged; join / facilitate / try / print links **stay live** |
-| Delete | Still only when **zero** sessions (unchanged rule) |
-| Scope | **Client-level only** — no per-session archive in v1 |
+| Column | `clients.archived_at` (nullable timestamptz) |
+| Creator home (default) | Active clients only (`archived_at` is null) |
+| Show archived | Toggle lists archived clients; **Restore** clears `archived_at` |
+| Archive | Card or detail → Archive sets `archived_at = now()` |
+| Session links | Stay live while archived |
+| Delete | Unchanged — only when zero sessions |
+| New session / brief pickers | Active clients only (default list API) |
 
-No separate “test” flag. No moving rows into an archive table.
+## API
 
-## Why this shape
+- `GET /api/create/clients` — active  
+- `GET /api/create/clients?archived=1` — archived  
+- `POST /api/create/clients/:id/archive`  
+- `POST /api/create/clients/:id/restore`  
 
-- One column, reversible, no data migration risk to live workshop rooms  
-- Operator can hide Prod Rehearsal Co / Rehearsal Co without breaking team links mid-week  
-- Matches “rehearse on staging” going forward while cleaning existing prod clutter  
+## Out of scope (still)
 
-## Decisions locked in this revision
-
-| Question | Answer |
-| --- | --- |
-| Archive vs test flag | **Archive** (`archivedAt`) |
-| Session links when archived | **Remain live** |
-| Session-level archive | **Not in v1** — client-level only |
-
-## Out of scope
-
-- Deleting clients that still have sessions  
-- Auto-expiring rooms or clients  
-- Multi-org / roles  
-
-## Build path (when Ali says go)
-
-1. Schema + bootstrap/`archived_at` on `clients` (staging first)  
-2. Creator API: archive / restore endpoints (Creator auth)  
-3. UI: Archive on card/detail; “Show archived” toggle on Clients  
-4. Smoke on staging Creator list  
-5. Production only via `main` → `production` PR + Ali “yes” in chat  
-
-## Open only if Ali disagrees
-
-- Prefer a status enum (`active` / `archived`) over timestamp? (timestamp is enough for v1.)  
-- Should archived clients be excluded from any “new session” client picker? (Recommend **yes** — hide from default pickers too.)
+- Deleting clients with sessions  
+- Auto-expiry  
+- Per-session archive  
