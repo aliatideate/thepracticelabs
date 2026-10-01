@@ -90,6 +90,9 @@ export const decisionChromeSchema = z.object({
   stopOne: z.string(),
   stopTwo: z.string(),
   stopMany: z.string(),
+  /** Join-screen coaching; omit or "" to hide the callout. */
+  joinTeamKicker: z.string().optional(),
+  joinTeamCallout: z.string().optional(),
 });
 
 export type DecisionChrome = z.infer<typeof decisionChromeSchema>;
@@ -112,6 +115,9 @@ export const DEFAULT_MART_CHROME: DecisionChrome = {
   stopOne: "Branch {n}",
   stopTwo: "Branches {a} and {b}",
   stopMany: "Branches {list} and {last}",
+  joinTeamKicker: "Work as a team",
+  joinTeamCallout:
+    "Discuss each choice before you confirm. Once you pick a door, you cannot undo it.",
 };
 
 export function chromeOf(game: { chrome?: DecisionChrome | null }): DecisionChrome {

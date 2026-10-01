@@ -590,7 +590,9 @@
     "questionLine": "Question {n} · {location}",
     "stopOne": "Stop {n}",
     "stopTwo": "Stops {a} and {b}",
-    "stopMany": "Stops {list} and {last}"
+    "stopMany": "Stops {list} and {last}",
+    "joinTeamKicker": "Work as a team",
+    "joinTeamCallout": "Discuss each choice before you confirm. Once you choose, you cannot undo it."
   },
   "scoring": {
     "grades": {

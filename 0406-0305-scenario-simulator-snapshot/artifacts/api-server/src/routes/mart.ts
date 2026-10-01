@@ -337,10 +337,20 @@ router.post("/mart/sessions/:id/choice", async (req, res) => {
 });
 
 router.post("/mart/sessions/:id/flag", async (req, res) => {
-  const workshopId = await workshopIdFor(martCodeFrom(req));
-  const row = await loadDecision(String(req.params.id), workshopId);
+  const body = req.body as { flagged?: boolean; workshopCode?: string } | undefined;
+  const explicitCode =
+    (typeof req.query.workshopCode === "string" && req.query.workshopCode.trim()) ||
+    (typeof body?.workshopCode === "string" && body.workshopCode.trim()) ||
+    "";
+  // Prefer id lookup so Creator rooms work even if clients omit workshopCode
+  // (legacy default is MART). When a code is supplied, enforce it.
+  let row = await loadDecision(String(req.params.id));
   if (!row) return res.status(404).json({ error: "not found" });
-  const flagged = Boolean((req.body as { flagged?: boolean }).flagged);
+  if (explicitCode) {
+    const workshopId = await workshopIdFor(explicitCode.trim().toUpperCase());
+    if (row.workshopId !== workshopId) return res.status(404).json({ error: "not found" });
+  }
+  const flagged = Boolean(body?.flagged);
   const updated = await db
     .update(decisionSessionsTable)
     .set({ flaggedForDebrief: flagged, updatedAt: new Date() })

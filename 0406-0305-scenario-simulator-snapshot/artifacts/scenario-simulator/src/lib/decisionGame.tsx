@@ -76,6 +76,8 @@ export interface DecisionChrome {
   stopOne: string;
   stopTwo: string;
   stopMany: string;
+  joinTeamKicker?: string;
+  joinTeamCallout?: string;
 }
 
 /** Current Mart wording — fallback when chrome is absent on frozen/legacy content. */
@@ -96,6 +98,9 @@ export const DEFAULT_MART_CHROME: DecisionChrome = {
   stopOne: "Branch {n}",
   stopTwo: "Branches {a} and {b}",
   stopMany: "Branches {list} and {last}",
+  joinTeamKicker: "Work as a team",
+  joinTeamCallout:
+    "Discuss each choice before you confirm. Once you pick a door, you cannot undo it.",
 };
 
 export function chromeOf(game: { chrome?: DecisionChrome | null }): DecisionChrome {

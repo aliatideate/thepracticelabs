@@ -123,6 +123,7 @@ export function Header({
   clock,
   liveLabel = "Live",
   brandOnly = false,
+  timerMode = "default",
 }: {
   teamName?: string;
   teamEmoji?: string;
@@ -139,6 +140,8 @@ export function Header({
   liveLabel?: string;
   /** Creator area: logo + "Creator Studio", no session title / timer. */
   brandOnly?: boolean;
+  /** Join screens: show full duration (neutral) until a live countdown is meaningful — no red 00:00. */
+  timerMode?: "default" | "join";
 }) {
   const scenario = useScenario();
   const fetched = useSessionConfig(clock !== undefined ? undefined : (configPath ?? "/api/session-config"));
@@ -183,16 +186,22 @@ export function Header({
   const barColor = timeBarColor(fraction);
   const expired = config ? isExpired(config) : false;
   const underFive = remaining !== null && remaining > 0 && remaining < 5 * 60_000;
-  const timerLabel = !config?.startedAt
-    ? "Not started"
+  const fullDurationLabel = formatCountdown((config?.durationMinutes ?? 0) * 60_000);
+  const joinIdle = timerMode === "join" && (!config?.startedAt || expired);
+  const timerLabel = joinIdle
+    ? fullDurationLabel
+    : !config?.startedAt
+      ? "Not started"
+      : expired
+        ? "00:00"
+        : formatCountdown(remaining ?? 0);
+  const timerClass = joinIdle
+    ? "text-white"
     : expired
-      ? "00:00"
-      : formatCountdown(remaining ?? 0);
-  const timerClass = expired
-    ? "text-[#B42318] font-semibold"
-    : underFive
-      ? "text-[#B7791F] font-semibold"
-      : "text-white";
+      ? "text-[#B42318] font-semibold"
+      : underFive
+        ? "text-[#B7791F] font-semibold"
+        : "text-white";
 
   const step = currentScreen ? flowStepIndex(currentScreen) : -1;
 
