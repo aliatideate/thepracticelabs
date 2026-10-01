@@ -1,7 +1,7 @@
 # Practice Labs — build status for review (2026-09-30)
 
 Audience: senior engineering manager + LLM reviewers.  
-Ask for: comments on product completeness, risk, and what to test before the next live workshop.
+Ask for: comments on product completeness, risk, and what still needs attention to get the tool into **good overall shape** (not gated on a single upcoming workshop date).
 
 **Screenshots in this doc:** [`./media/status-2026-09-30-sem/`](./media/status-2026-09-30-sem/)  
 **Code root:** `0406-0305-scenario-simulator-snapshot/` · Repo: `aliatideate/thepracticelabs`
@@ -14,7 +14,7 @@ Ask for: comments on product completeness, risk, and what to test before the nex
 | --- | --- | --- |
 | URL | https://app-staging-78f4.up.railway.app | https://practicelabs.up.railway.app |
 | Git branch | `main` | `production` |
-| Tip (as of this doc) | `f74aaf2` (includes open-slots fix) | `8f37ba1` (**1 commit behind** `main`) |
+| Tip (as of this doc) | `f74aaf2` (includes open-slots fix) | `f74aaf2` (same — #36 promoted 2026-10-01) |
 | Creator | `/login` → `/create` | same |
 
 **Deploy model (hard rule):** merge → staging only. Production updates only by fast-forward `production` ← `main` when Ali explicitly approves. No `railway up` to production. Details: repo `docs/deploy-staging-first.md`.
@@ -110,22 +110,30 @@ Real second Mart-engine exercise (not a schema fixture): Falaj Footwear buying w
 
 *Stop 1 of 6 at Al Quoz — progress chrome + location tokens resolved.*
 
+**Caveat:** import passed cleanly, but the Lacehouse JSON was **written from the Mart v2 template**. That proves the import path accepts well-formed branching content; it does **not** yet prove a hand-authored exercise (authored outside the Mart template) gets in without engineering help.
+
 **Still hardcoded for any branching story** (by design today): option ids `A \| B \| call`; four style keys (`operator|escalator|cowboy|bottleneck`); `{branches}` token name inside some tag templates; hotspot rectangles; travel “comma → area” parsing. Labels/copy can change; shape cannot without more engine work.
 
-### 2.5 Join open-slots fix (PR #36) — on staging, not yet production
+### 2.5 Join open-slots fix (PR #36) — staging + production
 
-Mart join meta used `TEAM_NAMES.length` (10) while the grid used `room.teamCount` (e.g. 6). Fixed to `teamSlots.length`. Verified on staging `AXQKUC`: **1 of 6**.
+Mart join meta used `TEAM_NAMES.length` (10) while the grid used `room.teamCount` (e.g. 6). Fixed to `teamSlots.length`.
+
+| Env | Room | Observed |
+| --- | --- | --- |
+| Staging | `AXQKUC` | **1 of 6** (verified earlier) |
+| Production | `Q7X2TU` | **1 of 6** after promote + smoke 2026-10-01 |
 
 ![Staging open slots 1 of 6](./media/status-2026-09-30-sem/10-staging-open-slots-1-of-6.webp)
 
 *Staging Mart join after #36: Open slots **1 of 6**, six cards — matches room `teamCount`.*
 
-### 2.6 Rehearsals already run (2026-09-30)
+### 2.6 Rehearsals already run
 
-| Env | Client | Sessions | Outcome |
-| --- | --- | --- | --- |
-| Staging | Rehearsal Co | Demand `H72DJ7`, Mart `AXQKUC` | 7 team joins; mid-flow refresh OK; CSV/archive/print OK |
-| Production | Prod Rehearsal Co | Demand `6SZHRJ`, Mart `Q7X2TU` | Same shape; promote OK at tip `5a2e218`+ |
+| Env | When | Client | Sessions | Outcome |
+| --- | --- | --- | --- | --- |
+| Staging | 2026-09-30 | Rehearsal Co | Demand `H72DJ7`, Mart `AXQKUC` | 7 team joins; mid-flow refresh OK; CSV/archive/print OK |
+| Production | 2026-09-30 | Prod Rehearsal Co | Demand `6SZHRJ`, Mart `Q7X2TU` | Same shape; promote OK at tip `5a2e218`+ |
+| Production | 2026-10-01 | Prod Rehearsal Co (smoke) | same codes | After #36 FF: open-slots **1 of 6**; co-fac `?token=` boards; Demand + Mart happy paths — all pass |
 
 **Broke then fixed:** co-facilitator UI links hit Creator `/login` because `AuthGate` ignored `?token=`. Fix: `allowFacilitatorToken` on facilitate routes. Retested staging + production.
 
@@ -147,49 +155,51 @@ Mart join meta used `TEAM_NAMES.length` (10) while the grid used `room.teamCount
 
 | Item | Priority | Notes |
 | --- | --- | --- |
-| **Promote open-slots fix to production** | High (when Ali OK) | Staging has it; prod still shows “1 of 10” on 6-team rooms |
-| **Join-flow visual polish** | Blocked | Waiting on Ali’s examples; do **not** invent a redesign |
-| **Facilitator attention / nudge** | Medium | Built earlier; **never exercised** in rehearsals |
-| **Six-window dress rehearsal (formal)** | Medium | Multi-team + mid-flow refresh done in Creator rehearsals; a timed 30‑min six-window pass may still be desired |
+| **Facilitator attention / nudge** | **High** | Built earlier; **never exercised** in rehearsals — exercise on staging before trusting |
+| **Join-flow visual polish** | Blocked / not must-have | Waiting on Ali’s examples; do **not** invent a redesign. Not a pre-workshop blocker. |
+| **Join copy/structure fixes** | Plan first | Team callout → chrome; timer red 00:00 before start; duplicate session/scenario; “table”→“team”; device-switch report |
+| **`{branches}` → engine-neutral token** | Medium | e.g. `{stops}` with fallback for existing content |
+| **Six-window dress rehearsal (formal)** | Medium | Multi-team + mid-flow refresh done; timed 30‑min six-window pass may still be desired (prefer staging) |
 | **Save `/print` as PDF** | Low/ops | Process fallback for breakouts; Demand print HTML already works |
-| **Loosen Mart engine shape** | Only if needed | Free option ids / style keys / `{branches}` token — not required for Lacehouse |
-| **Branch protection on `production`** | Ops | Discussed; confirm in GitHub if desired |
+| **Loosen Mart engine shape** | Only if needed | Accept current constraints until an exercise actually hits one |
+| **Branch protection on `production`** | Ops (Ali click) | Keep staging-first; see §7 for exact GitHub clicks |
+| **Archive / hide clients** | Proposal only | Prod clients with sessions can’t be deleted — clutter from rehearsals |
 | **Unilever Session 1 content** | Locked | Do not reopen decided content (Rohini Q3, SKU snapshot, etc.) |
 
-Out of scope unless reopened: restoring removed demo screens; rewriting live Unilever pedagogy.
+Out of scope unless reopened: restoring removed demo screens; rewriting live Unilever pedagogy. Roles, audit log, and multi-org do **not** block while this is a one-operator tool.
 
 ---
 
 ## 4. What matters most to test next
 
-Ordered for a busy SEM / facilitator dry-run. Prefer **staging** until open-slots is promoted.
+Prefer **staging** for new rehearsal (prod clients can’t be deleted when sessions exist). Ordered for getting the tool into good overall shape.
 
-### P0 — before trusting staging tip / next promote
+### P0 — confidence on current tip
 
-1. **Mart join open slots** — https://app-staging-78f4.up.railway.app/s/AXQKUC  
+1. **Attention / nudge** on staging Mart + Demand boards (never rehearsed) — report before fixing.
+2. **Mart join open slots** (already green on staging + prod) — https://app-staging-78f4.up.railway.app/s/AXQKUC · https://practicelabs.up.railway.app/s/Q7X2TU  
    Expect Open slots **N of 6** (not 10); card count = `teamCount`.
-2. **Co-facilitator token** — open session’s co-facilitator link (incognito).  
-   Board must load **without** Creator login (Mart + Demand).
-3. **Creator → new session → join** — non-Unilever client; Demand + Mart; claim a slot; mid-flow refresh; confirm same team.
+3. **Co-facilitator token** — session’s co-facilitator link (incognito). Board without Creator login (Mart + Demand). Verified again on prod 2026-10-01.
 
 ### P1 — import / multi-exercise confidence
 
 4. **Lacehouse imported session** — https://app-staging-78f4.up.railway.app/s/HD6Y2S/try  
    Chrome (“Stop N of M”, “Next stop”), renamed locations, full path to reveal.
-5. **Import UI or CLI** — Activities → Import (or CLI) with a rough third exercise if available; fail-closed validation should surface path errors, not write bad rows.
+5. **Import UI or CLI** — Activities → Import (or CLI) with a rough hand-authored third exercise if available; fail-closed validation should surface path errors, not write bad rows.
 6. **CSV + archive** — after ≥1 team submits, export CSV (shared prefix) and save/list archive on both engines.
 
-### P2 — workshop-day ops
+### P2 — ops / polish
 
 7. **Demand `/print`** — https://app-staging-78f4.up.railway.app/s/H72DJ7/print (or fresh session); save PDF manually if needed for breakouts.
-8. **Attention / nudge** on a live board (never rehearsed).
-9. **Production smoke after promote** — only when Ali says so: join `Q7X2TU` (or new room) for open-slots; token board; one Demand + one Mart happy path.
+8. **Join copy/structure** after Ali approves the plan (not the blocked visual redesign).
+9. **Further production smoke** — only when Ali says so for the next promote beyond #36.
 
 ### Explicitly lower urgency
 
-- Join visual redesign (blocked on design input).  
+- Join visual redesign (blocked on design input; not a must-have).  
 - Engine shape generalisation (only if next imported exercise hits a wall).  
-- Creator UI chrome polish already shipped (#28–#32).
+- Creator UI chrome polish already shipped (#28–#32).  
+- Roles / audit log / multi-org (one-operator tool).
 
 ---
 
@@ -224,18 +234,52 @@ Ordered for a busy SEM / facilitator dry-run. Prefer **staging** until open-slot
 | [#33](https://github.com/aliatideate/thepracticelabs/pull/33) | Rest of Creator build: engine contract, import, shared CSV |
 | [#34](https://github.com/aliatideate/thepracticelabs/pull/34) | Mart player chrome → content |
 | [#35](https://github.com/aliatideate/thepracticelabs/pull/35) | Lacehouse Mart-engine import stress-test content |
-| [#36](https://github.com/aliatideate/thepracticelabs/pull/36) | Mart join open-slots count = `teamCount` (**staging only until promote**) |
+| [#36](https://github.com/aliatideate/thepracticelabs/pull/36) | Mart join open-slots count = `teamCount` (**promoted to production** 2026-10-01 @ `f74aaf2`) |
 | #28–#32 | Creator breadcrumbs, selects, client lightbox/delete |
 
 ---
 
-## 7. Suggested questions for reviewers
+## 7. Decisions (Ali) + GitHub clicks
 
-1. Is staging-first + explicit promote the right long-term gate, or do we need branch protection / required checks on `production`?
-2. Should attention/nudge be in the P0 workshop checklist, or can it wait?
-3. For the next imported exercise: accept current Mart shape constraints, or schedule engine generalisation first?
-4. Join visual polish: treat as pre-workshop must-have, or post-workshop once Ali supplies examples?
-5. Any gap in Creator (roles, audit log, multi-org) that should block broader Ideate use?
+### Deploy / branch protection
+
+**Keep staging-first.** Add branch protection on `production`: block force pushes + deletion, require a pull request, **no** approval requirement.
+
+**Exact clicks (GitHub):**
+
+1. Open https://github.com/aliatideate/thepracticelabs/settings/rules  
+   (or **Settings → Rules → Rulesets**).
+2. **New ruleset** → name e.g. `protect-production`.
+3. **Enforcement status:** Active.
+4. **Target branches → Add target → Include by pattern** → `production`.
+5. Under **Rules**:
+   - Turn **on** Restrict deletions.
+   - Turn **on** Block force pushes.
+   - Turn **on** Require a pull request before merging.
+   - Set **Required approvals** to **0** (do **not** require reviewers).
+   - Leave status checks / CODEOWNERS / linear history off unless you want them later.
+6. **Create** / Save.
+
+(If the repo still shows classic **Settings → Branches → Branch protection rules**, same intent: rule for `production`, require PR before merging with approvals unchecked/0, disallow force pushes, disallow deletions.)
+
+**Promote process unchanged:** when Ali OK, fast-forward only:
+
+```bash
+git fetch origin main production
+git checkout production && git merge --ff-only origin/main
+git push origin production
+```
+
+Never `railway up` production. Nothing beyond #36 goes to production without Ali’s explicit OK.
+
+### Product scope answers
+
+| Topic | Decision |
+| --- | --- |
+| Mart shape constraints | **Accept** until an exercise actually hits one |
+| Join visual polish | **Not** a pre-workshop must-have; wait for Ali examples |
+| Attention / nudge | Raise priority (**High**); exercise on staging soon |
+| Roles / audit log / multi-org | Do **not** block while this is a one-operator tool |
 
 ---
 
@@ -249,3 +293,4 @@ Ordered for a busy SEM / facilitator dry-run. Prefer **staging** until open-slot
 | `docs/shell-engine-audit.md` | Shell vs engine boundary |
 | `docs/creator-studio-status-2026-09-30.md` | Earlier Creator UI handoff (partly superseded) |
 | `docs/handoff-2026-09-30.md` | Agent pick-up + Mart content-vs-code notes |
+| `docs/handoff-2026-10-01-continue-build.md` | Continue-build ordered list (PR #38) |
