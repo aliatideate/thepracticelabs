@@ -18,6 +18,20 @@ Evidence: agent store `media/prod-smoke-2026-10-01/`
 
 ---
 
+## Staging attention / Ask Moderator — 2026-10-01
+
+Report-only at time of test; Mart clear fix shipping separately. Detail: agent store `internal/staging-attention-test-2026-10-01.md`.
+
+| Engine | Raise flag | Board shows | Clear |
+| --- | --- | --- | --- |
+| Demand `H72DJ7` | ok | ok | **ok** |
+| Mart `AXQKUC` | ok (body includes `workshopCode`) | ok | **fail** — clear POST omits `workshopCode` → 404 vs Creator room (defaults to `MART`) |
+
+No facilitator→player nudge API; player-local blink only.
+
+---
+
+
 ## Production Creator rehearsal — 2026-09-30
 
 Promoted `production` ← `main` (Ali OK). Tip **`5a2e218`**. Client: **Prod Rehearsal Co**.
