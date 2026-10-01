@@ -1,5 +1,23 @@
 # Rehearsal results
 
+## Production smoke after #36 promote — 2026-10-01
+
+Tip **`f74aaf2`** on both `main` and `production` (FF promote already done). Bundle `assets/index-BBJe_emp.js` — Open slots uses `teamSlots.length`.
+
+| Check | Result |
+| --- | --- |
+| Mart open slots `Q7X2TU` | **pass** — UI showed **1 of 6** (not 10); six team cards |
+| Co-facilitator `?token=` Mart | **pass** — board loads, no Creator login |
+| Co-facilitator `?token=` Demand | **pass** — board loads, no Creator login |
+| Demand happy path `6SZHRJ` | **pass** — claimed Team 4 “Smoke Test”, entered brief/simulation |
+| Mart happy path `Q7X2TU` | **pass** — claimed Team 6 “Mart Smoke”, intro → Branch 1 decision |
+| Timer red `00:00` on expired room | **expected** (pre-start/expired display bug for §4) — not an open-slots failure |
+
+Links: https://practicelabs.up.railway.app/s/Q7X2TU · https://practicelabs.up.railway.app/s/6SZHRJ  
+Evidence: agent store `media/prod-smoke-2026-10-01/`
+
+---
+
 ## Production Creator rehearsal — 2026-09-30
 
 Promoted `production` ← `main` (Ali OK). Tip **`5a2e218`**. Client: **Prod Rehearsal Co**.
