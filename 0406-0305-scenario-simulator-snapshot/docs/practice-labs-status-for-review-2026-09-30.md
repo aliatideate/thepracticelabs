@@ -17,7 +17,7 @@ Ask for: comments on product completeness, risk, and what still needs attention 
 | Tip (as of this doc) | `f74aaf2` (includes open-slots fix) | `f74aaf2` (same — #36 promoted 2026-10-01) |
 | Creator | `/login` → `/create` | same |
 
-**Deploy model (hard rule):** merge → staging only. Production updates only by fast-forward `production` ← `main` when Ali explicitly approves. No `railway up` to production. Details: repo `docs/deploy-staging-first.md`.
+**Deploy model (hard rule):** merge → staging only. Production updates only via a PR from `main` into `production`, after Ali’s explicit “yes” in chat. Never push `production` directly. No `railway up` to production. Details: repo `docs/deploy-staging-first.md`.
 
 **Product intent:** one Ideate operator manages **clients**, picks a **published exercise**, lightly customises tokens (company / chain / locations / logo), creates an **isolated workshop session** (join / facilitate / try / print), and captures **briefs** for exercises still in design. Not an exercise generator.
 
