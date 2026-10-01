@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request } from "express";
-import { and, asc, desc, eq, max } from "drizzle-orm";
+import { and, asc, desc, eq, isNotNull, isNull, max } from "drizzle-orm";
 import {
   assetsTable,
   briefsTable,
@@ -49,10 +49,19 @@ router.use("/create", requireAuth);
 router.get("/create/clients", async (req, res) => {
   const user = orgUser(req);
   if (!user) return res.status(401).json({ error: "unauthorized" });
+  const archivedView =
+    req.query.archived === "1" ||
+    req.query.archived === "true" ||
+    req.query.view === "archived";
   const clients = await db
     .select()
     .from(clientsTable)
-    .where(eq(clientsTable.orgId, user.orgId))
+    .where(
+      and(
+        eq(clientsTable.orgId, user.orgId),
+        archivedView ? isNotNull(clientsTable.archivedAt) : isNull(clientsTable.archivedAt),
+      ),
+    )
     .orderBy(asc(clientsTable.name));
 
   const sessions = await db
@@ -77,6 +86,7 @@ router.get("/create/clients", async (req, res) => {
     .orderBy(desc(workshopSessionsTable.updatedAt));
 
   return res.json({
+    view: archivedView ? "archived" : "active",
     clients: clients.map((c) => {
       const clientSessions = sessions.filter((s) => s.clientId === c.id);
       const timestamps = [
@@ -89,6 +99,7 @@ router.get("/create/clients", async (req, res) => {
         id: c.id,
         name: c.name,
         notes: c.notes,
+        archivedAt: c.archivedAt?.toISOString() ?? null,
         createdAt: c.createdAt.toISOString(),
         updatedAt: c.updatedAt.toISOString(),
         lastModifiedAt,
@@ -206,6 +217,7 @@ router.get("/create/clients/:id", async (req, res) => {
     id: client.id,
     name: client.name,
     notes: client.notes,
+    archivedAt: client.archivedAt?.toISOString() ?? null,
     createdAt: client.createdAt.toISOString(),
     sessions: sessions.map((s) => ({
       id: s.id,
@@ -218,6 +230,38 @@ router.get("/create/clients/:id", async (req, res) => {
       createdAt: s.createdAt.toISOString(),
       endedAt: s.endedAt?.toISOString() ?? null,
     })),
+  });
+});
+
+router.post("/create/clients/:id/archive", async (req, res) => {
+  const user = orgUser(req);
+  if (!user) return res.status(401).json({ error: "unauthorized" });
+  const id = String(req.params.id);
+  const updated = await db
+    .update(clientsTable)
+    .set({ archivedAt: new Date(), updatedAt: new Date() })
+    .where(and(eq(clientsTable.id, id), eq(clientsTable.orgId, user.orgId)))
+    .returning();
+  if (!updated[0]) return res.status(404).json({ error: "not_found" });
+  return res.json({
+    id: updated[0].id,
+    archivedAt: updated[0].archivedAt?.toISOString() ?? null,
+  });
+});
+
+router.post("/create/clients/:id/restore", async (req, res) => {
+  const user = orgUser(req);
+  if (!user) return res.status(401).json({ error: "unauthorized" });
+  const id = String(req.params.id);
+  const updated = await db
+    .update(clientsTable)
+    .set({ archivedAt: null, updatedAt: new Date() })
+    .where(and(eq(clientsTable.id, id), eq(clientsTable.orgId, user.orgId)))
+    .returning();
+  if (!updated[0]) return res.status(404).json({ error: "not_found" });
+  return res.json({
+    id: updated[0].id,
+    archivedAt: null,
   });
 });
 
