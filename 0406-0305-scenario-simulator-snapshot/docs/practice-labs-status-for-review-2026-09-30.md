@@ -262,15 +262,7 @@ Prefer **staging** for new rehearsal (prod clients can’t be deleted when sessi
 
 (If the repo still shows classic **Settings → Branches → Branch protection rules**, same intent: rule for `production`, require PR before merging with approvals unchecked/0, disallow force pushes, disallow deletions.)
 
-**Promote process unchanged:** when Ali OK, fast-forward only:
-
-```bash
-git fetch origin main production
-git checkout production && git merge --ff-only origin/main
-git push origin production
-```
-
-Never `railway up` production. Nothing beyond #36 goes to production without Ali’s explicit OK.
+**Promote process:** open a PR **base=`production`**, **head=`main`**; in the body list included changes and anything that could affect existing sessions; wait for Ali’s explicit “yes” in chat; merge that PR. **Never** `git push origin production`. Never `railway up` production. Nothing beyond #36 goes to production without Ali’s explicit OK.
 
 ### Product scope answers
 
