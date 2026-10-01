@@ -620,12 +620,12 @@
       "tooSlow": {
         "name": "Too slow",
         "zero": "Nothing waited that was yours to decide.",
-        "withBranches": "Waited on decisions that were yours: {branches}."
+        "withBranches": "Waited on decisions that were yours: {stops}."
       },
       "tooFast": {
         "name": "Too fast",
         "zero": "Nothing went ahead that needed a check.",
-        "withBranches": "Went ahead without a check: {branches}."
+        "withBranches": "Went ahead without a check: {stops}."
       }
     },
     "styles": {
