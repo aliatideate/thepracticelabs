@@ -14,7 +14,7 @@ import {
   chromeOf,
   parseDecisionGameContent,
 } from "./decision-game";
-import { formatStopList } from "./decision-engine";
+import { formatStopList, fillStopListToken } from "./decision-engine";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const contentDir = resolve(here, "../../../../content");
@@ -56,5 +56,23 @@ describe("decision chrome", () => {
     );
     const withChrome = parseDecisionGameContent(raw, { requireChrome: true });
     assert.equal(withChrome.chrome?.startCta, "Start the week");
+  });
+
+  it("accepts {stops} in tag templates and falls back to {branches}", () => {
+    const raw = JSON.parse(readFileSync(resolve(contentDir, "decision-game.v2.json"), "utf8"));
+    const parsed = parseDecisionGameContent(raw);
+    assert.match(parsed.scoring.tags.tooSlow.withBranches, /\{stops\}/);
+    assert.equal(
+      fillStopListToken("Waited: {stops}.", "Branch 1"),
+      "Waited: Branch 1.",
+    );
+    assert.equal(
+      fillStopListToken("Waited: {branches}.", "Branch 2"),
+      "Waited: Branch 2.",
+    );
+    const legacy = structuredClone(raw);
+    legacy.scoring.tags.tooSlow.withBranches = "Legacy: {branches}.";
+    const parsedLegacy = parseDecisionGameContent(legacy);
+    assert.match(parsedLegacy.scoring.tags.tooSlow.withBranches, /\{branches\}/);
   });
 });

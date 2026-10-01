@@ -233,8 +233,13 @@ export function parseDecisionGameContent(
     if (!gradeKeys.has(key)) throw new Error(`scoring.grades missing ${key}`);
   }
   for (const [tagKey, tag] of Object.entries(parsed.scoring.tags)) {
-    if (!tag.withBranches.includes("{branches}")) {
-      throw new Error(`scoring.tags.${tagKey}.withBranches must contain {branches}`);
+    const template = tag.withBranches;
+    const hasStops = template.includes("{stops}");
+    const hasBranches = template.includes("{branches}");
+    if (!hasStops && !hasBranches) {
+      throw new Error(
+        `scoring.tags.${tagKey}.withBranches must contain {stops} (or legacy {branches})`,
+      );
     }
   }
   const grids = Object.entries(parsed.scoring.styles.labels).map(([key, label]) => {
