@@ -248,11 +248,18 @@ export async function bootstrapDatabase(): Promise<void> {
         notes TEXT,
         created_by UUID NOT NULL REFERENCES users(id),
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        archived_at TIMESTAMPTZ
       )
     `);
     await client.query(`
+      ALTER TABLE clients ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ
+    `);
+    await client.query(`
       CREATE INDEX IF NOT EXISTS clients_org_name_idx ON clients (org_id, name)
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS clients_org_archived_idx ON clients (org_id, archived_at)
     `);
 
     await client.query(`

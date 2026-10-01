@@ -55,8 +55,9 @@ function ClientDetail() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [archiveBusy, setArchiveBusy] = useState(false);
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["create-client", id],
     queryFn: async () => {
       const res = await fetch(`/api/create/clients/${id}`, { credentials: "same-origin" });
@@ -65,6 +66,7 @@ function ClientDetail() {
         id: string;
         name: string;
         notes: string | null;
+        archivedAt: string | null;
         sessions: {
           id: string;
           title: string;
@@ -126,28 +128,59 @@ function ClientDetail() {
   const upcoming = data.sessions.filter((s) => s.status === "ready" || s.status === "live");
   const past = data.sessions.filter((s) => s.status === "ended");
   const canDelete = data.sessions.length === 0;
+  const isArchived = Boolean(data.archivedAt);
+
+  const toggleArchive = async () => {
+    setArchiveBusy(true);
+    try {
+      const path = isArchived
+        ? `/api/create/clients/${data.id}/restore`
+        : `/api/create/clients/${data.id}/archive`;
+      const res = await fetch(path, { method: "POST", credentials: "same-origin" });
+      if (!res.ok) return;
+      await queryClient.invalidateQueries({ queryKey: ["create-clients"] });
+      await refetch();
+    } finally {
+      setArchiveBusy(false);
+    }
+  };
 
   return (
     <Shell
       title={data.name}
       belowTitle={
-        canDelete ? (
+        <div className="mt-2 flex flex-wrap items-center gap-4">
+          {isArchived && (
+            <span className="text-[14px] font-semibold text-[#6C6975]">Archived</span>
+          )}
           <button
             type="button"
-            onClick={() => {
-              setDeleteError(null);
-              setConfirmDelete(true);
-            }}
-            className="mt-2 text-[15px] font-semibold text-[#6C6975] bg-transparent border-0 p-0 cursor-pointer hover:text-[#B42318]"
+            disabled={archiveBusy}
+            onClick={() => void toggleArchive()}
+            className="text-[15px] font-semibold text-[#301CA0] bg-transparent border-0 p-0 cursor-pointer hover:underline disabled:opacity-50"
           >
-            Delete
+            {archiveBusy ? "…" : isArchived ? "Restore" : "Archive"}
           </button>
-        ) : null
+          {canDelete ? (
+            <button
+              type="button"
+              onClick={() => {
+                setDeleteError(null);
+                setConfirmDelete(true);
+              }}
+              className="text-[15px] font-semibold text-[#6C6975] bg-transparent border-0 p-0 cursor-pointer hover:text-[#B42318]"
+            >
+              Delete
+            </button>
+          ) : null}
+        </div>
       }
       actions={
-        <Link href={`/create/clients/${data.id}/new`}>
-          <PrimaryButton type="button">New session</PrimaryButton>
-        </Link>
+        !isArchived ? (
+          <Link href={`/create/clients/${data.id}/new`}>
+            <PrimaryButton type="button">New session</PrimaryButton>
+          </Link>
+        ) : null
       }
     >
       <Dialog
