@@ -1,6 +1,6 @@
 # Deploy: staging first, then production
 
-**Status:** Railway dashboard setup in progress. App code does not change deploy targets.
+**Status:** Live. Staging tracks `main`; production tracks `production`.
 
 ## Goal
 
@@ -26,22 +26,21 @@ Project: **the-practice-labs**. Same project, two environments. Separate Postgre
 1. Open a PR into `main`.
 2. Merge → Railway deploys **staging** only.
 3. Smoke staging (Creator login, new session, join, facilitate, CSV).
-4. **Only when Ali says promote:**
+4. **Promote to production only via PR — never push `production` directly:**
 
-   ```bash
-   git fetch origin
-   git checkout production
-   git merge --ff-only origin/main
-   git push origin production
-   ```
-
-5. Railway deploys **production** from the `production` branch tip.
+   1. Open a PR with **base = `production`**, **head = `main`** (GitHub: compare `production`...`main`, or `gh pr create --base production --head main`).
+   2. In the PR body, list:
+      - What commits / merged PRs are included
+      - Anything that could change behavior for **existing** sessions (frozen `resolved_content`, join/board UI, APIs, content loaded at boot)
+   3. **Wait for Ali’s explicit “yes” in chat** before merging.
+   4. Merge the PR (merge commit or GitHub’s merge button — do **not** `git push origin production`).
+   5. Railway deploys **production** from the new `production` tip.
 
 ### Hard rules (agents and humans)
 
 - **Never** deploy to production with `railway up` or any Railway CLI command.
-- **Never** push or merge to the `production` branch without Ali’s explicit approval.
-- Promotion is **only** a fast-forward of `production` from `main`, when Ali says so.
+- **Never** push directly to `production` (`git push origin production` is forbidden).
+- **Never** merge a `main` → `production` PR without Ali’s explicit “yes” in chat for that PR.
 - There is no CLI fallback for production. If GitHub→Railway is broken, stop and ask Ali.
 
 ### Notes
