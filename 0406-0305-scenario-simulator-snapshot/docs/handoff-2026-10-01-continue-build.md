@@ -2,6 +2,8 @@
 
 Pick up here. User is moving to another Cursor agent. Code root: `0406-0305-scenario-simulator-snapshot/`. Repo: `aliatideate/thepracticelabs`.
 
+**Progress (2026-10-01):** Steps 1–6 advanced — see agent store `internal/continue-build-progress-2026-10-01.md`. Join implement + Mart attention fix + archive build wait on Ali.
+
 ---
 
 ## Snapshot
@@ -11,16 +13,16 @@ Pick up here. User is moving to another Cursor agent. Code root: `0406-0305-scen
 | Staging | https://app-staging-78f4.up.railway.app ← branch `main` |
 | Production | https://practicelabs.up.railway.app ← branch `production` |
 | Tip (both) | `f74aaf2` — Merge PR #36 (Mart open-slots fix) |
-| Open PR | [#37](https://github.com/aliatideate/thepracticelabs/pull/37) draft — SEM status doc (needs Ali’s edits; see §2) |
-| Working branch left on | `production` (clean, matches origin). Start new work from `main` as `cursor/<name>-5dc1` |
-| Deploy rule | Staging first via `main`. Promote production only by FF `production` ← `main` when Ali OK. **Never** `railway up` prod. |
+| Open drafts | [#37](https://github.com/aliatideate/thepracticelabs/pull/37) status · [#38](https://github.com/aliatideate/thepracticelabs/pull/38) this handoff · [#39](https://github.com/aliatideate/thepracticelabs/pull/39) join plan · [#40](https://github.com/aliatideate/thepracticelabs/pull/40) `{stops}` · [#41](https://github.com/aliatideate/thepracticelabs/pull/41) promote-via-PR rule |
+| Working branch | Start new work from `main` as `cursor/<name>-5dc1` |
+| Deploy rule | Staging first via `main`. **Promote production only by PR `main` → `production`**, list session impact, wait for Ali’s explicit “yes” in chat before merging. **Never** push `production` directly. **Never** `railway up` prod. Details: `docs/deploy-staging-first.md`. |
 
 **Ali’s standing rules for this pass**
 
 - Everything ships through staging first.
 - Nothing beyond #36 goes to production without Ali’s approval. (#36 promote **was** approved and done.)
 - From now on, rehearse on **staging** unless Ali asks otherwise (prod rehearsal clients can’t be deleted → clutter).
-
+- Production promote = open PR from `main` into `production` → describe changes / existing-session impact → wait for Ali “yes” in chat → merge that PR. No direct `git push` to `production`.
 ---
 
 ## Ali’s ordered work list — status
@@ -51,7 +53,7 @@ Note: `Q7X2TU` clock already expired (`startedAt` 2026-09-30); join may show red
 
 ---
 
-### 2. Update the status doc — NOT STARTED
+### 2. Update the status doc — DONE (PR #37)
 
 Files:
 
@@ -76,7 +78,7 @@ Push updates on `cursor/sem-status-doc-5dc1` and refresh PR #37 (or new branch i
 
 ---
 
-### 3. Test attention/nudge + “Ask Moderator” on staging — NOT STARTED (report before fixing)
+### 3. Test attention/nudge + “Ask Moderator” on staging — DONE (report; Mart clear bug)
 
 **Do on staging.** Run a session, trigger both, confirm board shows them and signals reach the team. **Report what works / doesn’t before fixing anything.**
 
@@ -109,7 +111,7 @@ Creator login needed for facilitator board unless you have a co-facilitator `?to
 
 ---
 
-### 4. Join screen fixes — PLAN FIRST, then wait (parallel with §3)
+### 4. Join screen fixes — PLAN DELIVERED (PR #39); wait for Ali before implement
 
 Ali asked for a **file-by-file plan first** (no design examples needed). One item is report-only.
 
@@ -133,7 +135,7 @@ Deliverable for §4: a short plan markdown (store `docs/` or repo `docs/`) Ali c
 
 ---
 
-### 5. Rename `{branches}` → engine-neutral (e.g. `{stops}`) — NOT STARTED
+### 5. Rename `{branches}` → engine-neutral (e.g. `{stops}`) — DONE on PR #40 (staging only)
 
 After §3/§4 plan. Same reasoning as `stopOne` / `stopTwo` / `stopMany`.
 
@@ -145,7 +147,7 @@ Do not promote to production without Ali.
 
 ---
 
-### 6. Production test-data / archive-hide clients — PROPOSAL ONLY, HOLD
+### 6. Production test-data / archive-hide clients — PROPOSAL WRITTEN (PR #40), HOLD
 
 Ali: rehearse on staging unless asked otherwise. **Propose (don’t build)** a simple way to archive or hide clients so prod rehearsals don’t leave permanent undeletable clutter (delete blocked when sessions exist).
 
@@ -179,17 +181,11 @@ Unilever Session 1 content decisions (Rohini Q3 events-only, SKU snapshot, etc.)
 
 ---
 
-## Suggested first commands for the next agent
+## Waiting on Ali
 
-```bash
-git fetch origin main production
-git checkout main && git pull origin main
-# verify tips equal f74aaf2
-# 1) finish prod smoke on Q7X2TU / 6SZHRJ
-# 2) branch for status doc updates from cursor/sem-status-doc-5dc1 or fresh cursor/…-5dc1
-# 3+4) staging attention test + join plan in parallel
-# 5) {branches} → {stops} with fallback
-# 6) proposal only
-```
+- Merge/review drafts #37–#41 as desired (staging only until promote PR).
+- Branch protection on `production` (agent cannot apply — see chat for payload / click path).
+- Approve join-plan implement (#39); green-light Mart attention clear fix; feedback on archive proposal.
+- Any production promote: PR `main` → `production` + explicit “yes” in chat. Never push `production`.
 
 Branch prefix required: `cursor/<descriptive-name>-5dc1`.
