@@ -7,7 +7,6 @@ import {
 } from "@workspace/api-client-react";
 import { ArrowLeft, Lock } from "lucide-react";
 import {
-  SESSION_LABEL,
   TEAM_EMOJIS,
   TEAM_NAMES,
   WORKSHOP_CODE,
@@ -66,7 +65,7 @@ export default function JoinScreen() {
       return;
     }
     if (mySession) {
-      setError("This table already has a slot. Ask the facilitator to release it if that was a mistake.");
+      setError("This team already has a slot. Ask the facilitator to release it if that was a mistake.");
       return;
     }
     setClaimingSlot(teamName);
@@ -106,9 +105,12 @@ export default function JoinScreen() {
     );
   };
 
+  const demandJoinCallout =
+    "Discuss each choice before you confirm. The goal is not to solve the situation immediately — it is to identify the problem worth solving.";
+
   return (
     <div className="min-h-screen">
-      <Header />
+      <Header timerMode="join" />
       <div className="mx-auto max-w-[720px] px-6 py-14 tpl-page-in">
         <div className="flex justify-center mb-6">
           <LivePill label="Live session active" />
@@ -120,8 +122,6 @@ export default function JoinScreen() {
         <div className="mb-6">
           <MetaGrid
             items={[
-              { label: "Session", value: room?.title || SESSION_LABEL.split(":")[0] },
-              { label: "Scenario", value: scenario.title },
               {
                 label: "Duration",
                 value: `${room?.durationMinutes ?? scenario.timing.defaultMinutes} minutes`,
@@ -131,10 +131,7 @@ export default function JoinScreen() {
           />
         </div>
         <div className="mb-8">
-          <TeamCallout kicker="Work as a team">
-            Discuss each choice before you confirm. The goal is not to solve the situation
-            immediately — it is to identify the problem worth solving.
-          </TeamCallout>
+          <TeamCallout kicker="Work as a team">{demandJoinCallout}</TeamCallout>
         </div>
 
         {claimingSlot ? (
@@ -152,7 +149,7 @@ export default function JoinScreen() {
             </p>
             <h2 className="text-[24px] mt-0 mb-2">Name your team</h2>
             <p className="text-[16px] text-[#6C6975] mb-5">
-              Pick a name and an emoji. Other tables will see this on the join screen.
+              Pick a name and an emoji. Other teams will see this on the join screen.
             </p>
             <label className="block text-[14px] font-semibold mb-2" htmlFor="team-display-name">
               Team name
@@ -220,7 +217,7 @@ export default function JoinScreen() {
           <>
             {mySession && (
               <p className="text-[14px] text-[#6C6975] mb-3 text-center">
-                This table already has a slot. Ask the facilitator to release it if that was a mistake.
+                This team already has a slot. Ask the facilitator to release it if that was a mistake.
               </p>
             )}
             <div className="grid grid-cols-2 gap-3">

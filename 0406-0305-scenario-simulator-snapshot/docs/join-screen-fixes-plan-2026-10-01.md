@@ -1,6 +1,6 @@
 # Join screen fixes — plan (approve before implement)
 
-**Status:** plan only — wait for Ali approval. Copy/structure only; not the blocked visual redesign.  
+**Status:** approved 2026-10-01 — implementing on `cursor/join-attention-fixes-5dc1`. Stay within existing join visual language (Ali screenshot).  
 **Code root:** `0406-0305-scenario-simulator-snapshot/`  
 **Date:** 2026-10-01
 

@@ -1,51 +1,52 @@
-# Proposal — archive / hide clients (hold until Ali reviews)
+# Proposal — archive / hide clients (revised)
 
-**Status:** proposal only — do **not** build yet.  
-**Why:** Production (and staging) clients with any sessions cannot be deleted. Rehearsals leave permanent clutter. Ali asked to rehearse on staging going forward; still need a path for existing prod test clients.
+**Status:** revised proposal — **do not build** until Ali says go.  
+**Why:** Clients with any sessions cannot be deleted. Rehearsals (esp. production) leave permanent clutter on Creator home.
 
-## Goal
+## Recommendation (single path)
 
-Let the one Ideate operator hide or archive rehearsal/test clients without deleting session history, so Creator home stays clean.
-
-## Recommended shape (simple)
-
-### Option A — Soft-hide on client (preferred)
-
-Add `archivedAt` (nullable timestamp) on `clients` (or `hiddenAt` / `status: active|archived`).
+**Soft-archive on the client row** — add nullable `archivedAt` (timestamp) on `clients`.
 
 | Behavior | Detail |
 | --- | --- |
-| Creator home | Default list = non-archived only |
-| Toggle | Client card or detail: “Archive” / “Restore” |
-| Sessions | Unchanged; join/facilitate links keep working |
-| Delete | Still only when **zero** sessions (current rule) |
-| Empty archive | Optional “Show archived” filter on Clients |
+| Creator home (default) | Show only clients where `archivedAt` is null |
+| Archive | Client card or detail → “Archive” sets `archivedAt = now()` |
+| Restore | “Show archived” filter → “Restore” clears `archivedAt` |
+| Sessions | Unchanged; join / facilitate / try / print links **stay live** |
+| Delete | Still only when **zero** sessions (unchanged rule) |
+| Scope | **Client-level only** — no per-session archive in v1 |
 
-**Why preferred:** One column, no data move, reversible, no risk to live workshop rooms.
+No separate “test” flag. No moving rows into an archive table.
 
-### Option B — “Test” flag
+## Why this shape
 
-`isTest` boolean + filter chip. Weaker than archive (doesn’t communicate “done”); overlaps with naming discipline.
+- One column, reversible, no data migration risk to live workshop rooms  
+- Operator can hide Prod Rehearsal Co / Rehearsal Co without breaking team links mid-week  
+- Matches “rehearse on staging” going forward while cleaning existing prod clutter  
 
-### Option C — Hard move to archive table
+## Decisions locked in this revision
 
-Copy/move sessions out of live client. Heavier; not needed for clutter control.
+| Question | Answer |
+| --- | --- |
+| Archive vs test flag | **Archive** (`archivedAt`) |
+| Session links when archived | **Remain live** |
+| Session-level archive | **Not in v1** — client-level only |
 
-## Out of scope (for this proposal)
+## Out of scope
 
 - Deleting clients that still have sessions  
-- Auto-expiring rehearsal rooms  
+- Auto-expiring rooms or clients  
 - Multi-org / roles  
 
-## Ship path (when approved)
+## Build path (when Ali says go)
 
-1. Schema + migration on staging  
-2. Creator UI: Archive / Restore + “Show archived”  
-3. Smoke on staging Clients list  
-4. Promote only with Ali OK (nothing beyond #36 without approval)
+1. Schema + bootstrap/`archived_at` on `clients` (staging first)  
+2. Creator API: archive / restore endpoints (Creator auth)  
+3. UI: Archive on card/detail; “Show archived” toggle on Clients  
+4. Smoke on staging Creator list  
+5. Production only via `main` → `production` PR + Ali “yes” in chat  
 
-## Open questions for Ali
+## Open only if Ali disagrees
 
-1. Prefer **Archive** (Option A) vs **Test flag** (Option B)?  
-2. Should archived clients’ session links remain live (recommended yes)?  
-3. Any need to archive **sessions** individually, or is client-level enough?
+- Prefer a status enum (`active` / `archived`) over timestamp? (timestamp is enough for v1.)  
+- Should archived clients be excluded from any “new session” client picker? (Recommend **yes** — hide from default pickers too.)

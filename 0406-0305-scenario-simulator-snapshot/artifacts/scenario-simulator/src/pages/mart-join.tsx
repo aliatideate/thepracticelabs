@@ -12,7 +12,7 @@ import {
 } from "../lib/constants";
 import { readMartTeam, writeMartTeam } from "../lib/teamStorage";
 import { Header, LivePill, MetaGrid, PrimaryButton, TeamCallout } from "../simulation/components";
-import { useDecisionGame } from "../lib/decisionGame";
+import { chromeOf, useDecisionGame } from "../lib/decisionGame";
 import { useSessionRoom } from "../lib/sessionRoom";
 
 type MartSession = {
@@ -76,7 +76,7 @@ export default function MartJoin() {
       return;
     }
     if (mySession) {
-      setError("This table already has a slot. Ask the facilitator to release it if that was a mistake.");
+      setError("This team already has a slot. Ask the facilitator to release it if that was a mistake.");
       return;
     }
     setClaimingSlot(teamName);
@@ -119,12 +119,17 @@ export default function MartJoin() {
     }
   };
 
+  const chrome = chromeOf(game);
+  const joinCallout = chrome.joinTeamCallout?.trim();
+  const durationMinutes = room?.durationMinutes ?? MART_DURATION_MINUTES;
+
   return (
     <div className="min-h-screen">
       <Header
         configPath={`${MART_CONFIG_PATH}?workshopCode=${encodeURIComponent(workshopCode)}`}
         sessionLabel={MART_SESSION_LABEL}
         titleOverride={game.scenario.title}
+        timerMode="join"
       />
       <div className="mx-auto max-w-[720px] px-6 py-14 tpl-page-in">
         <div className="flex justify-center mb-6">
@@ -137,18 +142,18 @@ export default function MartJoin() {
         <div className="mb-6">
           <MetaGrid
             items={[
-              { label: "Session", value: "Session 2" },
-              { label: "Scenario", value: game.scenario.title },
-              { label: "Duration", value: `${MART_DURATION_MINUTES} minutes` },
+              { label: "Duration", value: `${durationMinutes} minutes` },
               { label: "Open slots", value: `${openSlots} of ${teamSlots.length}` },
             ]}
           />
         </div>
-        <div className="mb-8">
-          <TeamCallout kicker="Work as a team">
-            Discuss each choice before you confirm. Once you pick a door, you cannot undo it.
-          </TeamCallout>
-        </div>
+        {joinCallout ? (
+          <div className="mb-8">
+            <TeamCallout kicker={chrome.joinTeamKicker?.trim() || "Work as a team"}>
+              {joinCallout}
+            </TeamCallout>
+          </div>
+        ) : null}
 
         {claimingSlot ? (
           <div className="bg-white border border-[#E7E4DD] rounded-xl p-6">
@@ -165,7 +170,7 @@ export default function MartJoin() {
             </p>
             <h2 className="text-[24px] mt-0 mb-2">Name your team</h2>
             <p className="text-[16px] text-[#6C6975] mb-5">
-              Pick a name and an emoji. Other tables will see this on the join screen.
+              Pick a name and an emoji. Other teams will see this on the join screen.
             </p>
             <label className="block text-[14px] font-semibold mb-2" htmlFor="mart-team-name">
               Team name
@@ -227,7 +232,7 @@ export default function MartJoin() {
           <>
             {mySession && (
               <p className="text-[14px] text-[#6C6975] mb-3 text-center">
-                This table already has a slot. Ask the facilitator to release it if that was a mistake.
+                This team already has a slot. Ask the facilitator to release it if that was a mistake.
               </p>
             )}
             <div className="grid grid-cols-2 gap-3">
