@@ -12,7 +12,8 @@ type FacilitatorViewProps = {
 export function FacilitatorView({ layout }: FacilitatorViewProps) {
   const frame = useCurrentFrame();
   const uiExit = clamp(frame, [890, 922], [0, 1]);
-  const coverOpacity = clamp(frame, [904, 934], [0, 1]);
+  const coverOpacity = clamp(frame, [890, 914], [0, 1]);
+  const logoOpacity = clamp(frame, [916, 940], [0, 1]);
 
   return (
     <AbsoluteFill style={{ background: brand.colors.warm, overflow: "hidden" }}>
@@ -26,7 +27,7 @@ export function FacilitatorView({ layout }: FacilitatorViewProps) {
       </AbsoluteFill>
       <CompletionModal layout={layout} opacity={clamp(frame, [812, 842], [0, 1])} />
       <DebriefCursor layout={layout} />
-      <ClosingCover layout={layout} opacity={coverOpacity} />
+      <ClosingCover layout={layout} opacity={coverOpacity} logoOpacity={logoOpacity} />
     </AbsoluteFill>
   );
 }
@@ -163,10 +164,12 @@ function CompletionModal({
 
 function ClosingCover({
   layout,
-  opacity
+  opacity,
+  logoOpacity
 }: {
   layout: "wide" | "square";
   opacity: number;
+  logoOpacity: number;
 }) {
   const frame = useCurrentFrame();
   const drift = clamp(frame, [904, 960], [0, 1]);
@@ -197,11 +200,12 @@ function ClosingCover({
       <Img
         src={staticFile("assets/logo-practice-labs.png")}
         style={{
+          opacity: logoOpacity,
           width: layout === "wide" ? 440 : 370,
           display: "block",
           objectFit: "contain",
           filter: "drop-shadow(0 20px 42px rgba(26, 15, 88, 0.28))",
-          scale: 0.96 + clamp(frame, [910, 938], [0, 1]) * 0.04
+          scale: 0.96 + logoOpacity * 0.04
         }}
       />
     </AbsoluteFill>

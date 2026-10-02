@@ -12,12 +12,12 @@ type DashboardShellProps = {
 export function DashboardShell({ layout }: DashboardShellProps) {
   const frame = useCurrentFrame();
   const joinedTeams = teams.filter((team) => frame >= team.joinAt).length;
-  const focusMode = frame >= 420 && frame <= 540;
+  const focusMode = frame >= 420 && frame <= 525;
   const finalFit = clamp(frame, [704, 735], [0, 1]);
   const dropdownReveal = clamp(frame, [36, 56], [0, 1]);
   const titleReveal = clamp(frame, [52, 76], [0, 1]);
   const focusEaseIn = clamp(frame, [420, 454], [0, 1]);
-  const focusEaseOut = clamp(frame, [512, 540], [1, 0]);
+  const focusEaseOut = clamp(frame, [495, 525], [1, 0]);
   const focusAmount = Math.min(focusEaseIn, focusEaseOut);
   const scale =
     (layout === "wide" ? 1 + focusAmount * 0.22 : 1 + focusAmount * 0.14) -
@@ -174,7 +174,7 @@ function Cursor({ layout }: { layout: "wide" | "square" }) {
   const frame = useCurrentFrame();
   const travel = clamp(frame, [452, 472], [0, 1]);
   const click = clamp(frame, [490, 496], [0, 1]) - clamp(frame, [506, 514], [0, 1]);
-  const opacity = clamp(frame, [444, 454], [0, 1]) * (1 - clamp(frame, [516, 532], [0, 1]));
+  const opacity = clamp(frame, [444, 454], [0, 1]) * (1 - clamp(frame, [496, 508], [0, 1]));
   const startX = layout === "wide" ? 1370 : 758;
   const startY = layout === "wide" ? 740 : 560;
   const endX = layout === "wide" ? 1712 : 902;
@@ -193,7 +193,7 @@ function Cursor({ layout }: { layout: "wide" | "square" }) {
         filter: "drop-shadow(0 14px 22px rgba(26, 15, 88, 0.35))"
       }}
     >
-      {travel > 0.88 ? (
+      {travel > 0.88 && frame < 495 ? (
         <Img
           src={staticFile("assets/cursor-hand-icon.svg")}
           style={{
