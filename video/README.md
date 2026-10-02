@@ -14,16 +14,18 @@ npm run render:1x1
 
 The 16:9 composition is the primary deliverable:
 
-- `FacilitatorView-16x9`: 1920x1080, 30fps, 28 seconds
-- `FacilitatorView-1x1`: 1080x1080, 30fps, 28 seconds
+- `FacilitatorView-16x9`: 1920x1080, 30fps, 30 seconds
+- `FacilitatorView-1x1`: 1080x1080, 30fps, 30 seconds
 
 ## What The Video Shows
 
 - A tall, fixed Practice Labs header with the supplied logo.
-- Demand Spike facilitator dashboard with teams joining the exercise.
+- Header-first entry timing: background, header, timer, then dashboard section.
+- Demand Spike facilitator dashboard with placeholder team update slots.
 - Team progress through Brief, Stakeholder, Interview, Evidence, Define, and Submit.
-- A focused attention-request moment for The Wizards.
-- Final problem-statement comparison across all teams.
+- A focused attention-request moment for The Wizards with a blinking red request state.
+- Final problem statements and low-to-high confidence reveal inside the same team cards.
+- Completion pop-up with a combined-debrief CTA.
 
 ## Data Used
 

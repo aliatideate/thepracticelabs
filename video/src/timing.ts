@@ -1,7 +1,7 @@
 import { Easing, interpolate, spring } from "remotion";
 
 export const fps = 30;
-export const durationInFrames = 840;
+export const durationInFrames = 900;
 
 export function clamp(frame: number, range: [number, number], output: [number, number]) {
   return interpolate(frame, range, output, {

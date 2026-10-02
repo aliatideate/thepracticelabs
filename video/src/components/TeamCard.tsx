@@ -4,6 +4,7 @@ import { Img, staticFile, useCurrentFrame } from "remotion";
 import { brand } from "../brand";
 import {
   evidenceSources,
+  getConfidenceRevealAt,
   getStepIndex,
   isAttentionActive,
   stakeholders,
@@ -18,6 +19,7 @@ type TeamCardProps = {
   layout: "wide" | "square";
   focused: boolean;
   dimmed: boolean;
+  finalMode: boolean;
 };
 
 function confidenceColor(confidence: Team["confidence"]) {
@@ -26,7 +28,14 @@ function confidenceColor(confidence: Team["confidence"]) {
   return brand.colors.error;
 }
 
-export function TeamCard({ team, index, layout, focused, dimmed }: TeamCardProps) {
+export function TeamCard({
+  team,
+  index,
+  layout,
+  focused,
+  dimmed,
+  finalMode
+}: TeamCardProps) {
   const frame = useCurrentFrame();
   const entered = frame >= team.joinAt;
   const enter = softSpring(frame, team.joinAt);
@@ -38,13 +47,15 @@ export function TeamCard({ team, index, layout, focused, dimmed }: TeamCardProps
   const showEvidence = frame >= team.evidenceAt;
   const showStatement = frame >= team.defineAt;
   const showSubmit = frame >= team.submitAt;
+  const showConfidence = frame >= getConfidenceRevealAt(team);
   const breathe = focused ? 1 + Math.sin(frame / 8) * 0.01 : 1;
+  const attentionPulse = attentionActive ? Math.sin(frame * 0.65) * 0.5 + 0.5 : 0;
 
   return (
     <div
       style={{
         position: "relative",
-        minHeight: compact ? 194 : 226,
+        minHeight: finalMode ? (compact ? 118 : 138) : compact ? 194 : 226,
         borderRadius: 18,
         border: `2px solid ${
           focused ? "rgba(48, 28, 160, 0.5)" : "rgba(231, 228, 221, 0.95)"
@@ -53,9 +64,9 @@ export function TeamCard({ team, index, layout, focused, dimmed }: TeamCardProps
         boxShadow: focused
           ? "0 28px 80px rgba(48, 28, 160, 0.24)"
           : "0 18px 48px rgba(29, 29, 36, 0.08)",
-        opacity: entered ? (dimmed ? 0.35 : 1) : 0,
-        translate: `0 ${entered ? (1 - enter) * 36 : 36}px`,
-        scale: entered ? enter * breathe : 0.98,
+        opacity: dimmed ? 0.35 : entered ? 1 : 0.62,
+        translate: `0 ${entered ? (1 - enter) * 28 : 0}px`,
+        scale: entered ? enter * breathe : 1,
         overflow: "hidden"
       }}
     >
@@ -67,7 +78,7 @@ export function TeamCard({ team, index, layout, focused, dimmed }: TeamCardProps
           justifyContent: "space-between",
           padding: compact ? "0 18px" : "0 22px",
           borderBottom: `2px solid ${brand.colors.soft}`,
-          background: "#FEFDF8"
+          background: entered ? "#FEFDF8" : "#F5F2EA"
         }}
       >
         <div
@@ -88,7 +99,7 @@ export function TeamCard({ team, index, layout, focused, dimmed }: TeamCardProps
           >
             Team {index + 1}:
           </span>
-          <span style={{ fontSize: compact ? 16 : 18 }}>{team.emoji}</span>
+          <span style={{ fontSize: compact ? 16 : 18 }}>{entered ? team.emoji : ""}</span>
           <span
             style={{
               color: brand.colors.charcoal,
@@ -99,7 +110,7 @@ export function TeamCard({ team, index, layout, focused, dimmed }: TeamCardProps
               textOverflow: "ellipsis"
             }}
           >
-            {team.displayName}
+            {entered ? team.displayName : "Awaiting team update"}
           </span>
         </div>
         {attentionActive ? (
@@ -112,9 +123,13 @@ export function TeamCard({ team, index, layout, focused, dimmed }: TeamCardProps
               height: compact ? 36 : 42,
               padding: compact ? "0 14px" : "0 18px",
               borderRadius: 999,
-              color: brand.colors.muted,
-              background: "#F9F7F1",
-              border: `2px solid ${brand.colors.soft}`,
+              color: attentionPulse > 0.45 ? "white" : brand.colors.error,
+              background:
+                attentionPulse > 0.45
+                  ? brand.colors.error
+                  : "rgba(180, 35, 24, 0.08)",
+              border: `2px solid rgba(180, 35, 24, ${0.45 + attentionPulse * 0.45})`,
+              boxShadow: `0 0 0 ${Math.round(attentionPulse * 10)}px rgba(180, 35, 24, ${0.14 * (1 - attentionPulse)})`,
               fontSize: compact ? 15 : 17,
               fontWeight: 700
             }}
@@ -144,77 +159,85 @@ export function TeamCard({ team, index, layout, focused, dimmed }: TeamCardProps
       </div>
       <div
         style={{
-          padding: compact ? "16px 18px 18px" : "20px 22px 24px",
+          padding: finalMode
+            ? compact
+              ? "14px 18px 18px"
+              : "16px 22px 20px"
+            : compact
+              ? "16px 18px 18px"
+              : "20px 22px 24px",
           display: "grid",
           gap: compact ? 14 : 18
         }}
       >
-        <ProgressPills currentStep={currentStep} compact={compact} />
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: compact ? "1fr" : "0.95fr 1.25fr",
-            gap: compact ? 10 : 14,
-            alignItems: "stretch"
-          }}
-        >
-          <InfoPanel
-            label="Stakeholder"
-            visible={showStakeholder}
-            compact={compact}
+        {finalMode ? null : <ProgressPills currentStep={currentStep} compact={compact} />}
+        {finalMode ? null : (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: compact ? "1fr" : "0.95fr 1.25fr",
+              gap: compact ? 10 : 14,
+              alignItems: "stretch"
+            }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <Img
-                src={staticFile(stakeholder.avatar)}
-                style={{
-                  width: compact ? 38 : 44,
-                  height: compact ? 38 : 44,
-                  borderRadius: 999,
-                  objectFit: "cover",
-                  border: `2px solid ${brand.colors.soft}`
-                }}
-              />
-              <div style={{ minWidth: 0 }}>
-                <div
+            <InfoPanel
+              label="Stakeholder"
+              visible={showStakeholder}
+              compact={compact}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <Img
+                  src={staticFile(stakeholder.avatar)}
                   style={{
-                    fontSize: compact ? 17 : 19,
-                    fontWeight: 800,
-                    color: brand.colors.charcoal,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap"
+                    width: compact ? 38 : 44,
+                    height: compact ? 38 : 44,
+                    borderRadius: 999,
+                    objectFit: "cover",
+                    border: `2px solid ${brand.colors.soft}`
                   }}
-                >
-                  {stakeholder.name}
-                </div>
-                <div
-                  style={{
-                    marginTop: 2,
-                    fontSize: compact ? 13 : 15,
-                    color: brand.colors.muted
-                  }}
-                >
-                  {stakeholder.role}
+                />
+                <div style={{ minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: compact ? 17 : 19,
+                      fontWeight: 800,
+                      color: brand.colors.charcoal,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap"
+                    }}
+                  >
+                    {stakeholder.name}
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 2,
+                      fontSize: compact ? 13 : 15,
+                      color: brand.colors.muted
+                    }}
+                  >
+                    {stakeholder.role}
+                  </div>
                 </div>
               </div>
-            </div>
-          </InfoPanel>
-          <InfoPanel label="Evidence source" visible={showEvidence} compact={compact}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                minHeight: compact ? 38 : 44,
-                fontSize: compact ? 17 : 19,
-                fontWeight: 800,
-                color: brand.colors.charcoal,
-                lineHeight: 1.14
-              }}
-            >
-              {evidenceSources[team.evidence]}
-            </div>
-          </InfoPanel>
-        </div>
+            </InfoPanel>
+            <InfoPanel label="Evidence source" visible={showEvidence} compact={compact}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  minHeight: compact ? 38 : 44,
+                  fontSize: compact ? 17 : 19,
+                  fontWeight: 800,
+                  color: brand.colors.charcoal,
+                  lineHeight: 1.14
+                }}
+              >
+                {evidenceSources[team.evidence]}
+              </div>
+            </InfoPanel>
+          </div>
+        )}
         <div
           style={{
             display: "grid",
@@ -237,7 +260,7 @@ export function TeamCard({ team, index, layout, focused, dimmed }: TeamCardProps
               {team.statement}
             </div>
           </InfoPanel>
-          <InfoPanel label="Confidence" visible={showSubmit} compact={compact}>
+          <InfoPanel label="Confidence" visible={showConfidence} compact={compact}>
             <div
               style={{
                 minHeight: compact ? 34 : 48,
@@ -251,10 +274,17 @@ export function TeamCard({ team, index, layout, focused, dimmed }: TeamCardProps
             >
               <span
                 style={{
-                  width: 14,
-                  height: 14,
+                  width: 18,
+                  height: 18,
                   borderRadius: 999,
-                  background: confidenceColor(team.confidence)
+                  background: confidenceColor(team.confidence),
+                  boxShadow: `0 0 0 8px ${
+                    team.confidence === "High"
+                      ? brand.colors.paleMint
+                      : team.confidence === "Medium"
+                        ? "rgba(183, 121, 31, 0.12)"
+                        : "rgba(180, 35, 24, 0.12)"
+                  }`
                 }}
               />
               {team.confidence}

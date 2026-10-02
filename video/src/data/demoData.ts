@@ -162,3 +162,9 @@ export function isAttentionActive(team: Team, frame: number) {
     frame < team.attentionEnd
   );
 }
+
+export function getConfidenceRevealAt(team: Team) {
+  if (team.confidence === "Low") return 724;
+  if (team.confidence === "Medium") return team.id === "gunners" ? 748 : 758;
+  return 782;
+}

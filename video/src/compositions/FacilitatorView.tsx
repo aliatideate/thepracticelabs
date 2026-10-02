@@ -1,7 +1,7 @@
-import { AbsoluteFill, Img, staticFile, useCurrentFrame } from "remotion";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { AbsoluteFill, useCurrentFrame } from "remotion";
 import { Header } from "../components/Header";
 import { DashboardShell } from "../components/DashboardShell";
-import { Caption } from "../components/Caption";
 import { brand } from "../brand";
 import { clamp } from "../timing";
 
@@ -9,41 +9,19 @@ type FacilitatorViewProps = {
   layout: "wide" | "square";
 };
 
-const captions = [
-  { start: 56, end: 138, text: "A live facilitator view starts empty, then fills as teams enter the Demand Spike exercise." },
-  { start: 150, end: 246, text: "Team progress updates without the facilitator leaving the dashboard." },
-  { start: 314, end: 420, text: "Stakeholders, evidence, and confidence build into a scannable operating picture." },
-  { start: 444, end: 606, text: "When a team needs help, the interface surfaces the request in context." },
-  { start: 622, end: 704, text: "By the end, the facilitator can compare every team’s final problem framing." }
-];
-
 export function FacilitatorView({ layout }: FacilitatorViewProps) {
   const frame = useCurrentFrame();
-  const endOpacity = clamp(frame, [782, 820], [0, 1]);
-  const dashboardOpacity = 1 - clamp(frame, [782, 816], [0, 1]);
 
   return (
     <AbsoluteFill style={{ background: brand.colors.warm, overflow: "hidden" }}>
-      <div style={{ opacity: dashboardOpacity }}>
-        <DashboardShell layout={layout} />
-        <Header layout={layout} />
-        {captions.map((caption) => (
-          <Caption
-            key={caption.start}
-            start={caption.start}
-            end={caption.end}
-            layout={layout}
-          >
-            {caption.text}
-          </Caption>
-        ))}
-      </div>
-      <EndCard layout={layout} opacity={endOpacity} />
+      <DashboardShell layout={layout} />
+      <Header layout={layout} />
+      <CompletionModal layout={layout} opacity={clamp(frame, [812, 842], [0, 1])} />
     </AbsoluteFill>
   );
 }
 
-function EndCard({
+function CompletionModal({
   layout,
   opacity
 }: {
@@ -54,50 +32,72 @@ function EndCard({
     <AbsoluteFill
       style={{
         opacity,
-        background:
-          "linear-gradient(45deg, #1A0F58 0%, #301CA0 52%, #84C5B1 100%)",
+        background: "rgba(26, 15, 88, 0.24)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        color: "white",
+        color: brand.colors.charcoal,
         fontFamily: brand.fonts.sans
       }}
     >
       <div
         style={{
-          width: layout === "wide" ? 820 : 760,
-          textAlign: "center"
+          width: layout === "wide" ? 640 : 650,
+          minHeight: layout === "wide" ? 340 : 330,
+          borderRadius: 24,
+          background: brand.colors.paper,
+          border: `2px solid ${brand.colors.soft}`,
+          boxShadow: "0 34px 90px rgba(26, 15, 88, 0.28)",
+          padding: layout === "wide" ? "46px 54px" : "44px 48px",
+          textAlign: "center",
+          scale: 0.94 + opacity * 0.06
         }}
       >
-        <Img
-          src={staticFile("assets/logo-practice-labs.png")}
+        <div
           style={{
-            width: layout === "wide" ? 430 : 390,
-            display: "block",
-            margin: "0 auto 34px",
-            objectFit: "contain"
+            width: 70,
+            height: 70,
+            borderRadius: 999,
+            margin: "0 auto 26px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: brand.colors.paleMint,
+            color: brand.colors.success
           }}
-        />
+        >
+          <CheckCircle2 size={42} strokeWidth={2.4} />
+        </div>
         <div
           style={{
             fontFamily: brand.fonts.serif,
-            fontSize: layout === "wide" ? 76 : 64,
-            lineHeight: 1,
+            fontSize: layout === "wide" ? 46 : 42,
+            lineHeight: 1.05,
             fontWeight: 400
           }}
         >
-          Facilitator view
+          All 5 teams have completed the exercise.
         </div>
-        <div
+        <button
           style={{
-            marginTop: 22,
-            fontSize: layout === "wide" ? 28 : 26,
-            color: "rgba(255,255,255,0.78)",
-            fontWeight: 700
+            marginTop: 34,
+            border: 0,
+            height: 58,
+            borderRadius: 999,
+            padding: "0 28px",
+            background: brand.colors.purple,
+            color: "white",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 10,
+            fontFamily: brand.fonts.sans,
+            fontSize: layout === "wide" ? 21 : 20,
+            fontWeight: 800
           }}
         >
-          Demand Spike team progress animation
-        </div>
+          Start combined debrief
+          <ArrowRight size={22} strokeWidth={2.5} />
+        </button>
       </div>
     </AbsoluteFill>
   );

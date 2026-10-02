@@ -15,10 +15,11 @@ function formatTimer(seconds: number) {
 export function Header({ layout }: HeaderProps) {
   const frame = useCurrentFrame();
   const height = layout === "wide" ? 138 : 132;
-  const reveal = clamp(frame, [0, 34], [-height, 0]);
+  const timerStart = 42;
+  const reveal = clamp(frame, [8, timerStart], [-height, 0]);
   const seconds = Math.max(
     12 * 60 + 20,
-    30 * 60 - Math.floor(linear(frame, [0, 780], [0, 1060]))
+    30 * 60 - Math.floor(linear(frame, [timerStart, 800], [0, 1060]))
   );
 
   return (

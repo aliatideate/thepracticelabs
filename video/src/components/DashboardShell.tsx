@@ -13,6 +13,8 @@ export function DashboardShell({ layout }: DashboardShellProps) {
   const frame = useCurrentFrame();
   const joinedTeams = teams.filter((team) => frame >= team.joinAt).length;
   const focusMode = frame >= 420 && frame <= 660;
+  const dashboardReveal = clamp(frame, [46, 86], [0, 1]);
+  const finalMode = frame >= 704;
   const focusEaseIn = clamp(frame, [420, 454], [0, 1]);
   const focusEaseOut = clamp(frame, [626, 660], [1, 0]);
   const focusAmount = Math.min(focusEaseIn, focusEaseOut);
@@ -22,7 +24,6 @@ export function DashboardShell({ layout }: DashboardShellProps) {
   const boardTop = layout === "wide" ? 188 : 174;
   const contentWidth = layout === "wide" ? 1696 : 936;
   const gridColumns = layout === "wide" ? "repeat(2, minmax(0, 1fr))" : "1fr";
-  const summary = clamp(frame, [674, 710], [0, 1]);
 
   return (
     <main
@@ -40,6 +41,7 @@ export function DashboardShell({ layout }: DashboardShellProps) {
           margin: "0 auto",
           scale,
           translate: `${x}px ${y}px`,
+          opacity: dashboardReveal,
           transformOrigin: layout === "wide" ? "72% 48%" : "50% 43%"
         }}
       >
@@ -117,136 +119,28 @@ export function DashboardShell({ layout }: DashboardShellProps) {
             Live · {joinedTeams} teams
           </div>
         </div>
-        <div style={{ position: "relative" }}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: gridColumns,
-              gap: layout === "wide" ? 22 : 18,
-              opacity: 1 - summary,
-              translate: `0 ${summary * -24}px`
-            }}
-          >
-            {teams.map((team, index) => (
-              <TeamCard
-                key={team.id}
-                team={team}
-                index={index}
-                layout={layout}
-                focused={focusMode && team.id === "wizards"}
-                dimmed={focusMode && team.id !== "wizards"}
-              />
-            ))}
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              opacity: summary,
-              translate: `0 ${(1 - summary) * 28}px`,
-              pointerEvents: "none"
-            }}
-          >
-            <SummaryComparison layout={layout} />
-          </div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: gridColumns,
+            gap: finalMode ? (layout === "wide" ? 16 : 12) : layout === "wide" ? 22 : 18
+          }}
+        >
+          {teams.map((team, index) => (
+            <TeamCard
+              key={team.id}
+              team={team}
+              index={index}
+              layout={layout}
+              focused={focusMode && team.id === "wizards"}
+              dimmed={focusMode && team.id !== "wizards"}
+              finalMode={finalMode}
+            />
+          ))}
         </div>
       </div>
       {focusMode ? <Cursor layout={layout} /> : null}
     </main>
-  );
-}
-
-function SummaryComparison({ layout }: { layout: "wide" | "square" }) {
-  const compact = layout === "square";
-
-  return (
-    <div
-      style={{
-        display: "grid",
-        gap: compact ? 12 : 14
-      }}
-    >
-      {teams.map((team, index) => (
-        <div
-          key={team.id}
-          style={{
-            minHeight: compact ? 94 : 106,
-            borderRadius: 18,
-            border: `2px solid ${brand.colors.soft}`,
-            background: brand.colors.paper,
-            boxShadow: "0 14px 38px rgba(29, 29, 36, 0.07)",
-            display: "grid",
-            gridTemplateColumns: compact ? "1fr" : "320px 1fr 170px",
-            alignItems: "center",
-            gap: compact ? 6 : 18,
-            padding: compact ? "16px 18px" : "0 24px",
-            fontFamily: brand.fonts.sans
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              minWidth: 0
-            }}
-          >
-            <span style={{ color: brand.colors.muted, fontSize: compact ? 16 : 18 }}>
-              Team {index + 1}:
-            </span>
-            <span style={{ fontSize: compact ? 17 : 20 }}>{team.emoji}</span>
-            <span
-              style={{
-                fontSize: compact ? 20 : 23,
-                fontWeight: 800,
-                color: brand.colors.charcoal,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap"
-              }}
-            >
-              {team.displayName}
-            </span>
-          </div>
-          <div
-            style={{
-              fontSize: compact ? 19 : 25,
-              fontWeight: 800,
-              color: brand.colors.charcoal,
-              lineHeight: 1.12
-            }}
-          >
-            {team.statement}
-          </div>
-          <div
-            style={{
-              justifySelf: compact ? "start" : "end",
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              fontSize: compact ? 17 : 20,
-              fontWeight: 800,
-              color: brand.colors.charcoal
-            }}
-          >
-            <span
-              style={{
-                width: 14,
-                height: 14,
-                borderRadius: 999,
-                background:
-                  team.confidence === "High"
-                    ? brand.colors.success
-                    : team.confidence === "Medium"
-                      ? brand.colors.warning
-                      : brand.colors.error
-              }}
-            />
-            {team.confidence}
-          </div>
-        </div>
-      ))}
-    </div>
   );
 }
 
