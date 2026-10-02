@@ -11,7 +11,7 @@
     "still:teams": "remotion still src/index.ts FacilitatorView-16x9 renders/stills/02-team-updates.png --frame=210",
     "still:attention": "remotion still src/index.ts FacilitatorView-16x9 renders/stills/03-attention-zoom.png --frame=494",
     "still:payoff": "remotion still src/index.ts FacilitatorView-16x9 renders/stills/04-confidence-reveal.png --frame=790",
-    "still:end": "remotion still src/index.ts FacilitatorView-16x9 renders/stills/05-completion-popup.png --frame=890",
+    "still:end": "remotion still src/index.ts FacilitatorView-16x9 renders/stills/05-completion-popup.png --frame=940",
     "stills": "npm run still:empty && npm run still:teams && npm run still:attention && npm run still:payoff && npm run still:end",
     "typecheck": "tsc --noEmit"
   },

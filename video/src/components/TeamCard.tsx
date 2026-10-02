@@ -30,7 +30,7 @@ function confidenceColor(confidence: Team["confidence"]) {
 
 function confidenceBackground(confidence: Team["confidence"]) {
   if (confidence === "High") return "rgba(46, 125, 91, 0.25)";
-  if (confidence === "Medium") return "rgba(183, 121, 31, 0.25)";
+  if (confidence === "Medium") return "rgba(242, 183, 5, 0.25)";
   return "rgba(180, 35, 24, 0.25)";
 }
 
@@ -68,6 +68,8 @@ export function TeamCard({
   const attentionPulse = attentionActive ? Math.sin(frame * 0.14) * 0.5 + 0.5 : 0;
   const attentionClickState = frame >= 486 && frame < 512;
   const attentionFill = attentionClickState ? 1 : attentionPulse * 0.75;
+  const attentionOpacity = attentionActive ? 1 - clamp(frame, [492, 502], [0, 1]) : 0;
+  const requestOpacity = attentionActive ? clamp(frame, [496, 506], [0, 1]) : 1;
   const typedName = typeText(team.displayName, frame, team.joinAt, 20);
   const typedStatement = typeText(team.statement, frame, team.defineAt, 34);
 
@@ -132,7 +134,7 @@ export function TeamCard({
             {entered ? typedName : "Awaiting team update"}
           </span>
         </div>
-        {attentionActive ? (
+        {attentionActive && attentionOpacity > 0 ? (
           <div
             className="attention-pill"
             style={{
@@ -147,7 +149,8 @@ export function TeamCard({
               border: `2px solid ${mix([220, 138, 130], [223, 43, 30], attentionFill)}`,
               boxShadow: `0 0 0 ${Math.round(attentionPulse * 9)}px rgba(180, 35, 24, ${0.1 * (1 - attentionPulse)})`,
               fontSize: compact ? 15 : 17,
-              fontWeight: 700
+              fontWeight: 700,
+              opacity: attentionOpacity
             }}
           >
             <PhoneCall size={compact ? 17 : 20} strokeWidth={2.2} />
@@ -185,7 +188,8 @@ export function TeamCard({
               border: `2px solid ${brand.colors.soft}`,
               fontSize: compact ? 13 : 15,
               fontWeight: 800,
-              whiteSpace: "nowrap"
+              whiteSpace: "nowrap",
+              opacity: requestOpacity
             }}
           >
             <PhoneCall size={compact ? 15 : 17} strokeWidth={2.2} />
@@ -323,7 +327,7 @@ export function TeamCard({
                     team.confidence === "High"
                       ? brand.colors.paleMint
                       : team.confidence === "Medium"
-                        ? "rgba(183, 121, 31, 0.12)"
+                        ? "rgba(242, 183, 5, 0.16)"
                         : "rgba(180, 35, 24, 0.12)"
                   }`
                 }}

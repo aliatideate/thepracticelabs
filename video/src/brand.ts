@@ -10,7 +10,7 @@ export const brand = {
     muted: "#6C6975",
     soft: "#E7E4DD",
     success: "#2E7D5B",
-    warning: "#B7791F",
+    warning: "#F2B705",
     error: "#B42318",
     info: "#3159C9",
     paper: "#FFFFFF"

@@ -14,8 +14,8 @@ export function DashboardShell({ layout }: DashboardShellProps) {
   const joinedTeams = teams.filter((team) => frame >= team.joinAt).length;
   const focusMode = frame >= 420 && frame <= 540;
   const finalFit = clamp(frame, [704, 735], [0, 1]);
-  const dropdownReveal = clamp(frame, [48, 72], [0, 1]);
-  const titleReveal = clamp(frame, [70, 98], [0, 1]);
+  const dropdownReveal = clamp(frame, [36, 56], [0, 1]);
+  const titleReveal = clamp(frame, [52, 76], [0, 1]);
   const focusEaseIn = clamp(frame, [420, 454], [0, 1]);
   const focusEaseOut = clamp(frame, [512, 540], [1, 0]);
   const focusAmount = Math.min(focusEaseIn, focusEaseOut);
@@ -141,7 +141,7 @@ export function DashboardShell({ layout }: DashboardShellProps) {
         >
           {teams.map((team, index) => {
             const row = layout === "wide" ? Math.floor(index / 2) : index;
-            const rowReveal = clamp(frame, [104 + row * 16, 134 + row * 16], [0, 1]);
+            const rowReveal = clamp(frame, [82 + row * 14, 110 + row * 14], [0, 1]);
             return (
               <div
                 key={team.id}

@@ -11,7 +11,7 @@ export const RemotionRoot = () => {
           width={1920}
           height={1080}
           fps={30}
-          durationInFrames={900}
+          durationInFrames={960}
           defaultProps={{ layout: "wide" }}
         />
         <Composition
@@ -20,7 +20,7 @@ export const RemotionRoot = () => {
           width={1080}
           height={1080}
           fps={30}
-          durationInFrames={900}
+          durationInFrames={960}
           defaultProps={{ layout: "square" }}
         />
       </Folder>
