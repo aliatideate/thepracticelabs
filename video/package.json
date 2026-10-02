@@ -1,0 +1,32 @@
+{
+  "name": "practice-labs-video",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio src/index.ts --no-open --port=47200",
+    "render:16x9": "remotion render src/index.ts FacilitatorView-16x9 renders/mp4/facilitator-view-16x9.mp4",
+    "render:1x1": "remotion render src/index.ts FacilitatorView-1x1 renders/mp4/facilitator-view-1x1.mp4",
+    "still:empty": "remotion still src/index.ts FacilitatorView-16x9 renders/stills/01-empty-board.png --frame=90",
+    "still:teams": "remotion still src/index.ts FacilitatorView-16x9 renders/stills/02-all-teams-in.png --frame=210",
+    "still:attention": "remotion still src/index.ts FacilitatorView-16x9 renders/stills/03-attention-zoom.png --frame=510",
+    "still:payoff": "remotion still src/index.ts FacilitatorView-16x9 renders/stills/04-payoff.png --frame=735",
+    "still:end": "remotion still src/index.ts FacilitatorView-16x9 renders/stills/05-end-card.png --frame=820",
+    "stills": "npm run still:empty && npm run still:teams && npm run still:attention && npm run still:payoff && npm run still:end",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource/dm-serif-display": "^5.2.6",
+    "@fontsource/figtree": "^5.2.10",
+    "@remotion/cli": "4.0.531",
+    "lucide-react": "^0.545.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "remotion": "4.0.531"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "typescript": "~5.9.3"
+  }
+}
