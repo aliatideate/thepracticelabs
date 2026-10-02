@@ -1,5 +1,5 @@
-import { ChevronDown, Hand, MousePointer2 } from "lucide-react";
-import { useCurrentFrame } from "remotion";
+import { ChevronDown, MousePointer2 } from "lucide-react";
+import { Img, staticFile, useCurrentFrame } from "remotion";
 import { brand } from "../brand";
 import { teams } from "../data/demoData";
 import { clamp } from "../timing";
@@ -194,7 +194,13 @@ function Cursor({ layout }: { layout: "wide" | "square" }) {
       }}
     >
       {travel > 0.96 ? (
-        <Hand size={layout === "wide" ? 52 : 46} fill="white" />
+        <Img
+          src={staticFile("assets/cursor-hand-icon.svg")}
+          style={{
+            width: layout === "wide" ? 54 : 48,
+            display: "block"
+          }}
+        />
       ) : (
         <MousePointer2 size={layout === "wide" ? 54 : 48} fill="white" />
       )}

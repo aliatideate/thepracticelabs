@@ -1,5 +1,5 @@
-import { ArrowRight, CheckCircle2, Hand, MousePointer2 } from "lucide-react";
-import { AbsoluteFill, useCurrentFrame } from "remotion";
+import { ArrowRight, CheckCircle2, MousePointer2 } from "lucide-react";
+import { AbsoluteFill, Img, staticFile, useCurrentFrame } from "remotion";
 import { Header } from "../components/Header";
 import { DashboardShell } from "../components/DashboardShell";
 import { brand } from "../brand";
@@ -46,7 +46,13 @@ function DebriefCursor({ layout }: { layout: "wide" | "square" }) {
       }}
     >
       {travel > 0.96 ? (
-        <Hand size={layout === "wide" ? 52 : 46} fill="white" />
+        <Img
+          src={staticFile("assets/cursor-hand-icon.svg")}
+          style={{
+            width: layout === "wide" ? 54 : 48,
+            display: "block"
+          }}
+        />
       ) : (
         <MousePointer2 size={layout === "wide" ? 54 : 48} fill="white" />
       )}
