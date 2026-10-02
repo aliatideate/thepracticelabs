@@ -1,4 +1,4 @@
-import { Img, staticFile, useCurrentFrame } from "remotion";
+import { Img, interpolateColors, staticFile, useCurrentFrame } from "remotion";
 import { brand } from "../brand";
 import { clamp, linear } from "../timing";
 
@@ -16,10 +16,17 @@ export function Header({ layout }: HeaderProps) {
   const frame = useCurrentFrame();
   const height = layout === "wide" ? 138 : 132;
   const timerStart = 118;
+  const totalSeconds = 30 * 60;
   const reveal = clamp(frame, [8, 42], [-height, 0]);
   const seconds = Math.max(
     12 * 60 + 20,
-    30 * 60 - Math.floor(linear(frame, [timerStart, 800], [0, 1060]))
+    totalSeconds - Math.floor(linear(frame, [timerStart, 800], [0, 1060]))
+  );
+  const timerProgress = seconds / totalSeconds;
+  const stripColor = interpolateColors(
+    seconds,
+    [0, 5 * 60, 15 * 60, 24 * 60, totalSeconds],
+    ["#D92D20", "#D92D20", "#F2B705", "#8CCF72", "#2E7D62"]
   );
 
   return (
@@ -107,6 +114,25 @@ export function Header({ layout }: HeaderProps) {
         >
           {formatTimer(seconds)}
         </div>
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: -8,
+          height: 8,
+          background: "rgba(232, 229, 220, 0.9)",
+          overflow: "hidden"
+        }}
+      >
+        <div
+          style={{
+            width: `${timerProgress * 100}%`,
+            height: "100%",
+            background: stripColor
+          }}
+        />
       </div>
     </header>
   );
