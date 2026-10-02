@@ -12,12 +12,12 @@ type DashboardShellProps = {
 export function DashboardShell({ layout }: DashboardShellProps) {
   const frame = useCurrentFrame();
   const joinedTeams = teams.filter((team) => frame >= team.joinAt).length;
-  const focusMode = frame >= 420 && frame <= 660;
+  const focusMode = frame >= 420 && frame <= 540;
   const finalFit = clamp(frame, [704, 735], [0, 1]);
   const dropdownReveal = clamp(frame, [48, 72], [0, 1]);
   const titleReveal = clamp(frame, [70, 98], [0, 1]);
   const focusEaseIn = clamp(frame, [420, 454], [0, 1]);
-  const focusEaseOut = clamp(frame, [626, 660], [1, 0]);
+  const focusEaseOut = clamp(frame, [512, 540], [1, 0]);
   const focusAmount = Math.min(focusEaseIn, focusEaseOut);
   const scale =
     (layout === "wide" ? 1 + focusAmount * 0.22 : 1 + focusAmount * 0.14) -

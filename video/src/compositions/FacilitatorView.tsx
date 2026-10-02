@@ -80,12 +80,12 @@ function CompletionModal({
       <div
         style={{
           width: layout === "wide" ? 640 : 650,
-          minHeight: layout === "wide" ? 340 : 330,
+          minHeight: layout === "wide" ? 390 : 370,
           borderRadius: 24,
           background: brand.colors.paper,
           border: `2px solid ${brand.colors.soft}`,
           boxShadow: "0 34px 90px rgba(26, 15, 88, 0.28)",
-          padding: layout === "wide" ? "46px 54px" : "44px 48px",
+          padding: layout === "wide" ? "54px 58px" : "50px 52px",
           textAlign: "center",
           scale: 0.94 + opacity * 0.06
         }}
@@ -95,7 +95,7 @@ function CompletionModal({
             width: 70,
             height: 70,
             borderRadius: 999,
-            margin: "0 auto 26px",
+            margin: "0 auto 34px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -109,7 +109,7 @@ function CompletionModal({
           style={{
             fontFamily: brand.fonts.serif,
             fontSize: layout === "wide" ? 46 : 42,
-            lineHeight: 1.05,
+            lineHeight: 1.12,
             fontWeight: 400
           }}
         >
@@ -117,18 +117,18 @@ function CompletionModal({
         </div>
         <button
           style={{
-            marginTop: 34,
+            marginTop: 46,
             border: 0,
-            height: 58,
+            height: 70,
             borderRadius: 999,
-            padding: "0 28px",
+            padding: "0 38px",
             background: click > 0.2 ? brand.colors.purpleDark : brand.colors.purple,
             color: "white",
             display: "inline-flex",
             alignItems: "center",
-            gap: 10,
+            gap: 14,
             fontFamily: brand.fonts.sans,
-            fontSize: layout === "wide" ? 21 : 20,
+            fontSize: layout === "wide" ? 24 : 22,
             fontWeight: 800,
             scale: 1 + hover * 0.035 - click * 0.05,
             boxShadow: `0 0 0 ${Math.round(hover * 8)}px rgba(48, 28, 160, ${0.14 * hover})`

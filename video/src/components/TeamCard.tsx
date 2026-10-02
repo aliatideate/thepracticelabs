@@ -28,6 +28,18 @@ function confidenceColor(confidence: Team["confidence"]) {
   return brand.colors.error;
 }
 
+function confidenceBackground(confidence: Team["confidence"]) {
+  if (confidence === "High") return "rgba(46, 125, 91, 0.25)";
+  if (confidence === "Medium") return "rgba(183, 121, 31, 0.25)";
+  return "rgba(180, 35, 24, 0.25)";
+}
+
+function mix(from: [number, number, number], to: [number, number, number], amount: number) {
+  return `rgb(${from
+    .map((value, index) => Math.round(value + (to[index] - value) * amount))
+    .join(", ")})`;
+}
+
 function typeText(text: string, frame: number, start: number, duration: number) {
   const progress = clamp(frame, [start, start + duration], [0, 1]);
   return text.slice(0, Math.floor(progress * text.length));
@@ -54,6 +66,8 @@ export function TeamCard({
   const showConfidence = frame >= getConfidenceRevealAt(team);
   const breathe = focused ? 1 + Math.sin(frame / 8) * 0.01 : 1;
   const attentionPulse = attentionActive ? Math.sin(frame * 0.14) * 0.5 + 0.5 : 0;
+  const attentionClickState = frame >= 486 && frame < 512;
+  const attentionFill = attentionClickState ? 1 : attentionPulse * 0.75;
   const typedName = typeText(team.displayName, frame, team.joinAt, 20);
   const typedStatement = typeText(team.statement, frame, team.defineAt, 34);
 
@@ -128,9 +142,9 @@ export function TeamCard({
               height: compact ? 36 : 42,
               padding: compact ? "0 14px" : "0 18px",
               borderRadius: 999,
-              color: brand.colors.error,
-              background: `rgba(180, 35, 24, ${0.08 + attentionPulse * 0.12})`,
-              border: `2px solid rgba(180, 35, 24, ${0.52 + attentionPulse * 0.35})`,
+              color: attentionFill > 0.55 ? "white" : brand.colors.error,
+              background: mix([253, 244, 241], [223, 43, 30], attentionFill),
+              border: `2px solid ${mix([220, 138, 130], [223, 43, 30], attentionFill)}`,
               boxShadow: `0 0 0 ${Math.round(attentionPulse * 9)}px rgba(180, 35, 24, ${0.1 * (1 - attentionPulse)})`,
               fontSize: compact ? 15 : 17,
               fontWeight: 700
@@ -262,7 +276,12 @@ export function TeamCard({
               {typedStatement}
             </div>
           </InfoPanel>
-          <InfoPanel label="Confidence" visible={showConfidence} compact={compact}>
+          <InfoPanel
+            label="Confidence"
+            visible={showConfidence}
+            compact={compact}
+            background={showConfidence ? confidenceBackground(team.confidence) : undefined}
+          >
             <div
               style={{
                 minHeight: compact ? 34 : 48,
@@ -302,11 +321,13 @@ function InfoPanel({
   label,
   visible,
   compact,
+  background,
   children
 }: {
   label: string;
   visible: boolean;
   compact: boolean;
+  background?: string;
   children: ReactNode;
 }) {
   const frame = useCurrentFrame();
@@ -317,7 +338,7 @@ function InfoPanel({
       style={{
         minHeight: compact ? 74 : 88,
         borderRadius: 14,
-        background: visible ? "#FBFAF5" : "#F2EFE8",
+        background: visible ? background ?? "#FBFAF5" : "#F2EFE8",
         border: `2px solid ${brand.colors.soft}`,
         padding: compact ? "10px 12px" : "12px 14px",
         opacity: visible ? reveal : 0.6

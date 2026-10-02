@@ -115,7 +115,7 @@ export const teams: Team[] = [
   },
   {
     id: "shelf-truth",
-    displayName: "Shelf Truth",
+    displayName: "The Planners",
     emoji: "🧭",
     joinAt: 166,
     stakeholderAt: 320,

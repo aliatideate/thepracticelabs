@@ -23,9 +23,9 @@ export function ProgressPills({ currentStep, compact }: ProgressPillsProps) {
         const isCurrent = index === currentStep;
         const isSubmitted = index === steps.length - 1 && currentStep >= steps.length - 1;
         const pulse = isCurrent ? Math.sin(frame * 0.09) * 0.5 + 0.5 : 0;
-        const currentBlue = `rgb(${Math.round(48 + pulse * 44)}, ${Math.round(
-          28 + pulse * 40
-        )}, ${Math.round(160 + pulse * 44)})`;
+        const currentBlue = `rgb(${Math.round(48 + pulse * 72)}, ${Math.round(
+          28 + pulse * 70
+        )}, ${Math.round(160 + pulse * 64)})`;
         return (
           <div
             key={step}
@@ -57,7 +57,8 @@ export function ProgressPills({ currentStep, compact }: ProgressPillsProps) {
               fontWeight: 700,
               whiteSpace: "nowrap",
               overflow: "hidden",
-              textOverflow: "ellipsis"
+              textOverflow: "ellipsis",
+              scale: isCurrent && !isSubmitted ? 1 + pulse * 0.04 : 1
             }}
           >
             {step}
