@@ -1,0 +1,213 @@
+import { ArrowRight, CheckCircle2, MousePointer2 } from "lucide-react";
+import { AbsoluteFill, Img, staticFile, useCurrentFrame } from "remotion";
+import { Header } from "../components/Header";
+import { DashboardShell } from "../components/DashboardShell";
+import { brand } from "../brand";
+import { clamp } from "../timing";
+
+type FacilitatorViewProps = {
+  layout: "wide" | "square";
+};
+
+export function FacilitatorView({ layout }: FacilitatorViewProps) {
+  const frame = useCurrentFrame();
+  const uiExit = clamp(frame, [890, 934], [0, 1]);
+  const coverOpacity = clamp(frame, [890, 926], [0, 1]);
+  const logoOpacity = clamp(frame, [890, 934], [0, 1]);
+
+  return (
+    <AbsoluteFill style={{ background: brand.colors.warm, overflow: "hidden" }}>
+      <AbsoluteFill
+        style={{
+          opacity: 1 - uiExit
+        }}
+      >
+        <DashboardShell layout={layout} />
+        <Header layout={layout} />
+      </AbsoluteFill>
+      <CompletionModal layout={layout} opacity={clamp(frame, [812, 842], [0, 1])} />
+      <DebriefCursor layout={layout} />
+      <ClosingCover layout={layout} opacity={coverOpacity} logoOpacity={logoOpacity} />
+    </AbsoluteFill>
+  );
+}
+
+function DebriefCursor({ layout }: { layout: "wide" | "square" }) {
+  const frame = useCurrentFrame();
+  const appear = clamp(frame, [842, 854], [0, 1]);
+  const travel = clamp(frame, [854, 878], [0, 1]);
+  const click = clamp(frame, [878, 890], [0, 1]);
+  const exit = clamp(frame, [890, 902], [0, 1]);
+  const startX = layout === "wide" ? 1210 : 690;
+  const startY = layout === "wide" ? 760 : 760;
+  const endX = layout === "wide" ? 1088 : 618;
+  const endY = layout === "wide" ? 655 : 654;
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: startX + (endX - startX) * travel,
+        top: startY + (endY - startY) * travel,
+        opacity: appear * (1 - exit),
+        zIndex: 30,
+        scale: 1 - click * 0.16,
+        color: brand.colors.purple,
+        filter: "drop-shadow(0 14px 22px rgba(26, 15, 88, 0.35))"
+      }}
+    >
+      {travel > 0.88 ? (
+        <Img
+          src={staticFile("assets/cursor-hand-icon.svg")}
+          style={{
+            width: layout === "wide" ? 54 : 48,
+            display: "block"
+          }}
+        />
+      ) : (
+        <MousePointer2 size={layout === "wide" ? 54 : 48} fill="white" />
+      )}
+    </div>
+  );
+}
+
+function CompletionModal({
+  layout,
+  opacity
+}: {
+  layout: "wide" | "square";
+  opacity: number;
+}) {
+  const frame = useCurrentFrame();
+  const hover = clamp(frame, [866, 878], [0, 1]);
+  const click = clamp(frame, [878, 890], [0, 1]);
+  const exit = clamp(frame, [890, 934], [0, 1]);
+
+  return (
+    <AbsoluteFill
+      style={{
+        opacity: opacity * (1 - exit),
+        background: "rgba(26, 15, 88, 0.24)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: brand.colors.charcoal,
+        fontFamily: brand.fonts.sans
+      }}
+    >
+      <div
+        style={{
+          width: layout === "wide" ? 640 : 650,
+          minHeight: layout === "wide" ? 390 : 370,
+          borderRadius: 24,
+          background: brand.colors.paper,
+          border: `2px solid ${brand.colors.soft}`,
+          boxShadow: "0 34px 90px rgba(26, 15, 88, 0.28)",
+          padding: layout === "wide" ? "54px 58px" : "50px 52px",
+          textAlign: "center",
+          scale: 0.94 + opacity * 0.06 - exit * 0.08,
+          transform: `perspective(900px) rotateX(${-72 * exit}deg)`,
+          transformOrigin: "center top"
+        }}
+      >
+        <div
+          style={{
+            width: 70,
+            height: 70,
+            borderRadius: 999,
+            margin: "0 auto 34px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: brand.colors.paleMint,
+            color: brand.colors.success
+          }}
+        >
+          <CheckCircle2 size={42} strokeWidth={2.4} />
+        </div>
+        <div
+          style={{
+            fontFamily: brand.fonts.serif,
+            fontSize: layout === "wide" ? 46 : 42,
+            lineHeight: 1.12,
+            fontWeight: 400
+          }}
+        >
+          All 5 teams have completed the exercise.
+        </div>
+        <button
+          style={{
+            marginTop: 46,
+            border: 0,
+            height: 70,
+            borderRadius: 999,
+            padding: "0 38px",
+            background: click > 0.2 ? brand.colors.purpleDark : brand.colors.purple,
+            color: "white",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 14,
+            fontFamily: brand.fonts.sans,
+            fontSize: layout === "wide" ? 24 : 22,
+            fontWeight: 800,
+            scale: 1 + hover * 0.035 - click * 0.05,
+            boxShadow: `0 0 0 ${Math.round(hover * 8)}px rgba(48, 28, 160, ${0.14 * hover})`
+          }}
+        >
+          Start combined debrief
+          <ArrowRight size={22} strokeWidth={2.5} />
+        </button>
+      </div>
+    </AbsoluteFill>
+  );
+}
+
+function ClosingCover({
+  layout,
+  opacity,
+  logoOpacity
+}: {
+  layout: "wide" | "square";
+  opacity: number;
+  logoOpacity: number;
+}) {
+  const frame = useCurrentFrame();
+  const drift = clamp(frame, [904, 960], [0, 1]);
+
+  return (
+    <AbsoluteFill
+      style={{
+        opacity,
+        zIndex: 40,
+        background:
+          "linear-gradient(45deg, #1A0F58 0%, #301CA0 48%, #84C5B1 100%)",
+        overflow: "hidden",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: "-18%",
+          background:
+            "radial-gradient(circle at 28% 42%, rgba(255,255,255,0.18), transparent 26%), radial-gradient(circle at 72% 58%, rgba(132,197,177,0.28), transparent 30%)",
+          translate: `${drift * 28}px ${drift * -18}px`,
+          scale: 1.05 + drift * 0.025
+        }}
+      />
+      <Img
+        src={staticFile("assets/logo-practice-labs.png")}
+        style={{
+          opacity: logoOpacity,
+          width: layout === "wide" ? 440 : 370,
+          display: "block",
+          objectFit: "contain",
+          filter: "drop-shadow(0 20px 42px rgba(26, 15, 88, 0.28))",
+          scale: 0.96 + logoOpacity * 0.04
+        }}
+      />
+    </AbsoluteFill>
+  );
+}
