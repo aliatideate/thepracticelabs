@@ -11,9 +11,9 @@ type FacilitatorViewProps = {
 
 export function FacilitatorView({ layout }: FacilitatorViewProps) {
   const frame = useCurrentFrame();
-  const uiExit = clamp(frame, [890, 922], [0, 1]);
-  const coverOpacity = clamp(frame, [890, 914], [0, 1]);
-  const logoOpacity = clamp(frame, [916, 940], [0, 1]);
+  const uiExit = clamp(frame, [890, 934], [0, 1]);
+  const coverOpacity = clamp(frame, [890, 926], [0, 1]);
+  const logoOpacity = clamp(frame, [890, 934], [0, 1]);
 
   return (
     <AbsoluteFill style={{ background: brand.colors.warm, overflow: "hidden" }}>
@@ -81,7 +81,7 @@ function CompletionModal({
   const frame = useCurrentFrame();
   const hover = clamp(frame, [866, 878], [0, 1]);
   const click = clamp(frame, [878, 890], [0, 1]);
-  const exit = clamp(frame, [890, 922], [0, 1]);
+  const exit = clamp(frame, [890, 934], [0, 1]);
 
   return (
     <AbsoluteFill

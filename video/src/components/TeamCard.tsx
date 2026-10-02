@@ -72,6 +72,19 @@ export function TeamCard({
   const requestOpacity = attentionActive ? clamp(frame, [496, 506], [0, 1]) : 1;
   const typedName = typeText(team.displayName, frame, team.joinAt, 20);
   const typedStatement = typeText(team.statement, frame, team.defineAt, 34);
+  const confidenceRevealAt = getConfidenceRevealAt(team);
+  const stakeholderActive =
+    clamp(frame, [team.stakeholderAt, team.stakeholderAt + 12], [0, 1]) *
+    (1 - clamp(frame, [team.interviewAt - 12, team.interviewAt], [0, 1]));
+  const evidenceActive =
+    clamp(frame, [team.evidenceAt, team.evidenceAt + 12], [0, 1]) *
+    (1 - clamp(frame, [team.defineAt - 12, team.defineAt], [0, 1]));
+  const statementActive =
+    clamp(frame, [team.defineAt, team.defineAt + 12], [0, 1]) *
+    (1 - clamp(frame, [team.submitAt - 12, team.submitAt], [0, 1]));
+  const confidenceActive =
+    clamp(frame, [confidenceRevealAt, confidenceRevealAt + 12], [0, 1]) *
+    (1 - clamp(frame, [confidenceRevealAt + 54, confidenceRevealAt + 72], [0, 1]));
 
   return (
     <div
@@ -224,6 +237,7 @@ export function TeamCard({
               label="Stakeholder"
               visible={showStakeholder}
               compact={compact}
+              active={stakeholderActive}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <Img
@@ -261,7 +275,12 @@ export function TeamCard({
                 </div>
               </div>
             </InfoPanel>
-            <InfoPanel label="Evidence source" visible={showEvidence} compact={compact}>
+            <InfoPanel
+              label="Evidence source"
+              visible={showEvidence}
+              compact={compact}
+              active={evidenceActive}
+            >
               <div
                 style={{
                   display: "flex",
@@ -285,7 +304,12 @@ export function TeamCard({
             gap: compact ? 10 : 14
           }}
         >
-          <InfoPanel label="Problem statement" visible={showStatement} compact={compact}>
+          <InfoPanel
+            label="Problem statement"
+            visible={showStatement}
+            compact={compact}
+            active={statementActive}
+          >
             <div
               style={{
                 minHeight: compact ? 40 : 48,
@@ -305,6 +329,7 @@ export function TeamCard({
             visible={showConfidence}
             compact={compact}
             background={showConfidence ? confidenceBackground(team.confidence) : undefined}
+            active={confidenceActive}
           >
             <div
               style={{
@@ -345,12 +370,14 @@ function InfoPanel({
   label,
   visible,
   compact,
+  active = 0,
   background,
   children
 }: {
   label: string;
   visible: boolean;
   compact: boolean;
+  active?: number;
   background?: string;
   children: ReactNode;
 }) {
@@ -363,7 +390,8 @@ function InfoPanel({
         minHeight: compact ? 74 : 88,
         borderRadius: 14,
         background: visible ? background ?? "#FBFAF5" : "#F2EFE8",
-        border: `2px solid ${brand.colors.soft}`,
+        border: `2px solid ${mix([231, 228, 221], [48, 28, 160], active)}`,
+        boxShadow: `0 0 0 ${Math.round(active * 3)}px rgba(48, 28, 160, ${0.1 * active})`,
         padding: compact ? "10px 12px" : "12px 14px",
         opacity: visible ? reveal : 0.6
       }}
