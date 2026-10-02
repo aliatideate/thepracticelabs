@@ -96,7 +96,7 @@ export const teams: Team[] = [
     confidence: "High",
     statement: "Retailer feedback was not closed-looped",
     attentionStart: 430,
-    attentionEnd: 604
+    attentionEnd: 520
   },
   {
     id: "signal-builders",
@@ -164,7 +164,7 @@ export function isAttentionActive(team: Team, frame: number) {
 }
 
 export function getConfidenceRevealAt(team: Team) {
-  if (team.confidence === "Low") return 724;
-  if (team.confidence === "Medium") return team.id === "gunners" ? 748 : 758;
-  return 782;
+  if (team.confidence === "Low") return 738;
+  if (team.confidence === "Medium") return team.id === "gunners" ? 756 : 766;
+  return 786;
 }

@@ -1,5 +1,6 @@
 import { brand } from "../brand";
 import { steps } from "../data/demoData";
+import { useCurrentFrame } from "remotion";
 
 type ProgressPillsProps = {
   currentStep: number;
@@ -7,6 +8,7 @@ type ProgressPillsProps = {
 };
 
 export function ProgressPills({ currentStep, compact }: ProgressPillsProps) {
+  const frame = useCurrentFrame();
   return (
     <div
       style={{
@@ -19,6 +21,11 @@ export function ProgressPills({ currentStep, compact }: ProgressPillsProps) {
       {steps.map((step, index) => {
         const isPast = index < currentStep;
         const isCurrent = index === currentStep;
+        const isSubmitted = index === steps.length - 1 && currentStep >= steps.length - 1;
+        const pulse = isCurrent ? Math.sin(frame * 0.09) * 0.5 + 0.5 : 0;
+        const currentBlue = `rgb(${Math.round(48 + pulse * 44)}, ${Math.round(
+          28 + pulse * 40
+        )}, ${Math.round(160 + pulse * 44)})`;
         return (
           <div
             key={step}
@@ -30,18 +37,22 @@ export function ProgressPills({ currentStep, compact }: ProgressPillsProps) {
               justifyContent: "center",
               padding: "0 8px",
               border: `2px solid ${
-                isPast || isCurrent ? brand.colors.purple : brand.colors.soft
+                isSubmitted
+                  ? brand.colors.success
+                  : isPast || isCurrent
+                    ? brand.colors.purple
+                    : brand.colors.soft
               }`,
-              background: isPast
-                ? brand.colors.purple
+              background: isSubmitted
+                ? brand.colors.success
                 : isCurrent
-                  ? brand.colors.paper
-                  : "#F1EFE7",
-              color: isPast
+                  ? currentBlue
+                  : isPast
+                    ? brand.colors.purple
+                    : "#F1EFE7",
+              color: isPast || isCurrent || isSubmitted
                 ? "white"
-                : isCurrent
-                  ? brand.colors.purple
-                  : brand.colors.muted,
+                : brand.colors.muted,
               fontSize: compact ? 13 : 15,
               fontWeight: 700,
               whiteSpace: "nowrap",

@@ -10,7 +10,7 @@ import {
   stakeholders,
   Team
 } from "../data/demoData";
-import { clamp, softSpring } from "../timing";
+import { clamp } from "../timing";
 import { ProgressPills } from "./ProgressPills";
 
 type TeamCardProps = {
@@ -28,6 +28,11 @@ function confidenceColor(confidence: Team["confidence"]) {
   return brand.colors.error;
 }
 
+function typeText(text: string, frame: number, start: number, duration: number) {
+  const progress = clamp(frame, [start, start + duration], [0, 1]);
+  return text.slice(0, Math.floor(progress * text.length));
+}
+
 export function TeamCard({
   team,
   index,
@@ -38,8 +43,7 @@ export function TeamCard({
 }: TeamCardProps) {
   const frame = useCurrentFrame();
   const entered = frame >= team.joinAt;
-  const enter = softSpring(frame, team.joinAt);
-  const currentStep = getStepIndex(team, frame);
+  const currentStep = entered ? getStepIndex(team, frame) : -1;
   const stakeholder = stakeholders[team.stakeholder];
   const attentionActive = isAttentionActive(team, frame);
   const compact = layout === "square";
@@ -49,7 +53,9 @@ export function TeamCard({
   const showSubmit = frame >= team.submitAt;
   const showConfidence = frame >= getConfidenceRevealAt(team);
   const breathe = focused ? 1 + Math.sin(frame / 8) * 0.01 : 1;
-  const attentionPulse = attentionActive ? Math.sin(frame * 0.65) * 0.5 + 0.5 : 0;
+  const attentionPulse = attentionActive ? Math.sin(frame * 0.14) * 0.5 + 0.5 : 0;
+  const typedName = typeText(team.displayName, frame, team.joinAt, 20);
+  const typedStatement = typeText(team.statement, frame, team.defineAt, 34);
 
   return (
     <div
@@ -64,9 +70,8 @@ export function TeamCard({
         boxShadow: focused
           ? "0 28px 80px rgba(48, 28, 160, 0.24)"
           : "0 18px 48px rgba(29, 29, 36, 0.08)",
-        opacity: dimmed ? 0.35 : entered ? 1 : 0.62,
-        translate: `0 ${entered ? (1 - enter) * 28 : 0}px`,
-        scale: entered ? enter * breathe : 1,
+        opacity: dimmed ? 0.35 : 1,
+        scale: breathe,
         overflow: "hidden"
       }}
     >
@@ -78,7 +83,7 @@ export function TeamCard({
           justifyContent: "space-between",
           padding: compact ? "0 18px" : "0 22px",
           borderBottom: `2px solid ${brand.colors.soft}`,
-          background: entered ? "#FEFDF8" : "#F5F2EA"
+          background: entered ? brand.colors.paleMint : "#F5F2EA"
         }}
       >
         <div
@@ -99,7 +104,7 @@ export function TeamCard({
           >
             Team {index + 1}:
           </span>
-          <span style={{ fontSize: compact ? 16 : 18 }}>{entered ? team.emoji : ""}</span>
+          <span style={{ fontSize: compact ? 16 : 18 }}>{typedName ? team.emoji : ""}</span>
           <span
             style={{
               color: brand.colors.charcoal,
@@ -110,7 +115,7 @@ export function TeamCard({
               textOverflow: "ellipsis"
             }}
           >
-            {entered ? team.displayName : "Awaiting team update"}
+            {entered ? typedName : "Awaiting team update"}
           </span>
         </div>
         {attentionActive ? (
@@ -123,13 +128,10 @@ export function TeamCard({
               height: compact ? 36 : 42,
               padding: compact ? "0 14px" : "0 18px",
               borderRadius: 999,
-              color: attentionPulse > 0.45 ? "white" : brand.colors.error,
-              background:
-                attentionPulse > 0.45
-                  ? brand.colors.error
-                  : "rgba(180, 35, 24, 0.08)",
-              border: `2px solid rgba(180, 35, 24, ${0.45 + attentionPulse * 0.45})`,
-              boxShadow: `0 0 0 ${Math.round(attentionPulse * 10)}px rgba(180, 35, 24, ${0.14 * (1 - attentionPulse)})`,
+              color: brand.colors.error,
+              background: `rgba(180, 35, 24, ${0.08 + attentionPulse * 0.12})`,
+              border: `2px solid rgba(180, 35, 24, ${0.52 + attentionPulse * 0.35})`,
+              boxShadow: `0 0 0 ${Math.round(attentionPulse * 9)}px rgba(180, 35, 24, ${0.1 * (1 - attentionPulse)})`,
               fontSize: compact ? 15 : 17,
               fontWeight: 700
             }}
@@ -257,7 +259,7 @@ export function TeamCard({
                 color: brand.colors.charcoal
               }}
             >
-              {team.statement}
+              {typedStatement}
             </div>
           </InfoPanel>
           <InfoPanel label="Confidence" visible={showConfidence} compact={compact}>

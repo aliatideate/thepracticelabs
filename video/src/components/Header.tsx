@@ -15,8 +15,8 @@ function formatTimer(seconds: number) {
 export function Header({ layout }: HeaderProps) {
   const frame = useCurrentFrame();
   const height = layout === "wide" ? 138 : 132;
-  const timerStart = 42;
-  const reveal = clamp(frame, [8, timerStart], [-height, 0]);
+  const timerStart = 118;
+  const reveal = clamp(frame, [8, 42], [-height, 0]);
   const seconds = Math.max(
     12 * 60 + 20,
     30 * 60 - Math.floor(linear(frame, [timerStart, 800], [0, 1060]))
@@ -101,7 +101,7 @@ export function Header({ layout }: HeaderProps) {
             justifyContent: "center",
             fontFamily: brand.fonts.mono,
             fontSize: layout === "wide" ? 27 : 25,
-            color: "#C92D22",
+            color: "white",
             fontWeight: 800
           }}
         >
