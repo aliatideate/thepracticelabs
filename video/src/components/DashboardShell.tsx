@@ -193,7 +193,7 @@ function Cursor({ layout }: { layout: "wide" | "square" }) {
         filter: "drop-shadow(0 14px 22px rgba(26, 15, 88, 0.35))"
       }}
     >
-      {travel > 0.96 ? (
+      {travel > 0.88 ? (
         <Img
           src={staticFile("assets/cursor-hand-icon.svg")}
           style={{

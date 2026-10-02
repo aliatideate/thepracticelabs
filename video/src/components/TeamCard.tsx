@@ -171,7 +171,27 @@ export function TeamCard({
             <Check size={compact ? 16 : 18} />
             Submitted
           </div>
-        ) : null}
+        ) : (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              height: compact ? 34 : 38,
+              padding: compact ? "0 12px" : "0 15px",
+              borderRadius: 999,
+              color: brand.colors.muted,
+              background: "#FBFAF5",
+              border: `2px solid ${brand.colors.soft}`,
+              fontSize: compact ? 13 : 15,
+              fontWeight: 800,
+              whiteSpace: "nowrap"
+            }}
+          >
+            <PhoneCall size={compact ? 15 : 17} strokeWidth={2.2} />
+            Request to join team
+          </div>
+        )}
       </div>
       <div
         style={{
@@ -269,7 +289,7 @@ export function TeamCard({
                 alignItems: "center",
                 fontSize: compact ? 19 : 23,
                 lineHeight: 1.16,
-                fontWeight: 800,
+                fontWeight: 500,
                 color: brand.colors.charcoal
               }}
             >
